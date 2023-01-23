@@ -23,11 +23,11 @@ use futures::TryStreamExt;
 use http::Request;
 use http::Response;
 use log::debug;
-use reqwest::redirect::Policy;
 use reqwest::ClientBuilder;
 use reqwest::Url;
 
 use super::body::IncomingAsyncBody;
+#[cfg(not(target_arch = "wasm32"))]
 use super::dns::*;
 use super::parse_content_length;
 use super::AsyncBody;
@@ -40,8 +40,15 @@ use crate::Result;
 #[derive(Clone)]
 pub struct HttpClient {
     async_client: reqwest::Client,
+    #[cfg(not(target_arch = "wasm32"))]
     sync_client: ureq::Agent,
+    #[cfg(target_arch = "wasm32")]
+    sync_client: FetchClient,
 }
+
+#[cfg(target_arch = "wasm32")]
+#[derive(Clone)]
+struct FetchClient {}
 
 /// We don't want users to know details about our clients.
 impl Debug for HttpClient {
@@ -56,18 +63,21 @@ impl HttpClient {
         let async_client = {
             let mut builder = ClientBuilder::new();
 
-            // Make sure we don't enable auto gzip decompress.
-            builder = builder.no_gzip();
-            // Make sure we don't enable auto brotli decompress.
-            builder = builder.no_brotli();
-            // Make sure we don't enable auto deflate decompress.
-            builder = builder.no_deflate();
-            // Redirect will be handled by ourselves.
-            builder = builder.redirect(Policy::none());
+            #[cfg(not(target_arch = "wasm32"))]
+            {
+                // Make sure we don't enable auto gzip decompress.
+                builder = builder.no_gzip();
+                // Make sure we don't enable auto brotli decompress.
+                builder = builder.no_brotli();
+                // Make sure we don't enable auto deflate decompress.
+                builder = builder.no_deflate();
+                // Redirect will be handled by ourselves.
+                builder = builder.redirect(reqwest::redirect::Policy::none());
+            }
 
-            #[cfg(feature = "trust-dns")]
+            #[cfg(all(feature = "trust-dns", not(target_arch = "wasm32")))]
             let builder = builder.dns_resolver(Arc::new(AsyncTrustDnsResolver::new().unwrap()));
-            #[cfg(not(feature = "trust-dns"))]
+            #[cfg(all(not(feature = "trust-dns"), not(target_arch = "wasm32")))]
             let builder = builder.dns_resolver(Arc::new(AsyncStdDnsResolver::default()));
 
             builder.build().map_err(|err| {
@@ -75,6 +85,7 @@ impl HttpClient {
             })?
         };
 
+        #[cfg(not(target_arch = "wasm32"))]
         let sync_client = {
             let mut builder = ureq::AgentBuilder::new();
 
@@ -92,6 +103,8 @@ impl HttpClient {
 
             builder.build()
         };
+        #[cfg(target_arch = "wasm32")]
+        let sync_client = FetchClient {};
 
         Ok(HttpClient {
             async_client,
@@ -108,6 +121,7 @@ impl HttpClient {
     ///
     /// And this API is an internal API, OpenDAL could change it while bumping
     /// minor versions.
+    #[cfg(not(target_arch = "wasm32"))]
     pub fn with_client(async_client: reqwest::Client, sync_client: ureq::Agent) -> Self {
         Self {
             async_client,
@@ -121,11 +135,18 @@ impl HttpClient {
     }
 
     /// Get the sync client from http client.
+    #[cfg(not(target_arch = "wasm32"))]
     pub fn sync_client(&self) -> ureq::Agent {
         self.sync_client.clone()
     }
 
+    #[cfg(target_arch = "wasm32")]
+    pub fn sync_client(&self) -> FetchClient {
+        self.sync_client.clone()
+    }
+
     /// Send a request in blocking way.
+    #[cfg(not(target_arch = "wasm32"))]
     pub fn send(&self, req: Request<Body>) -> Result<Response<Body>> {
         let (parts, body) = req.into_parts();
 
@@ -174,6 +195,11 @@ impl HttpClient {
         Ok(resp)
     }
 
+    #[cfg(target_arch = "wasm32")]
+    pub fn send(&self, req: Request<Body>) -> Result<Response<Body>> {
+        todo!()
+    }
+
     /// Send a request in async way.
     pub async fn send_async(&self, req: Request<AsyncBody>) -> Result<Response<IncomingAsyncBody>> {
         let is_head = req.method() == http::Method::HEAD;
@@ -185,8 +211,12 @@ impl HttpClient {
                 parts.method,
                 Url::from_str(&parts.uri.to_string()).expect("input request url must be valid"),
             )
-            .version(parts.version)
             .headers(parts.headers);
+
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            req_builder = req_builder.version(parts.version);
+        }
 
         req_builder = if let AsyncBody::Multipart(field, r) = body {
             let mut form = reqwest::multipart::Form::new();
@@ -230,9 +260,12 @@ impl HttpClient {
             parse_content_length(resp.headers()).expect("response content length must be valid")
         };
 
-        let mut hr = Response::builder()
-            .version(resp.version())
-            .status(resp.status());
+        let mut hr = Response::builder().status(resp.status());
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            hr = hr.version(resp.version());
+        }
+
         for (k, v) in resp.headers().iter() {
             hr = hr.header(k, v);
         }
@@ -249,7 +282,11 @@ impl HttpClient {
                 err,
             )
         });
+
+        #[cfg(not(target_arch = "wasm32"))]
         let body = IncomingAsyncBody::new(Box::new(stream), content_length);
+        #[cfg(target_arch = "wasm32")]
+        let body = todo!();
 
         let resp = hr.body(body).expect("response must build succeed");
 

@@ -51,4 +51,5 @@ pub use bytes_range::BytesRange;
 mod bytes_content_range;
 pub use bytes_content_range::BytesContentRange;
 
+#[cfg(not(target_arch = "wasm32"))]
 mod dns;

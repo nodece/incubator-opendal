@@ -764,7 +764,10 @@ impl Builder {
         signer_builder.credential_loader({
             let mut cred_loader = AwsCredentialLoader::new(cfg);
             cred_loader = cred_loader.with_allow_anonymous();
-            cred_loader = cred_loader.with_client(client.sync_client());
+            #[cfg(not(target_arch = "wasm32"))]
+            {
+                cred_loader = cred_loader.with_client(client.sync_client());
+            }
             if self.disable_config_load {
                 // If load config has been disable, we should also disable
                 // ec2 metadata to avoid leaking permits.
