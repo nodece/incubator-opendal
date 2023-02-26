@@ -1,4 +1,4 @@
-// Copyright 2023 Datafuse Labs.
+// Copyright 2022 Datafuse Labs
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -37,3 +37,24 @@ pub mod into_blocking_reader;
 
 mod cursor;
 pub use cursor::Cursor;
+
+mod into_streamable;
+pub use into_streamable::into_streamable_reader;
+pub use into_streamable::IntoStreamableReader;
+
+mod entry;
+pub use entry::Entry;
+
+mod page;
+pub use page::BlockingPage;
+pub use page::BlockingPager;
+pub use page::Page;
+pub use page::Pager;
+
+mod to_flat_pager;
+pub use to_flat_pager::to_flat_pager;
+pub use to_flat_pager::ToFlatPager;
+
+mod to_hierarchy_pager;
+pub use to_hierarchy_pager::to_hierarchy_pager;
+pub use to_hierarchy_pager::ToHierarchyPager;

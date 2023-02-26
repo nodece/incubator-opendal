@@ -1,4 +1,4 @@
-// Copyright 2022 Datafuse Labs.
+// Copyright 2022 Datafuse Labs
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -33,6 +33,10 @@ pub enum Operation {
     Delete,
     /// Operation for [`crate::raw::Accessor::list`]
     List,
+    /// Operation for [`crate::raw::Accessor::scan`]
+    Scan,
+    /// Operation for [`crate::raw::Accessor::batch`]
+    Batch,
     /// Operation for [`crate::raw::Accessor::presign`]
     Presign,
     /// Operation for [`crate::raw::Accessor::create_multipart`]
@@ -55,6 +59,8 @@ pub enum Operation {
     BlockingDelete,
     /// Operation for [`crate::raw::Accessor::blocking_list`]
     BlockingList,
+    /// Operation for [`crate::raw::Accessor::blocking_scan`]
+    BlockingScan,
 }
 
 impl Operation {
@@ -86,7 +92,9 @@ impl From<Operation> for &'static str {
             Operation::Stat => "stat",
             Operation::Delete => "delete",
             Operation::List => "list",
+            Operation::Scan => "scan",
             Operation::Presign => "presign",
+            Operation::Batch => "batch",
             Operation::CreateMultipart => "create_multipart",
             Operation::WriteMultipart => "write_multipart",
             Operation::CompleteMultipart => "complete_multipart",
@@ -97,6 +105,7 @@ impl From<Operation> for &'static str {
             Operation::BlockingStat => "blocking_stat",
             Operation::BlockingDelete => "blocking_delete",
             Operation::BlockingList => "blocking_list",
+            Operation::BlockingScan => "blocking_scan",
         }
     }
 }

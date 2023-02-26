@@ -1,4 +1,4 @@
-// Copyright 2023 Datafuse Labs.
+// Copyright 2022 Datafuse Labs
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -36,12 +36,8 @@
 
 mod by_range;
 pub use by_range::by_range;
-
-mod by_offset;
-pub use by_offset::by_offset;
+pub use by_range::RangeReader;
 
 mod from_fd;
 pub use from_fd::from_fd;
-
-mod as_streamable;
-pub use as_streamable::as_streamable;
+pub use from_fd::FdReader;

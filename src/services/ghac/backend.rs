@@ -1,4 +1,4 @@
-// Copyright 2022 Datafuse Labs.
+// Copyright 2022 Datafuse Labs
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use std::collections::HashMap;
 use std::env;
 
 use async_trait::async_trait;
@@ -30,6 +31,7 @@ use serde::Deserialize;
 use serde::Serialize;
 
 use super::error::parse_error;
+use crate::ops::*;
 use crate::raw::*;
 use crate::*;
 
@@ -55,9 +57,95 @@ const GITHUB_REPOSITORY: &str = "GITHUB_REPOSITORY";
 /// The github API version that used by OpenDAL.
 const GITHUB_API_VERSION: &str = "2022-11-28";
 
-/// Builder for github action cache services.
+/// Github Action Cache Services support.
+///
+/// # Capabilities
+///
+/// This service can be used to:
+///
+/// - [x] read
+/// - [x] write
+/// - [ ] list
+/// - [ ] ~~scan~~
+/// - [ ] ~~presign~~
+/// - [ ] ~~multipart~~
+/// - [ ] blocking
+///
+/// # Notes
+///
+/// This service is mainly provided by github actions.
+///
+/// Refer to [Caching dependencies to speed up workflows](https://docs.github.com/en/actions/using-workflows/caching-dependencies-to-speed-up-workflows) for more information.
+///
+/// To make this service work as expected, please make sure the following
+/// environment has been setup correctly:
+///
+/// - `ACTIONS_CACHE_URL`
+/// - `ACTIONS_RUNTIME_TOKEN`
+///
+/// They can be exposed by following action:
+///
+/// ```yaml
+/// - name: Configure Cache Env
+///   uses: actions/github-script@v6
+///   with:
+///     script: |
+///       core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
+///       core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
+/// ```
+///
+/// To make `delete` work as expected, `GITHUB_TOKEN` should also be set via:
+///
+/// ```yaml
+/// env:
+///   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+/// ```
+///
+/// # Limitations
+///
+/// Unlike other services, ghac doesn't support create empty files.
+/// We provide a `enable_create_simulation()` to support this operation but may result unexpected side effects.
+///
+/// Also, `ghac` is a cache service which means the data store inside could
+/// be automatically evicted at any time.
+///
+/// # Configuration
+///
+/// - `root`: Set the work dir for backend.
+///
+/// Refer to [`GhacBuilder`]'s public API docs for more information.
+///
+/// # Example
+///
+/// ## Via Builder
+///
+/// ```no_run
+/// use std::sync::Arc;
+///
+/// use anyhow::Result;
+/// use opendal::services::Ghac;
+/// use opendal::Object;
+/// use opendal::Operator;
+///
+/// #[tokio::main]
+/// async fn main() -> Result<()> {
+///     // Create ghac backend builder.
+///     let mut builder = Ghac::default();
+///     // Set the root for ghac, all operations will happen under this root.
+///     //
+///     // NOTE: the root must be absolute path.
+///     builder.root("/path/to/dir");
+///
+///     let op: Operator = Operator::create(builder)?.finish();
+///
+///     // Create an object handle to start operation on object.
+///     let _: Object = op.object("test_file");
+///
+///     Ok(())
+/// }
+/// ```
 #[derive(Debug, Default)]
-pub struct Builder {
+pub struct GhacBuilder {
     root: Option<String>,
     version: Option<String>,
     enable_create_simulation: bool,
@@ -65,21 +153,7 @@ pub struct Builder {
     http_client: Option<HttpClient>,
 }
 
-impl Builder {
-    pub(crate) fn from_iter(it: impl Iterator<Item = (String, String)>) -> Self {
-        let mut builder = Builder::default();
-        for (k, v) in it {
-            let v = v.as_str();
-            match k.as_ref() {
-                "root" => builder.root(v),
-                "version" => builder.version(v),
-                "enable_create_simulation" if !v.is_empty() => builder.enable_create_simulation(),
-                _ => continue,
-            };
-        }
-        builder
-    }
-
+impl GhacBuilder {
     /// set the working directory root of backend
     pub fn root(&mut self, root: &str) -> &mut Self {
         if !root.is_empty() {
@@ -125,9 +199,25 @@ impl Builder {
         self.http_client = Some(client);
         self
     }
+}
 
-    /// Build a github action cache runner.
-    pub fn build(&mut self) -> Result<impl Accessor> {
+impl Builder for GhacBuilder {
+    const SCHEME: Scheme = Scheme::Ghac;
+    type Accessor = GhacBackend;
+
+    fn from_map(map: HashMap<String, String>) -> Self {
+        let mut builder = GhacBuilder::default();
+
+        map.get("root").map(|v| builder.root(v));
+        map.get("version").map(|v| builder.version(v));
+        map.get("enable_create_simulation")
+            .filter(|v| *v == "on" || *v == "true")
+            .map(|_| builder.enable_create_simulation());
+
+        builder
+    }
+
+    fn build(&mut self) -> Result<Self::Accessor> {
         debug!("backend build started: {:?}", self);
 
         let root = normalize_root(&self.root.take().unwrap_or_default());
@@ -142,7 +232,7 @@ impl Builder {
             })?
         };
 
-        let backend = Backend {
+        let backend = GhacBackend {
             root,
             enable_create_simulation: self.enable_create_simulation,
 
@@ -175,13 +265,13 @@ impl Builder {
             client,
         };
 
-        Ok(apply_wrapper(backend))
+        Ok(backend)
     }
 }
 
 /// Backend for github action cache services.
 #[derive(Debug)]
-pub struct Backend {
+pub struct GhacBackend {
     // root should end with "/"
     root: String,
     enable_create_simulation: bool,
@@ -198,14 +288,19 @@ pub struct Backend {
 }
 
 #[async_trait]
-impl Accessor for Backend {
+impl Accessor for GhacBackend {
+    type Reader = IncomingAsyncBody;
+    type BlockingReader = ();
+    type Pager = ();
+    type BlockingPager = ();
+
     fn metadata(&self) -> AccessorMetadata {
         let mut am = AccessorMetadata::default();
         am.set_scheme(Scheme::Ghac)
             .set_root(&self.root)
             .set_name(&self.version)
             .set_capabilities(AccessorCapability::Read | AccessorCapability::Write)
-            .set_hints(AccessorHint::ReadIsStreamable);
+            .set_hints(AccessorHint::ReadStreamable);
         am
     }
 
@@ -228,7 +323,7 @@ impl Accessor for Backend {
         let cache_id = if resp.status().is_success() {
             let slc = resp.into_body().bytes().await?;
             let reserve_resp: GhacReserveResponse =
-                serde_json::from_slice(&slc).map_err(parse_json_deserialize_error)?;
+                serde_json::from_slice(&slc).map_err(new_json_deserialize_error)?;
             reserve_resp.cache_id
         } else if resp.status().as_u16() == StatusCode::CONFLICT {
             // If the file is already exist, just return Ok.
@@ -254,7 +349,7 @@ impl Accessor for Backend {
                 .map(|err| err.with_operation("Backend::ghac_upload"))?);
         }
 
-        let req = self.ghac_commmit(cache_id, 1).await?;
+        let req = self.ghac_commit(cache_id, 1).await?;
         let resp = self.client.send_async(req).await?;
 
         if resp.status().is_success() {
@@ -263,11 +358,11 @@ impl Accessor for Backend {
         } else {
             Err(parse_error(resp)
                 .await
-                .map(|err| err.with_operation("Backend::ghac_commmit"))?)
+                .map(|err| err.with_operation("Backend::ghac_commit"))?)
         }
     }
 
-    async fn read(&self, path: &str, args: OpRead) -> Result<(RpRead, output::Reader)> {
+    async fn read(&self, path: &str, args: OpRead) -> Result<(RpRead, Self::Reader)> {
         let req = self.ghac_query(path).await?;
 
         let resp = self.client.send_async(req).await?;
@@ -275,7 +370,7 @@ impl Accessor for Backend {
         let location = if resp.status() == StatusCode::OK {
             let slc = resp.into_body().bytes().await?;
             let query_resp: GhacQueryResponse =
-                serde_json::from_slice(&slc).map_err(parse_json_deserialize_error)?;
+                serde_json::from_slice(&slc).map_err(new_json_deserialize_error)?;
             query_resp.archive_location
         } else {
             return Err(parse_error(resp).await?);
@@ -288,7 +383,7 @@ impl Accessor for Backend {
         match status {
             StatusCode::OK | StatusCode::PARTIAL_CONTENT => {
                 let meta = parse_into_object_metadata(path, resp.headers())?;
-                Ok((RpRead::with_metadata(meta), resp.into_body().reader()))
+                Ok((RpRead::with_metadata(meta), resp.into_body()))
             }
             _ => Err(parse_error(resp).await?),
         }
@@ -302,7 +397,7 @@ impl Accessor for Backend {
         let cache_id = if resp.status().is_success() {
             let slc = resp.into_body().bytes().await?;
             let reserve_resp: GhacReserveResponse =
-                serde_json::from_slice(&slc).map_err(parse_json_deserialize_error)?;
+                serde_json::from_slice(&slc).map_err(new_json_deserialize_error)?;
             reserve_resp.cache_id
         } else {
             return Err(parse_error(resp)
@@ -321,10 +416,10 @@ impl Accessor for Backend {
         } else {
             return Err(parse_error(resp)
                 .await
-                .map(|err| err.with_operation("Backend::ghac_commmit"))?);
+                .map(|err| err.with_operation("Backend::ghac_upload"))?);
         }
 
-        let req = self.ghac_commmit(cache_id, args.size()).await?;
+        let req = self.ghac_commit(cache_id, args.size()).await?;
         let resp = self.client.send_async(req).await?;
 
         if resp.status().is_success() {
@@ -333,7 +428,7 @@ impl Accessor for Backend {
         } else {
             Err(parse_error(resp)
                 .await
-                .map(|err| err.with_operation("Backend::ghac_commmit"))?)
+                .map(|err| err.with_operation("Backend::ghac_commit"))?)
         }
     }
 
@@ -350,7 +445,7 @@ impl Accessor for Backend {
         let location = if resp.status() == StatusCode::OK {
             let slc = resp.into_body().bytes().await?;
             let query_resp: GhacQueryResponse =
-                serde_json::from_slice(&slc).map_err(parse_json_deserialize_error)?;
+                serde_json::from_slice(&slc).map_err(new_json_deserialize_error)?;
             query_resp.archive_location
         } else if resp.status() == StatusCode::NO_CONTENT && path.ends_with('/') {
             return Ok(RpStat::new(ObjectMetadata::new(ObjectMode::DIR)));
@@ -381,7 +476,7 @@ impl Accessor for Backend {
         if self.api_token.is_empty() {
             return Err(Error::new(
                 ErrorKind::ObjectPermissionDenied,
-                "github token is not configued, delete is permission denied",
+                "github token is not configured, delete is permission denied",
             ));
         }
 
@@ -396,7 +491,7 @@ impl Accessor for Backend {
     }
 }
 
-impl Backend {
+impl GhacBackend {
     async fn ghac_query(&self, path: &str) -> Result<Request<AsyncBody>> {
         let p = build_abs_path(&self.root, path);
 
@@ -459,7 +554,7 @@ impl Backend {
             version: self.version.to_string(),
             cache_size: size,
         })
-        .map_err(parse_json_serialize_error)?;
+        .map_err(new_json_serialize_error)?;
 
         let mut req = Request::post(&url);
         req = req.header(AUTHORIZATION, format!("Bearer {}", self.catch_token));
@@ -499,11 +594,11 @@ impl Backend {
         Ok(req)
     }
 
-    async fn ghac_commmit(&self, cache_id: i64, size: u64) -> Result<Request<AsyncBody>> {
+    async fn ghac_commit(&self, cache_id: i64, size: u64) -> Result<Request<AsyncBody>> {
         let url = format!("{}{CACHE_URL_BASE}/caches/{cache_id}", self.cache_url);
 
         let bs =
-            serde_json::to_vec(&GhacCommitRequest { size }).map_err(parse_json_serialize_error)?;
+            serde_json::to_vec(&GhacCommitRequest { size }).map_err(new_json_serialize_error)?;
 
         let mut req = Request::post(&url);
         req = req.header(AUTHORIZATION, format!("Bearer {}", self.catch_token));
@@ -566,12 +661,4 @@ struct GhacReserveResponse {
 #[derive(Serialize)]
 struct GhacCommitRequest {
     size: u64,
-}
-
-pub fn parse_json_serialize_error(e: serde_json::Error) -> Error {
-    Error::new(ErrorKind::Unexpected, "serialize json").set_source(e)
-}
-
-pub fn parse_json_deserialize_error(e: serde_json::Error) -> Error {
-    Error::new(ErrorKind::Unexpected, "deserialize json").set_source(e)
 }

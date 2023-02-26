@@ -1,4 +1,4 @@
-// Copyright 2022 Datafuse Labs.
+// Copyright 2022 Datafuse Labs
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@ pub use mode::ObjectMode;
 
 mod metadata;
 pub use metadata::ObjectMetadata;
+pub use metadata::ObjectMetakey;
 
 mod multipart;
 pub use multipart::ObjectMultipart;
@@ -27,10 +28,8 @@ mod object;
 pub use object::Object;
 
 mod reader;
+pub use reader::BlockingObjectReader;
 pub use reader::ObjectReader;
-
-mod blocking_reader;
-pub use blocking_reader::BlockingObjectReader;
 
 mod list;
 pub use list::BlockingObjectLister;

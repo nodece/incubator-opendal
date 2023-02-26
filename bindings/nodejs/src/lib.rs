@@ -1,4 +1,4 @@
-// Copyright 2023 Datafuse Labs.
+// Copyright 2022 Datafuse Labs
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -13,11 +13,13 @@
 // limitations under the License.
 
 use napi_derive::napi;
+use opendal::services;
 use opendal::Operator;
-use opendal::Scheme;
 
 #[napi]
 pub fn debug() -> String {
-    let op = Operator::from_env(Scheme::Fs).unwrap();
+    let op = Operator::create(services::Memory::default())
+        .unwrap()
+        .finish();
     format!("{:?}", op.metadata())
 }

@@ -1,4 +1,4 @@
-// Copyright 2022 Datafuse Labs.
+// Copyright 2022 Datafuse Labs
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -11,6 +11,10 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+//! Ops provides the operation args struct like [`OpRead`] for user.
+//!
+//! By using ops, users can add more context for operation.
 
 use time::Duration;
 
@@ -52,12 +56,53 @@ impl OpDelete {
 
 /// Args for `list` operation.
 #[derive(Debug, Clone, Default)]
-pub struct OpList {}
+pub struct OpList {
+    /// The limit passed to underlying service to specify the max results
+    /// that could return.
+    limit: Option<usize>,
+}
 
 impl OpList {
     /// Create a new `OpList`.
     pub fn new() -> Self {
-        Self {}
+        Self::default()
+    }
+
+    /// Change the limit of this list operation.
+    pub fn with_limit(mut self, limit: usize) -> Self {
+        self.limit = Some(limit);
+        self
+    }
+
+    /// Get the limit of list operation.
+    pub fn limit(&self) -> Option<usize> {
+        self.limit
+    }
+}
+
+/// Args for `scan` operation.
+#[derive(Debug, Default, Clone)]
+pub struct OpScan {
+    /// The limit passed to underlying service to specify the max results
+    /// that could return.
+    limit: Option<usize>,
+}
+
+impl OpScan {
+    /// Create a new `OpList`.
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    /// Change the limit of this list operation.
+    pub fn with_limit(mut self, limit: usize) -> Self {
+        self.limit = Some(limit);
+        self
+    }
+
+    /// Get the limit of list operation.
+    pub fn limit(&self) -> Option<usize> {
+        self.limit
     }
 }
 
@@ -220,6 +265,63 @@ impl From<OpWriteMultipart> for PresignOperation {
     }
 }
 
+/// Args for `batch` operation.
+#[derive(Debug, Clone)]
+pub struct OpBatch {
+    ops: BatchOperations,
+}
+
+impl OpBatch {
+    /// Create a new batch options.
+    pub fn new(ops: BatchOperations) -> Self {
+        Self { ops }
+    }
+
+    /// Get operation from op.
+    pub fn operation(&self) -> &BatchOperations {
+        &self.ops
+    }
+
+    /// Consume OpBatch into BatchOperation
+    pub fn into_operation(self) -> BatchOperations {
+        self.ops
+    }
+}
+
+/// Batch operation used for batch.
+#[derive(Debug, Clone)]
+#[non_exhaustive]
+pub enum BatchOperations {
+    /// Batch delete operations.
+    Delete(Vec<(String, OpDelete)>),
+}
+
+impl BatchOperations {
+    /// Return the operation of this batch.
+    pub fn operation(&self) -> Operation {
+        use BatchOperations::*;
+        match self {
+            Delete(_) => Operation::Delete,
+        }
+    }
+
+    /// Return the length of given operations.
+    pub fn len(&self) -> usize {
+        use BatchOperations::*;
+        match self {
+            Delete(v) => v.len(),
+        }
+    }
+
+    /// Return if given operations is empty.
+    pub fn is_empty(&self) -> bool {
+        use BatchOperations::*;
+        match self {
+            Delete(v) => v.is_empty(),
+        }
+    }
+}
+
 /// Args for `read` operation.
 #[derive(Debug, Clone, Default)]
 pub struct OpRead {
@@ -260,6 +362,7 @@ impl OpStat {
 pub struct OpWrite {
     size: u64,
     content_type: Option<String>,
+    content_disposition: Option<String>,
 }
 
 impl OpWrite {
@@ -270,6 +373,7 @@ impl OpWrite {
         Self {
             size,
             content_type: None,
+            content_disposition: None,
         }
     }
 
@@ -278,6 +382,16 @@ impl OpWrite {
         Self {
             size: self.size(),
             content_type: Some(content_type.to_string()),
+            content_disposition: self.content_disposition,
+        }
+    }
+
+    /// Set the content disposition of option
+    pub fn with_content_disposition(self, content_disposition: &str) -> Self {
+        Self {
+            size: self.size(),
+            content_type: self.content_type,
+            content_disposition: Some(content_disposition.to_string()),
         }
     }
 
@@ -288,5 +402,10 @@ impl OpWrite {
     /// Get the content type from option
     pub fn content_type(&self) -> Option<&str> {
         self.content_type.as_deref()
+    }
+
+    /// Get the content disposition from option
+    pub fn content_disposition(&self) -> Option<&str> {
+        self.content_disposition.as_deref()
     }
 }

@@ -1,4 +1,4 @@
-// Copyright 2022 Datafuse Labs.
+// Copyright 2022 Datafuse Labs
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,6 +20,8 @@ use std::io::Result;
 use std::io::Seek;
 use std::io::SeekFrom;
 
+use bytes::Bytes;
+
 use crate::raw::*;
 
 /// Convert given fd into [`output::BlockingRead`].
@@ -35,7 +37,7 @@ where
     }
 }
 
-/// FdReader is a wrapper of input fd to implment [`output::Read`].
+/// FdReader is a wrapper of input fd to implement [`output::Read`].
 pub struct FdReader<R: Read + Seek + Send + Sync> {
     inner: R,
 
@@ -48,6 +50,7 @@ impl<R> FdReader<R>
 where
     R: Read + Seek + Send + Sync,
 {
+    #[inline]
     pub(crate) fn current_size(&self) -> i64 {
         debug_assert!(self.offset >= self.start, "offset must in range");
         self.end as i64 - self.offset as i64
@@ -56,7 +59,7 @@ where
 
 impl<R> output::BlockingRead for FdReader<R>
 where
-    R: Read + Seek + Send + Sync,
+    R: Read + Seek + Send + Sync + 'static,
 {
     fn read(&mut self, buf: &mut [u8]) -> Result<usize> {
         if self.current_size() <= 0 {
@@ -86,11 +89,6 @@ where
                 "invalid seek to a negative or overflowing position",
             )),
             Some(n) => {
-                // Ignore seek operation if we are already on start.
-                if self.offset == n as u64 {
-                    return Ok(self.offset - self.start);
-                }
-
                 let cur = self.inner.seek(SeekFrom::Start(n as u64))?;
 
                 self.offset = cur;
@@ -101,5 +99,12 @@ where
                 "invalid seek to a negative or overflowing position",
             )),
         }
+    }
+
+    fn next(&mut self) -> Option<Result<Bytes>> {
+        Some(Err(Error::new(
+            ErrorKind::Unsupported,
+            "output reader doesn't support iterating",
+        )))
     }
 }

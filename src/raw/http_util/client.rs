@@ -1,4 +1,4 @@
-// Copyright 2022 Datafuse Labs.
+// Copyright 2022 Datafuse Labs
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -121,7 +121,31 @@ impl HttpClient {
     ///
     /// And this API is an internal API, OpenDAL could change it while bumping
     /// minor versions.
+    ///
+    /// ## Reminders
+    /// ### no auto redirect
+    /// OpenDAL will handle all HTTP responses, including redirections.
+    /// Auto redirect may cause OpenDAL to fail.
+    ///
+    /// For reqwest client, please make sure your client's redirect policy is `Policy::none()`.
+    /// ```no_run
+    /// # use anyhow::Result;
+    /// # use reqwest::redirect::Policy;
+    /// # fn main() -> Result<()> {
+    /// let _client = reqwest::ClientBuilder::new()
+    ///     .redirect(Policy::none())
+    ///     .build()?;
+    /// # Ok(())
+    /// # }
+    /// ```
+    /// For ureq client, please make sure your client's redirect count is `0`:
+    /// ```no_run
+    /// # fn main() {
+    /// let _client = ureq::AgentBuilder::new().redirects(0).build();
+    /// # }
+    /// ```
     #[cfg(not(target_arch = "wasm32"))]
+
     pub fn with_client(async_client: reqwest::Client, sync_client: ureq::Agent) -> Self {
         Self {
             async_client,
@@ -162,7 +186,7 @@ impl HttpClient {
             Err(err_resp) => match err_resp {
                 ureq::Error::Status(_code, resp) => resp,
                 ureq::Error::Transport(transport) => {
-                    let is_temperary = matches!(
+                    let is_temporary = matches!(
                         transport.kind(),
                         ureq::ErrorKind::Dns
                             | ureq::ErrorKind::ConnectionFailed
@@ -172,7 +196,7 @@ impl HttpClient {
                     let mut err = Error::new(ErrorKind::Unexpected, "send blocking request")
                         .with_operation("http_util::Client::send")
                         .set_source(transport);
-                    if is_temperary {
+                    if is_temporary {
                         err = err.set_temporary();
                     }
 
@@ -229,7 +253,7 @@ impl HttpClient {
         };
 
         let resp = req_builder.send().await.map_err(|err| {
-            let is_temperary = !(
+            let is_temporary = !(
                 // Builder related error should not be retried.
                 err.is_builder() ||
                 // Error returned by RedirectPolicy.
@@ -245,7 +269,7 @@ impl HttpClient {
             let mut oerr = Error::new(ErrorKind::Unexpected, "send async request")
                 .with_operation("http_util::Client::send_async")
                 .set_source(err);
-            if is_temperary {
+            if is_temporary {
                 oerr = oerr.set_temporary();
             }
 

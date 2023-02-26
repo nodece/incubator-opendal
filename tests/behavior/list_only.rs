@@ -1,4 +1,4 @@
-// Copyright 2022 Datafuse Labs.
+// Copyright 2022 Datafuse Labs
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -33,7 +33,7 @@ macro_rules! behavior_list_only_test {
                         #[$meta]
                     )*
                     async fn [< $test >]() -> anyhow::Result<()> {
-                        let op = $crate::utils::init_service(opendal::Scheme::$service, false);
+                        let op = $crate::utils::init_service::<opendal::services::$service>(false);
                         match op {
                             Some(op) if op.metadata().can_list() && !op.metadata().can_write() => $crate::list_only::$test(op).await,
                             Some(_) => {
@@ -71,20 +71,14 @@ pub async fn test_list(op: Operator) -> Result<()> {
 
     let mut ds = op.object("/").list().await?;
     while let Some(de) = ds.try_next().await? {
-        entries.insert(de.path().to_string(), de.metadata().await?.mode());
+        entries.insert(de.path().to_string(), de.stat().await?.mode());
     }
 
     assert_eq!(entries["normal_file"], ObjectMode::FILE);
-    assert_eq!(
-        entries["special_file  !@#$%^&*()_+-=;'><,?"],
-        ObjectMode::FILE
-    );
+    assert_eq!(entries["special_file  !@#$%^&()_+-=;',"], ObjectMode::FILE);
 
     assert_eq!(entries["normal_dir/"], ObjectMode::DIR);
-    assert_eq!(
-        entries["special_dir  !@#$%^&*()_+-=;'><,?/"],
-        ObjectMode::DIR
-    );
+    assert_eq!(entries["special_dir  !@#$%^&()_+-=;',/"], ObjectMode::DIR);
 
     Ok(())
 }

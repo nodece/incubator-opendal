@@ -1,4 +1,4 @@
-// Copyright 2022 Datafuse Labs.
+// Copyright 2022 Datafuse Labs
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,20 +21,3 @@
 
 pub mod input;
 pub mod output;
-
-#[cfg(feature = "compress")]
-mod compress;
-#[cfg(feature = "compress")]
-pub use compress::CompressAlgorithm;
-#[cfg(feature = "compress")]
-pub use compress::DecompressCodec;
-#[cfg(feature = "compress")]
-pub use compress::DecompressDecoder;
-#[cfg(feature = "compress")]
-pub use compress::DecompressReader;
-#[cfg(feature = "compress")]
-pub use compress::DecompressState;
-
-mod walk;
-pub use walk::BottomUpWalker;
-pub use walk::TopDownWalker;

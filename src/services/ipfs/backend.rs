@@ -1,4 +1,4 @@
-// Copyright 2022 Datafuse Labs.
+// Copyright 2022 Datafuse Labs
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use std::collections::HashMap;
 use std::fmt::Debug;
 use std::fmt::Formatter;
 use std::sync::Arc;
@@ -25,33 +26,67 @@ use prost::Message;
 
 use super::error::parse_error;
 use super::ipld::PBNode;
+use crate::ops::*;
 use crate::raw::*;
 use crate::*;
 
-/// Builder for ipfs backend.
+/// IPFS file system support based on [IPFS HTTP Gateway](https://docs.ipfs.tech/concepts/ipfs-gateway/).
+///
+/// # Capabilities
+///
+/// This service can be used to:
+///
+/// - [x] read
+/// - [ ] ~~write~~
+/// - [x] list
+/// - [ ] ~~scan~~
+/// - [ ] presign
+/// - [ ] ~~multipart~~
+/// - [ ] blocking
+///
+/// # Configuration
+///
+/// - `root`: Set the work directory for backend
+/// - `endpoint`: Customizable endpoint setting
+///
+/// You can refer to [`IpfsBuilder`]'s docs for more information
+///
+/// # Example
+///
+/// ## Via Builder
+///
+/// ```no_run
+/// use anyhow::Result;
+/// use opendal::services::Ipfs;
+/// use opendal::Object;
+/// use opendal::Operator;
+///
+/// #[tokio::main]
+/// async fn main() -> Result<()> {
+///     // create backend builder
+///     let mut builder = Ipfs::default();
+///
+///     // set the endpoint for OpenDAL
+///     builder.endpoint("https://ipfs.io");
+///     // set the root for OpenDAL
+///     builder.root("/ipfs/QmPpCt1aYGb9JWJRmXRUnmJtVgeFFTJGzWFYEEX7bo9zGJ");
+///
+///     let op: Operator = Operator::create(builder)?.finish();
+///
+///     // Create an object handle to start operation on object.
+///     let _: Object = op.object("test_file");
+///
+///     Ok(())
+/// }
+/// ```
 #[derive(Default, Clone, Debug)]
-pub struct Builder {
+pub struct IpfsBuilder {
     endpoint: Option<String>,
     root: Option<String>,
     http_client: Option<HttpClient>,
 }
 
-impl Builder {
-    pub(crate) fn from_iter(it: impl Iterator<Item = (String, String)>) -> Self {
-        let mut builder = Builder::default();
-
-        for (k, v) in it {
-            let v = v.as_str();
-            match k.as_ref() {
-                "root" => builder.root(v),
-                "endpoint" => builder.endpoint(v),
-                _ => continue,
-            };
-        }
-
-        builder
-    }
-
+impl IpfsBuilder {
     /// Set root of ipfs backend.
     ///
     /// Root must be a valid ipfs address like the following:
@@ -97,9 +132,21 @@ impl Builder {
         self.http_client = Some(client);
         self
     }
+}
 
-    /// Consume builder to build an ipfs backend.
-    pub fn build(&mut self) -> Result<impl Accessor> {
+impl Builder for IpfsBuilder {
+    const SCHEME: Scheme = Scheme::Ipfs;
+    type Accessor = IpfsBackend;
+    fn from_map(map: HashMap<String, String>) -> Self {
+        let mut builder = IpfsBuilder::default();
+
+        map.get("root").map(|v| builder.root(v));
+        map.get("endpoint").map(|v| builder.endpoint(v));
+
+        builder
+    }
+
+    fn build(&mut self) -> Result<Self::Accessor> {
         debug!("backend build started: {:?}", &self);
 
         let root = normalize_root(&self.root.take().unwrap_or_default());
@@ -133,23 +180,23 @@ impl Builder {
         };
 
         debug!("backend build finished: {:?}", &self);
-        Ok(apply_wrapper(Backend {
+        Ok(IpfsBackend {
             root,
             endpoint,
             client,
-        }))
+        })
     }
 }
 
 /// Backend for IPFS.
 #[derive(Clone)]
-pub struct Backend {
+pub struct IpfsBackend {
     endpoint: String,
     root: String,
     client: HttpClient,
 }
 
-impl Debug for Backend {
+impl Debug for IpfsBackend {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("Backend")
             .field("endpoint", &self.endpoint)
@@ -160,18 +207,23 @@ impl Debug for Backend {
 }
 
 #[async_trait]
-impl Accessor for Backend {
+impl Accessor for IpfsBackend {
+    type Reader = IncomingAsyncBody;
+    type BlockingReader = ();
+    type Pager = DirStream;
+    type BlockingPager = ();
+
     fn metadata(&self) -> AccessorMetadata {
         let mut ma = AccessorMetadata::default();
         ma.set_scheme(Scheme::Ipfs)
             .set_root(&self.root)
             .set_capabilities(AccessorCapability::Read | AccessorCapability::List)
-            .set_hints(AccessorHint::ReadIsStreamable);
+            .set_hints(AccessorHint::ReadStreamable);
 
         ma
     }
 
-    async fn read(&self, path: &str, args: OpRead) -> Result<(RpRead, output::Reader)> {
+    async fn read(&self, path: &str, args: OpRead) -> Result<(RpRead, Self::Reader)> {
         let resp = self.ipfs_get(path, args.range()).await?;
 
         let status = resp.status();
@@ -179,7 +231,7 @@ impl Accessor for Backend {
         match status {
             StatusCode::OK | StatusCode::PARTIAL_CONTENT => {
                 let meta = parse_into_object_metadata(path, resp.headers())?;
-                Ok((RpRead::with_metadata(meta), resp.into_body().reader()))
+                Ok((RpRead::with_metadata(meta), resp.into_body()))
             }
             _ => Err(parse_error(resp).await?),
         }
@@ -323,6 +375,10 @@ impl Accessor for Backend {
                     m.set_mode(ObjectMode::DIR);
                 }
 
+                if let Some(v) = parse_content_disposition(resp.headers())? {
+                    m.set_content_disposition(v);
+                }
+
                 Ok(RpStat::new(m))
             }
             StatusCode::FOUND | StatusCode::MOVED_PERMANENTLY => {
@@ -332,15 +388,15 @@ impl Accessor for Backend {
         }
     }
 
-    async fn list(&self, path: &str, _: OpList) -> Result<(RpList, ObjectPager)> {
+    async fn list(&self, path: &str, _: OpList) -> Result<(RpList, Self::Pager)> {
         Ok((
             RpList::default(),
-            Box::new(DirStream::new(Arc::new(self.clone()), path)),
+            DirStream::new(Arc::new(self.clone()), path),
         ))
     }
 }
 
-impl Backend {
+impl IpfsBackend {
     async fn ipfs_get(&self, path: &str, range: BytesRange) -> Result<Response<IncomingAsyncBody>> {
         let p = build_rooted_abs_path(&self.root, path);
 
@@ -394,14 +450,14 @@ impl Backend {
     }
 }
 
-struct DirStream {
-    backend: Arc<Backend>,
+pub struct DirStream {
+    backend: Arc<IpfsBackend>,
     path: String,
     consumed: bool,
 }
 
 impl DirStream {
-    fn new(backend: Arc<Backend>, path: &str) -> Self {
+    fn new(backend: Arc<IpfsBackend>, path: &str) -> Self {
         Self {
             backend,
             path: path.to_string(),
@@ -411,8 +467,8 @@ impl DirStream {
 }
 
 #[async_trait]
-impl ObjectPage for DirStream {
-    async fn next_page(&mut self) -> Result<Option<Vec<ObjectEntry>>> {
+impl output::Page for DirStream {
+    async fn next_page(&mut self) -> Result<Option<Vec<output::Entry>>> {
         if self.consumed {
             return Ok(None);
         }
@@ -447,7 +503,7 @@ impl ObjectPage for DirStream {
                 name += "/";
             }
 
-            oes.push(ObjectEntry::new(&name, meta.with_complete()))
+            oes.push(output::Entry::new(&name, meta))
         }
 
         self.consumed = true;

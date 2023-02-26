@@ -1,4 +1,4 @@
-// Copyright 2022 Datafuse Labs.
+// Copyright 2022 Datafuse Labs
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -66,19 +66,15 @@ pub async fn parse_error(resp: Response<IncomingAsyncBody>) -> Result<Error> {
     };
 
     let message = match ipfs_error {
-        Some(ipfs_error) => format!("{:?}", ipfs_error),
+        Some(ipfs_error) => format!("{ipfs_error:?}"),
         None => String::from_utf8_lossy(&bs).into_owned(),
     };
 
-    let mut err = Error::new(kind, &message).with_context("response", format!("{:?}", parts));
+    let mut err = Error::new(kind, &message).with_context("response", format!("{parts:?}"));
 
     if retryable {
         err = err.set_temporary();
     }
 
     Ok(err)
-}
-
-pub fn parse_json_deserialize_error(e: serde_json::Error) -> Error {
-    Error::new(ErrorKind::Unexpected, "deserialize json").set_source(e)
 }

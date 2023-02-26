@@ -1,4 +1,4 @@
-// Copyright 2023 Datafuse Labs.
+// Copyright 2022 Datafuse Labs
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,8 +15,6 @@
 //! into_blocking_reader will provide different implementations to convert
 //! into [`output::BlockingRead`][crate::raw::output::BlockingRead]
 
-mod as_iterable;
-pub use as_iterable::as_iterable;
-
 mod from_fd;
 pub use from_fd::from_fd;
+pub use from_fd::FdReader;

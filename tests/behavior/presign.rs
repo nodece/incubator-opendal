@@ -1,4 +1,4 @@
-// Copyright 2022 Datafuse Labs.
+// Copyright 2022 Datafuse Labs
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -41,7 +41,7 @@ macro_rules! behavior_presign_test {
                         #[$meta]
                     )*
                     async fn [< $test >]() -> anyhow::Result<()> {
-                        let op = $crate::utils::init_service(opendal::Scheme::$service, true);
+                        let op = $crate::utils::init_service::<opendal::services::$service>(true);
                         match op {
                             Some(op) if op.metadata().can_read() && op.metadata().can_write() && op.metadata().can_presign() => $crate::presign::$test(op).await,
                             Some(_) => {
@@ -101,11 +101,7 @@ pub async fn test_presign_write(op: Operator) -> Result<()> {
         resp.text().await.expect("read response must succeed")
     );
 
-    let meta = op
-        .object(&path)
-        .metadata()
-        .await
-        .expect("stat must succeed");
+    let meta = op.object(&path).stat().await.expect("stat must succeed");
     assert_eq!(meta.content_length(), size as u64);
 
     op.object(&path)

@@ -1,4 +1,4 @@
-// Copyright 2022 Datafuse Labs.
+// Copyright 2022 Datafuse Labs
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -13,6 +13,7 @@
 // limitations under the License.
 
 use std::cmp::min;
+use std::collections::HashMap;
 use std::fmt::Debug;
 use std::io;
 use std::io::SeekFrom;
@@ -25,32 +26,111 @@ use time::OffsetDateTime;
 
 use super::dir_stream::DirStream;
 use super::error::parse_io_error;
+use crate::ops::*;
 use crate::raw::*;
 use crate::*;
 
-/// Builder for hdfs services
+/// [Hadoop Distributed File System (HDFS™)](https://hadoop.apache.org/) support.
+///
+/// A distributed file system that provides high-throughput access to application data.
+///
+/// # Capabilities
+///
+/// This service can be used to:
+///
+/// - [x] read
+/// - [x] write
+/// - [x] list
+/// - [ ] ~~scan~~
+/// - [ ] ~~presign~~
+/// - [ ] ~~multipart~~
+/// - [x] blocking
+///
+/// # Differences with webhdfs
+///
+/// [Webhdfs][crate::services::Webhdfs] is powered by hdfs's RESTful HTTP API.
+///
+/// # Features
+///
+/// HDFS support needs to enable feature `services-hdfs`.
+///
+/// # Configuration
+///
+/// - `root`: Set the work dir for backend.
+/// - `name_node`: Set the name node for backend.
+///
+/// Refer to [`HdfsBuilder`]'s public API docs for more information.
+///
+/// # Environment
+///
+/// HDFS needs some environment set correctly.
+///
+/// - `JAVA_HOME`: the path to java home, could be found via `java -XshowSettings:properties -version`
+/// - `HADOOP_HOME`: the path to hadoop home, opendal relays on this env to discover hadoop jars and set `CLASSPATH` automatically.
+///
+/// Most of the time, setting `JAVA_HOME` and `HADOOP_HOME` is enough. But there are some edge cases:
+///
+/// - If meeting errors like the following:
+///
+/// ```shell
+/// error while loading shared libraries: libjvm.so: cannot open shared object file: No such file or directory
+/// ```
+///
+/// Java's lib are not including in pkg-config find path, please set `LD_LIBRARY_PATH`:
+///
+/// ```shell
+/// export LD_LIBRARY_PATH=${JAVA_HOME}/lib/server:${LD_LIBRARY_PATH}
+/// ```
+///
+/// The path of `libjvm.so` could be different, please keep an eye on it.
+///
+/// - If meeting errors like the following:
+///
+/// ```shell
+/// (unable to get stack trace for java.lang.NoClassDefFoundError exception: ExceptionUtils::getStackTrace error.)
+/// ```
+///
+/// `CLASSPATH` is not set correctly or your hadoop installation is incorrect.
+///
+/// # Example
+///
+/// ### Via Builder
+///
+/// ```no_run
+/// use std::sync::Arc;
+///
+/// use anyhow::Result;
+/// use opendal::services::Hdfs;
+/// use opendal::Object;
+/// use opendal::Operator;
+///
+/// #[tokio::main]
+/// async fn main() -> Result<()> {
+///     // Create fs backend builder.
+///     let mut builder = Hdfs::default();
+///     // Set the name node for hdfs.
+///     builder.name_node("hdfs://127.0.0.1:9000");
+///     // Set the root for hdfs, all operations will happen under this root.
+///     //
+///     // NOTE: the root must be absolute path.
+///     builder.root("/tmp");
+///
+///     // `Accessor` provides the low level APIs, we will use `Operator` normally.
+///     let op: Operator = Operator::create(builder)?.finish();
+///
+///     // Create an object handle to start operation on object.
+///     let _: Object = op.object("test_file");
+///
+///     Ok(())
+/// }
+/// ```
 #[derive(Debug, Default)]
-pub struct Builder {
+pub struct HdfsBuilder {
     root: Option<String>,
     name_node: Option<String>,
 }
 
-impl Builder {
-    pub(crate) fn from_iter(it: impl Iterator<Item = (String, String)>) -> Self {
-        let mut builder = Builder::default();
-
-        for (k, v) in it {
-            let v = v.as_str();
-            match k.as_ref() {
-                "root" => builder.root(v),
-                "name_node" => builder.name_node(v),
-                _ => continue,
-            };
-        }
-
-        builder
-    }
-
+impl HdfsBuilder {
     /// Set root of this backend.
     ///
     /// All operations will happen under this root.
@@ -66,7 +146,7 @@ impl Builder {
 
     /// Set name_node of this backend.
     ///
-    /// Vaild format including:
+    /// Valid format including:
     ///
     /// - `default`: using the default setting based on hadoop config.
     /// - `hdfs://127.0.0.1:9000`: connect to hdfs cluster.
@@ -78,9 +158,22 @@ impl Builder {
 
         self
     }
+}
 
-    /// Finish the building and create hdfs backend.
-    pub fn build(&mut self) -> Result<impl Accessor> {
+impl Builder for HdfsBuilder {
+    const SCHEME: Scheme = Scheme::Hdfs;
+    type Accessor = HdfsBackend;
+
+    fn from_map(map: HashMap<String, String>) -> Self {
+        let mut builder = HdfsBuilder::default();
+
+        map.get("root").map(|v| builder.root(v));
+        map.get("name_node").map(|v| builder.name_node(v));
+
+        builder
+    }
+
+    fn build(&mut self) -> Result<Self::Accessor> {
         debug!("backend build started: {:?}", &self);
 
         let name_node = match &self.name_node {
@@ -108,26 +201,31 @@ impl Builder {
         }
 
         debug!("backend build finished: {:?}", &self);
-        Ok(apply_wrapper(Backend {
+        Ok(HdfsBackend {
             root,
             client: Arc::new(client),
-        }))
+        })
     }
 }
 
 /// Backend for hdfs services.
 #[derive(Debug, Clone)]
-pub struct Backend {
+pub struct HdfsBackend {
     root: String,
     client: Arc<hdrs::Client>,
 }
 
 /// hdrs::Client is thread-safe.
-unsafe impl Send for Backend {}
-unsafe impl Sync for Backend {}
+unsafe impl Send for HdfsBackend {}
+unsafe impl Sync for HdfsBackend {}
 
 #[async_trait]
-impl Accessor for Backend {
+impl Accessor for HdfsBackend {
+    type Reader = output::into_reader::FdReader<hdrs::AsyncFile>;
+    type BlockingReader = output::into_blocking_reader::FdReader<hdrs::File>;
+    type Pager = Option<DirStream>;
+    type BlockingPager = Option<DirStream>;
+
     fn metadata(&self) -> AccessorMetadata {
         let mut am = AccessorMetadata::default();
         am.set_scheme(Scheme::Hdfs)
@@ -138,7 +236,7 @@ impl Accessor for Backend {
                     | AccessorCapability::List
                     | AccessorCapability::Blocking,
             )
-            .set_hints(AccessorHint::ReadIsSeekable);
+            .set_hints(AccessorHint::ReadSeekable);
 
         am
     }
@@ -153,7 +251,7 @@ impl Accessor for Backend {
                     .ok_or_else(|| {
                         Error::new(
                             ErrorKind::Unexpected,
-                            "path shoud have parent but not, it must be malformed",
+                            "path should have parent but not, it must be malformed",
                         )
                         .with_context("input", &p)
                     })?
@@ -182,7 +280,7 @@ impl Accessor for Backend {
         }
     }
 
-    async fn read(&self, path: &str, args: OpRead) -> Result<(RpRead, output::Reader)> {
+    async fn read(&self, path: &str, args: OpRead) -> Result<(RpRead, Self::Reader)> {
         use output::ReadExt;
 
         let p = build_rooted_abs_path(&self.root, path);
@@ -214,7 +312,7 @@ impl Accessor for Backend {
         // Rewind to make sure we are on the correct offset.
         r.seek(SeekFrom::Start(0)).await.map_err(parse_io_error)?;
 
-        Ok((RpRead::new(end - start), Box::new(r)))
+        Ok((RpRead::new(end - start), r))
     }
 
     async fn write(&self, path: &str, _: OpWrite, r: input::Reader) -> Result<RpWrite> {
@@ -225,7 +323,7 @@ impl Accessor for Backend {
             .ok_or_else(|| {
                 Error::new(
                     ErrorKind::Unexpected,
-                    "path shoud have parent but not, it must be malformed",
+                    "path should have parent but not, it must be malformed",
                 )
                 .with_context("input", &p)
             })?
@@ -295,23 +393,23 @@ impl Accessor for Backend {
         Ok(RpDelete::default())
     }
 
-    async fn list(&self, path: &str, _: OpList) -> Result<(RpList, ObjectPager)> {
+    async fn list(&self, path: &str, args: OpList) -> Result<(RpList, Self::Pager)> {
         let p = build_rooted_abs_path(&self.root, path);
 
         let f = match self.client.read_dir(&p) {
             Ok(f) => f,
             Err(e) => {
                 return if e.kind() == io::ErrorKind::NotFound {
-                    Ok((RpList::default(), Box::new(EmptyObjectPager)))
+                    Ok((RpList::default(), None))
                 } else {
                     Err(parse_io_error(e))
                 }
             }
         };
 
-        let rd = DirStream::new(&self.root, f);
+        let rd = DirStream::new(&self.root, f, args.limit());
 
-        Ok((RpList::default(), Box::new(rd)))
+        Ok((RpList::default(), Some(rd)))
     }
 
     fn blocking_create(&self, path: &str, args: OpCreate) -> Result<RpCreate> {
@@ -324,7 +422,7 @@ impl Accessor for Backend {
                     .ok_or_else(|| {
                         Error::new(
                             ErrorKind::Unexpected,
-                            "path shoud have parent but not, it must be malformed",
+                            "path should have parent but not, it must be malformed",
                         )
                         .with_context("input", &p)
                     })?
@@ -353,7 +451,7 @@ impl Accessor for Backend {
         }
     }
 
-    fn blocking_read(&self, path: &str, args: OpRead) -> Result<(RpRead, output::BlockingReader)> {
+    fn blocking_read(&self, path: &str, args: OpRead) -> Result<(RpRead, Self::BlockingReader)> {
         use output::BlockingRead;
 
         let p = build_rooted_abs_path(&self.root, path);
@@ -384,7 +482,7 @@ impl Accessor for Backend {
         // Rewind to make sure we are on the correct offset.
         r.seek(SeekFrom::Start(0)).map_err(parse_io_error)?;
 
-        Ok((RpRead::new(end - start), Box::new(r)))
+        Ok((RpRead::new(end - start), r))
     }
 
     fn blocking_write(
@@ -400,7 +498,7 @@ impl Accessor for Backend {
             .ok_or_else(|| {
                 Error::new(
                     ErrorKind::Unexpected,
-                    "path shoud have parent but not, it must be malformed",
+                    "path should have parent but not, it must be malformed",
                 )
                 .with_context("input", &p)
             })?
@@ -469,22 +567,22 @@ impl Accessor for Backend {
         Ok(RpDelete::default())
     }
 
-    fn blocking_list(&self, path: &str, _: OpList) -> Result<(RpList, BlockingObjectPager)> {
+    fn blocking_list(&self, path: &str, args: OpList) -> Result<(RpList, Self::BlockingPager)> {
         let p = build_rooted_abs_path(&self.root, path);
 
         let f = match self.client.read_dir(&p) {
             Ok(f) => f,
             Err(e) => {
                 return if e.kind() == io::ErrorKind::NotFound {
-                    Ok((RpList::default(), Box::new(EmptyBlockingObjectPager)))
+                    Ok((RpList::default(), None))
                 } else {
                     Err(parse_io_error(e))
                 }
             }
         };
 
-        let rd = DirStream::new(&self.root, f);
+        let rd = DirStream::new(&self.root, f, args.limit());
 
-        Ok((RpList::default(), Box::new(rd)))
+        Ok((RpList::default(), Some(rd)))
     }
 }

@@ -1,4 +1,4 @@
-// Copyright 2022 Datafuse Labs.
+// Copyright 2022 Datafuse Labs
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -40,7 +40,7 @@ where
     }
 }
 
-/// FdReader is a wrapper of input fd to implment [`output::Read`].
+/// FdReader is a wrapper of input fd to implement [`output::Read`].
 pub struct FdReader<R: AsyncRead + AsyncSeek + Unpin + Send + Sync> {
     inner: R,
 
@@ -91,11 +91,6 @@ where
                 "invalid seek to a negative or overflowing position",
             ))),
             Some(n) => {
-                // Ignore seek operation if we are already on start.
-                if self.offset == n as u64 {
-                    return Poll::Ready(Ok(self.offset - self.start));
-                }
-
                 let cur =
                     ready!(Pin::new(&mut self.inner).poll_seek(cx, SeekFrom::Start(n as u64)))?;
 
@@ -107,5 +102,14 @@ where
                 "invalid seek to a negative or overflowing position",
             ))),
         }
+    }
+
+    fn poll_next(&mut self, cx: &mut Context<'_>) -> Poll<Option<Result<bytes::Bytes>>> {
+        let _ = cx;
+
+        Poll::Ready(Some(Err(Error::new(
+            ErrorKind::Unsupported,
+            "output reader doesn't support seeking",
+        ))))
     }
 }

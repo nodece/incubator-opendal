@@ -1,4 +1,4 @@
-// Copyright 2022 Datafuse Labs.
+// Copyright 2022 Datafuse Labs
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -13,6 +13,7 @@
 // limitations under the License.
 
 use std::collections::BTreeMap;
+use std::collections::HashMap;
 use std::sync::Arc;
 
 use async_trait::async_trait;
@@ -20,26 +21,43 @@ use parking_lot::Mutex;
 
 use crate::raw::adapters::kv;
 use crate::raw::*;
-use crate::Result;
-use crate::Scheme;
+use crate::*;
 
-/// Builder for memory backend
+/// In memory service support. (HashMap Based)
+///
+/// # Capabilities
+///
+/// This service can be used to:
+///
+/// - [x] read
+/// - [x] write
+/// - [ ] ~~list~~
+/// - [x] scan
+/// - [ ] ~~presign~~
+/// - [ ] ~~multipart~~
+/// - [x] blocking
 #[derive(Default)]
-pub struct Builder {}
+pub struct MemoryBuilder {}
 
-impl Builder {
-    /// Consume builder to build a memory backend.
-    pub fn build(&mut self) -> Result<impl Accessor> {
+impl Builder for MemoryBuilder {
+    const SCHEME: Scheme = Scheme::Memory;
+    type Accessor = MemoryBackend;
+
+    fn from_map(_: HashMap<String, String>) -> Self {
+        Self::default()
+    }
+
+    fn build(&mut self) -> Result<Self::Accessor> {
         let adapter = Adapter {
             inner: Arc::new(Mutex::new(BTreeMap::default())),
         };
 
-        Ok(apply_wrapper(Backend::new(adapter)))
+        Ok(MemoryBackend::new(adapter))
     }
 }
 
 /// Backend is used to serve `Accessor` support in memory.
-pub type Backend = kv::Backend<Adapter>;
+pub type MemoryBackend = kv::Backend<Adapter>;
 
 #[derive(Debug, Clone)]
 pub struct Adapter {
@@ -52,7 +70,7 @@ impl kv::Adapter for Adapter {
         kv::Metadata::new(
             Scheme::Memory,
             &format!("{:?}", &self.inner as *const _),
-            AccessorCapability::Read | AccessorCapability::Write,
+            AccessorCapability::Read | AccessorCapability::Write | AccessorCapability::Scan,
         )
     }
 
@@ -86,6 +104,25 @@ impl kv::Adapter for Adapter {
 
         Ok(())
     }
+
+    async fn scan(&self, path: &str) -> Result<Vec<String>> {
+        self.blocking_scan(path)
+    }
+
+    fn blocking_scan(&self, path: &str) -> Result<Vec<String>> {
+        let inner = self.inner.lock();
+        let keys: Vec<_> = if path.is_empty() {
+            inner.keys().cloned().collect()
+        } else {
+            let right_range = format!("{}0", &path[..path.len() - 1]);
+            inner
+                .range(path.to_string()..right_range)
+                .map(|(k, _)| k.to_string())
+                .collect()
+        };
+
+        Ok(keys)
+    }
 }
 
 #[cfg(test)]
@@ -94,10 +131,10 @@ mod tests {
 
     #[test]
     fn test_accessor_metadata_name() {
-        let b1 = Builder::default().build().unwrap();
+        let b1 = MemoryBuilder::default().build().unwrap();
         assert_eq!(b1.metadata().name(), b1.metadata().name());
 
-        let b2 = Builder::default().build().unwrap();
+        let b2 = MemoryBuilder::default().build().unwrap();
         assert_ne!(b1.metadata().name(), b2.metadata().name())
     }
 }

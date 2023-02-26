@@ -1,4 +1,4 @@
-// Copyright 2022 Datafuse Labs.
+// Copyright 2022 Datafuse Labs
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -29,7 +29,7 @@ use crate::Result;
 ///
 /// BytesRange implements `ToString` which can be used as `Range` HTTP header directly.
 ///
-/// <unit> should always be `bytes`.
+/// `<unit>` should always be `bytes`.
 ///
 /// ```text
 /// Range: bytes=<range-start>-
@@ -39,7 +39,7 @@ use crate::Result;
 ///
 /// # Notes
 ///
-/// BytesRange support constuct via rust native range syntex like `..`, `1024..`, `..2048`.
+/// BytesRange support construct via rust native range syntex like `..`, `1024..`, `..2048`.
 /// But it's has different symantic on `RangeTo`: `..<end>`.
 /// In rust, `..<end>` means all items that `< end`, but in BytesRange, `..<end>` means the
 /// tailing part of content, a.k.a, the last `<end>` bytes of content.
@@ -63,8 +63,8 @@ impl BytesRange {
     ///
     /// The behavior for `None` and `Some(0)` is different.
     ///
-    /// - offset=None => `bytes=-<size>`, read <size> bytes from end.
-    /// - offset=Some(0) => `bytes=0-<size>`, read <size> bytes from start.
+    /// - offset=None => `bytes=-<size>`, read `<size>` bytes from end.
+    /// - offset=Some(0) => `bytes=0-<size>`, read `<size>` bytes from start.
     pub fn new(offset: Option<u64>, size: Option<u64>) -> Self {
         BytesRange(offset, size)
     }
@@ -135,8 +135,8 @@ impl BytesRange {
 impl Display for BytesRange {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match (self.0, self.1) {
-            (Some(offset), None) => write!(f, "{}-", offset),
-            (None, Some(size)) => write!(f, "-{}", size),
+            (Some(offset), None) => write!(f, "{offset}-"),
+            (None, Some(size)) => write!(f, "-{size}"),
             (Some(offset), Some(size)) => write!(f, "{}-{}", offset, offset + size - 1),
             (None, None) => write!(f, "0-"),
         }

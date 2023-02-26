@@ -1,4 +1,4 @@
-// Copyright 2022 Datafuse Labs.
+// Copyright 2022 Datafuse Labs
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -28,6 +28,11 @@ pub use accessor::Accessor;
 pub use accessor::AccessorCapability;
 pub use accessor::AccessorHint;
 pub use accessor::AccessorMetadata;
+pub use accessor::FusedAccessor;
+
+mod layer;
+pub use layer::Layer;
+pub use layer::LayeredAccessor;
 
 mod io;
 pub use io::*;
@@ -42,20 +47,6 @@ pub use path::normalize_path;
 pub use path::normalize_root;
 pub use path::validate_path;
 
-mod wrappers;
-pub use wrappers::apply_wrapper;
-
-mod object_entry;
-pub use object_entry::ObjectEntry;
-
-mod object_page;
-pub use object_page::BlockingObjectPage;
-pub use object_page::BlockingObjectPager;
-pub use object_page::EmptyBlockingObjectPager;
-pub use object_page::EmptyObjectPager;
-pub use object_page::ObjectPage;
-pub use object_page::ObjectPager;
-
 mod operation;
 pub use operation::Operation;
 
@@ -67,6 +58,9 @@ pub use rps::*;
 
 mod http_util;
 pub use http_util::*;
+
+mod serde_util;
+pub use serde_util::*;
 
 // Expose as a pub mod to avoid confusing.
 pub mod adapters;

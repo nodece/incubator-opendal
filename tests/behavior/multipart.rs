@@ -1,4 +1,4 @@
-// Copyright 2022 Datafuse Labs.
+// Copyright 2022 Datafuse Labs
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -34,7 +34,7 @@ macro_rules! behavior_multipart_test {
                         #[$meta]
                     )*
                     async fn [< $test >]() -> anyhow::Result<()> {
-                        let op = $crate::utils::init_service(opendal::Scheme::$service, true);
+                        let op = $crate::utils::init_service::<opendal::services::$service>(true);
                         match op {
                             Some(op) if op.metadata().can_read() && op.metadata().can_write() && op.metadata().can_multipart() => $crate::multipart::$test(op).await,
                             Some(_) => {
@@ -85,7 +85,7 @@ pub async fn test_multipart_complete(op: Operator) -> Result<()> {
     // Complete
     let o = mp.complete(vec![p1, p2]).await?;
 
-    let meta = o.metadata().await?;
+    let meta = o.stat().await?;
 
     assert_eq!(10 * 1024 * 1024, meta.content_length(), "complete size");
     assert_eq!(

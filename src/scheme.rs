@@ -1,4 +1,4 @@
-// Copyright 2022 Datafuse Labs.
+// Copyright 2022 Datafuse Labs
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -28,49 +28,59 @@ use crate::Error;
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 #[non_exhaustive]
 pub enum Scheme {
-    /// [azblob][crate::services::azblob]: Azure Storage Blob services.
+    /// [azblob][crate::services::Azblob]: Azure Storage Blob services.
     Azblob,
-    /// [azdfs][crate::services::azdfs]: Azure Data Lake Storage Gen2.
+    /// [azdfs][crate::services::Azdfs]: Azure Data Lake Storage Gen2.
     Azdfs,
-    /// [fs][crate::services::fs]: POSIX alike file system.
+    /// [dashmap][crate::services::Dashmap]: dashmap backend support.
+    #[cfg(feature = "services-dashmap")]
+    Dashmap,
+    /// [fs][crate::services::Fs]: POSIX alike file system.
     Fs,
-    /// [gcs][crate::services::gcs]: Google Cloud Storage backend.
+    /// [gcs][crate::services::Gcs]: Google Cloud Storage backend.
     Gcs,
-    /// [ghac][crate::services::ghac]: Github Action Cache services.
+    /// [ghac][crate::services::Ghac]: Github Action Cache services.
     Ghac,
-    /// [hdfs][crate::services::hdfs]: Hadoop Distributed File System.
+    /// [hdfs][crate::services::Hdfs]: Hadoop Distributed File System.
     #[cfg(feature = "services-hdfs")]
     Hdfs,
-    /// [http][crate::services::http]: HTTP backend.
+    /// [http][crate::services::Http]: HTTP backend.
     Http,
-    /// [ftp][crate::services::ftp]: FTP backend.
+    /// [ftp][crate::services::Ftp]: FTP backend.
     #[cfg(feature = "services-ftp")]
     Ftp,
-    /// [ipmfs][crate::services::ipfs]: IPFS HTTP Gateway
+    /// [ipmfs][crate::services::Ipfs]: IPFS HTTP Gateway
     #[cfg(feature = "services-ipfs")]
     Ipfs,
-    /// [ipmfs][crate::services::ipmfs]: IPFS mutable file system
+    /// [ipmfs][crate::services::Ipmfs]: IPFS mutable file system
     Ipmfs,
-    /// [memcached][crate::services::memcached]: Memcached service support.
+    /// [memcached][crate::services::Memcached]: Memcached service support.
     #[cfg(feature = "services-memcached")]
     Memcached,
-    /// [memory][crate::services::memory]: In memory backend support.
+    /// [memory][crate::services::Memory]: In memory backend support.
     Memory,
-    /// [moka][crate::services::moka]: moka backend support.
+    /// [moka][crate::services::Moka]: moka backend support.
     #[cfg(feature = "services-moka")]
     Moka,
-    /// [obs][crate::services::obs]: Huawei Cloud OBS services.
+    /// [obs][crate::services::Obs]: Huawei Cloud OBS services.
     Obs,
-    /// [redis][crate::services::redis]: Redis services
+    /// [oss][crate::services::Oss]: Aliyun Object Storage Services
+    Oss,
+    /// [redis][crate::services::Redis]: Redis services
     #[cfg(feature = "services-redis")]
     Redis,
-    /// [rocksdb][crate::services::rocksdb]: RocksDB services
+    /// [rocksdb][crate::services::Rocksdb]: RocksDB services
     #[cfg(feature = "services-rocksdb")]
     Rocksdb,
-    /// [s3][crate::services::s3]: AWS S3 alike services.
+    /// [s3][crate::services::S3]: AWS S3 alike services.
     S3,
-    /// [oss][crate::services::oss]: Aliyun Object Storage Services
-    Oss,
+    /// [sled][crate::services::Sled]: Sled services
+    #[cfg(feature = "services-sled")]
+    Sled,
+    /// [webdav][crate::services::Webdav]: WebDAV support.
+    Webdav,
+    /// [webhdfs][crate::services::Webhdfs]: WebHDFS RESTful API Services
+    Webhdfs,
     /// Custom that allow users to implement services outside of OpenDAL.
     ///
     /// # NOTE
@@ -95,34 +105,7 @@ impl Default for Scheme {
 
 impl Display for Scheme {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Scheme::Azblob => write!(f, "azblob"),
-            Scheme::Azdfs => write!(f, "azdfs"),
-            Scheme::Fs => write!(f, "fs"),
-            Scheme::Gcs => write!(f, "gcs"),
-            Scheme::Ghac => write!(f, "ghac"),
-            #[cfg(feature = "services-hdfs")]
-            Scheme::Hdfs => write!(f, "hdfs"),
-            Scheme::Http => write!(f, "http"),
-            #[cfg(feature = "services-ftp")]
-            Scheme::Ftp => write!(f, "ftp"),
-            #[cfg(feature = "services-ipfs")]
-            Scheme::Ipfs => write!(f, "ipfs"),
-            Scheme::Ipmfs => write!(f, "ipmfs"),
-            #[cfg(feature = "services-memcached")]
-            Scheme::Memcached => write!(f, "memcached"),
-            Scheme::Memory => write!(f, "memory"),
-            #[cfg(feature = "services-moka")]
-            Scheme::Moka => write!(f, "moka"),
-            Scheme::Obs => write!(f, "obs"),
-            #[cfg(feature = "services-redis")]
-            Scheme::Redis => write!(f, "redis"),
-            #[cfg(feature = "services-rocksdb")]
-            Scheme::Rocksdb => write!(f, "rocksdb"),
-            Scheme::S3 => write!(f, "s3"),
-            Scheme::Oss => write!(f, "oss"),
-            Scheme::Custom(v) => write!(f, "{v}"),
-        }
+        write!(f, "{}", self.into_static())
     }
 }
 
@@ -134,6 +117,8 @@ impl FromStr for Scheme {
         match s.as_str() {
             "azblob" => Ok(Scheme::Azblob),
             "azdfs" => Ok(Scheme::Azdfs),
+            #[cfg(feature = "services-dashmap")]
+            "dashmap" => Ok(Scheme::Dashmap),
             "fs" => Ok(Scheme::Fs),
             "gcs" => Ok(Scheme::Gcs),
             "ghac" => Ok(Scheme::Ghac),
@@ -156,7 +141,11 @@ impl FromStr for Scheme {
             #[cfg(feature = "services-rocksdb")]
             "rocksdb" => Ok(Scheme::Rocksdb),
             "s3" => Ok(Scheme::S3),
+            #[cfg(feature = "services-sled")]
+            "sled" => Ok(Scheme::Sled),
             "oss" => Ok(Scheme::Oss),
+            "webdav" => Ok(Scheme::Webdav),
+            "webhdfs" => Ok(Scheme::Webhdfs),
             _ => Ok(Scheme::Custom(Box::leak(s.into_boxed_str()))),
         }
     }
@@ -167,6 +156,8 @@ impl From<Scheme> for &'static str {
         match v {
             Scheme::Azblob => "azblob",
             Scheme::Azdfs => "azdfs",
+            #[cfg(feature = "services-dashmap")]
+            Scheme::Dashmap => "dashmap",
             Scheme::Fs => "fs",
             Scheme::Gcs => "gcs",
             Scheme::Ghac => "ghac",
@@ -187,9 +178,13 @@ impl From<Scheme> for &'static str {
             #[cfg(feature = "services-redis")]
             Scheme::Redis => "redis",
             #[cfg(feature = "services-rocksdb")]
-            Scheme::Rocksdb => "service-rocksdb",
+            Scheme::Rocksdb => "rocksdb",
             Scheme::S3 => "s3",
+            #[cfg(feature = "services-sled")]
+            Scheme::Sled => "sled",
             Scheme::Oss => "oss",
+            Scheme::Webdav => "webdav",
+            Scheme::Webhdfs => "webhdfs",
             Scheme::Custom(v) => v,
         }
     }

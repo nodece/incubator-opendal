@@ -1,4 +1,4 @@
-// Copyright 2022 Datafuse Labs.
+// Copyright 2022 Datafuse Labs
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use std::collections::HashMap;
 use std::fmt::Debug;
 use std::fmt::Formatter;
 use std::fmt::Write;
@@ -19,6 +20,7 @@ use std::mem;
 use std::sync::Arc;
 
 use async_trait::async_trait;
+use http::header::CONTENT_DISPOSITION;
 use http::header::CONTENT_LENGTH;
 use http::header::CONTENT_TYPE;
 use http::Request;
@@ -30,12 +32,86 @@ use reqsign::AzureStorageSigner;
 use super::dir_stream::DirStream;
 use super::error::parse_error;
 use crate::object::ObjectMetadata;
+use crate::ops::*;
 use crate::raw::*;
 use crate::*;
 
-/// Builder for azblob services
+/// Azure Data Lake Storage Gen2 Support.
+///
+/// As known as `abfs`, `azdfs` or `azdls`.
+///
+/// This service will visist the [ABFS](https://learn.microsoft.com/en-us/azure/storage/blobs/data-lake-storage-abfs-driver) URI supported by [Azure Data Lake Storage Gen2](https://learn.microsoft.com/en-us/azure/storage/blobs/data-lake-storage-introduction).
+///
+/// # Capabilities
+///
+/// This service can be used to:
+///
+/// - [x] read
+/// - [x] write
+/// - [x] list
+/// - [ ] ~~scan~~
+/// - [ ] presign
+/// - [ ] multipart
+/// - [ ] blocking
+///
+/// # Configuration
+///
+/// - `root`: Set the work dir for backend.
+/// - `filesystem`: Set the filesystem name for backend.
+/// - `endpoint`: Set the endpoint for backend.
+/// - `account_name`: Set the account_name for backend.
+/// - `account_key`: Set the account_key for backend.
+///
+/// Refer to public API docs for more information.
+///
+/// # Example
+///
+/// ## Init OpenDAL Operator
+///
+/// ### Via Builder
+///
+/// ```no_run
+/// use std::sync::Arc;
+///
+/// use anyhow::Result;
+/// use opendal::services::Azdfs;
+/// use opendal::Object;
+/// use opendal::Operator;
+///
+/// #[tokio::main]
+/// async fn main() -> Result<()> {
+///     // Create azblob backend builder.
+///     let mut builder = Azdfs::default();
+///     // Set the root for azblob, all operations will happen under this root.
+///     //
+///     // NOTE: the root must be absolute path.
+///     builder.root("/path/to/dir");
+///     // Set the filesystem name, this is required.
+///     builder.filesystem("test");
+///     // Set the endpoint, this is required.
+///     //
+///     // For examples:
+///     // - "https://accountname.dfs.core.windows.net"
+///     builder.endpoint("https://accountname.dfs.core.windows.net");
+///     // Set the account_name and account_key.
+///     //
+///     // OpenDAL will try load credential from the env.
+///     // If credential not set and no valid credential in env, OpenDAL will
+///     // send request without signing like anonymous user.
+///     builder.account_name("account_name");
+///     builder.account_key("account_key");
+///
+///     // `Accessor` provides the low level APIs, we will use `Operator` normally.
+///     let op: Operator = Operator::create(builder)?.finish();
+///
+///     // Create an object handle to start operation on object.
+///     let _: Object = op.object("test_file");
+///
+///     Ok(())
+/// }
+/// ```
 #[derive(Default, Clone)]
-pub struct Builder {
+pub struct AzdfsBuilder {
     root: Option<String>,
     filesystem: String,
     endpoint: Option<String>,
@@ -44,7 +120,7 @@ pub struct Builder {
     http_client: Option<HttpClient>,
 }
 
-impl Debug for Builder {
+impl Debug for AzdfsBuilder {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         let mut ds = f.debug_struct("Builder");
 
@@ -63,25 +139,7 @@ impl Debug for Builder {
     }
 }
 
-impl Builder {
-    pub(crate) fn from_iter(it: impl Iterator<Item = (String, String)>) -> Self {
-        let mut builder = Builder::default();
-
-        for (k, v) in it {
-            let v = v.as_str();
-            match k.as_ref() {
-                "root" => builder.root(v),
-                "filesystem" => builder.filesystem(v),
-                "endpoint" => builder.endpoint(v),
-                "account_name" => builder.account_name(v),
-                "account_key" => builder.account_key(v),
-                _ => continue,
-            };
-        }
-
-        builder
-    }
-
+impl AzdfsBuilder {
     /// Set root of this backend.
     ///
     /// All operations will happen under this root.
@@ -149,9 +207,13 @@ impl Builder {
         self.http_client = Some(client);
         self
     }
+}
 
-    /// Consume builder to build an azblob backend.
-    pub fn build(&mut self) -> Result<impl Accessor> {
+impl Builder for AzdfsBuilder {
+    type Accessor = AzdfsBackend;
+    const SCHEME: Scheme = Scheme::Azdfs;
+
+    fn build(&mut self) -> Result<Self::Accessor> {
         debug!("backend build started: {:?}", &self);
 
         let root = normalize_root(&self.root.take().unwrap_or_default());
@@ -202,20 +264,32 @@ impl Builder {
         })?;
 
         debug!("backend build finished: {:?}", &self);
-        Ok(apply_wrapper(Backend {
+        Ok(AzdfsBackend {
             root,
             endpoint,
             signer: Arc::new(signer),
             filesystem: self.filesystem.clone(),
             client,
             _account_name: mem::take(&mut self.account_name).unwrap_or_default(),
-        }))
+        })
+    }
+
+    fn from_map(map: HashMap<String, String>) -> Self {
+        let mut builder = AzdfsBuilder::default();
+
+        map.get("root").map(|v| builder.root(v));
+        map.get("filesystem").map(|v| builder.filesystem(v));
+        map.get("endpoint").map(|v| builder.endpoint(v));
+        map.get("account_name").map(|v| builder.account_name(v));
+        map.get("account_key").map(|v| builder.account_key(v));
+
+        builder
     }
 }
 
 /// Backend for azblob services.
 #[derive(Debug, Clone)]
-pub struct Backend {
+pub struct AzdfsBackend {
     filesystem: String,
     client: HttpClient,
     root: String, // root will be "/" or /abc/
@@ -225,7 +299,12 @@ pub struct Backend {
 }
 
 #[async_trait]
-impl Accessor for Backend {
+impl Accessor for AzdfsBackend {
+    type Reader = IncomingAsyncBody;
+    type BlockingReader = ();
+    type Pager = DirStream;
+    type BlockingPager = ();
+
     fn metadata(&self) -> AccessorMetadata {
         let mut am = AccessorMetadata::default();
         am.set_scheme(Scheme::Azdfs)
@@ -234,7 +313,7 @@ impl Accessor for Backend {
             .set_capabilities(
                 AccessorCapability::Read | AccessorCapability::Write | AccessorCapability::List,
             )
-            .set_hints(AccessorHint::ReadIsStreamable);
+            .set_hints(AccessorHint::ReadStreamable);
 
         am
     }
@@ -246,7 +325,7 @@ impl Accessor for Backend {
             _ => unimplemented!("not supported object mode"),
         };
 
-        let mut req = self.azdfs_create_request(path, resource, None, AsyncBody::Empty)?;
+        let mut req = self.azdfs_create_request(path, resource, None, None, AsyncBody::Empty)?;
 
         self.signer.sign(&mut req).map_err(new_request_sign_error)?;
 
@@ -263,7 +342,7 @@ impl Accessor for Backend {
         }
     }
 
-    async fn read(&self, path: &str, args: OpRead) -> Result<(RpRead, output::Reader)> {
+    async fn read(&self, path: &str, args: OpRead) -> Result<(RpRead, Self::Reader)> {
         let resp = self.azdfs_read(path, args.range()).await?;
 
         let status = resp.status();
@@ -271,15 +350,20 @@ impl Accessor for Backend {
         match status {
             StatusCode::OK | StatusCode::PARTIAL_CONTENT => {
                 let meta = parse_into_object_metadata(path, resp.headers())?;
-                Ok((RpRead::with_metadata(meta), resp.into_body().reader()))
+                Ok((RpRead::with_metadata(meta), resp.into_body()))
             }
             _ => Err(parse_error(resp).await?),
         }
     }
 
     async fn write(&self, path: &str, args: OpWrite, r: input::Reader) -> Result<RpWrite> {
-        let mut req =
-            self.azdfs_create_request(path, "file", args.content_type(), AsyncBody::Empty)?;
+        let mut req = self.azdfs_create_request(
+            path,
+            "file",
+            args.content_type(),
+            args.content_disposition(),
+            AsyncBody::Empty,
+        )?;
 
         self.signer.sign(&mut req).map_err(new_request_sign_error)?;
 
@@ -345,18 +429,19 @@ impl Accessor for Backend {
         }
     }
 
-    async fn list(&self, path: &str, _: OpList) -> Result<(RpList, ObjectPager)> {
-        let op = Box::new(DirStream::new(
+    async fn list(&self, path: &str, args: OpList) -> Result<(RpList, Self::Pager)> {
+        let op = DirStream::new(
             Arc::new(self.clone()),
             self.root.clone(),
             path.to_string(),
-        ));
+            args.limit(),
+        );
 
         Ok((RpList::default(), op))
     }
 }
 
-impl Backend {
+impl AzdfsBackend {
     async fn azdfs_read(
         &self,
         path: &str,
@@ -404,6 +489,7 @@ impl Backend {
         path: &str,
         resource: &str,
         content_type: Option<&str>,
+        content_disposition: Option<&str>,
         body: AsyncBody,
     ) -> Result<Request<AsyncBody>> {
         let p = build_abs_path(&self.root, path)
@@ -424,6 +510,10 @@ impl Backend {
 
         if let Some(ty) = content_type {
             req = req.header(CONTENT_TYPE, ty)
+        }
+
+        if let Some(pos) = content_disposition {
+            req = req.header(CONTENT_DISPOSITION, pos)
         }
 
         // Set body
@@ -512,6 +602,7 @@ impl Backend {
         &self,
         path: &str,
         continuation: &str,
+        limit: Option<usize>,
     ) -> Result<Response<IncomingAsyncBody>> {
         let p = build_abs_path(&self.root, path)
             .trim_end_matches('/')
@@ -524,6 +615,9 @@ impl Backend {
         if !p.is_empty() {
             write!(url, "&directory={}", percent_encode_path(&p))
                 .expect("write into string must succeed");
+        }
+        if let Some(limit) = limit {
+            write!(url, "&maxresults={limit}").expect("write into string must succeed");
         }
         if !continuation.is_empty() {
             write!(url, "&continuation={continuation}").expect("write into string must succeed");

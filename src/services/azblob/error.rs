@@ -1,4 +1,4 @@
-// Copyright 2022 Datafuse Labs.
+// Copyright 2022 Datafuse Labs
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -57,7 +57,7 @@ impl Debug for AzblobError {
     }
 }
 
-/// Parse error respons into Error.
+/// Parse error response into Error.
 pub async fn parse_error(resp: Response<IncomingAsyncBody>) -> Result<Error> {
     let (parts, body) = resp.into_parts();
     let bs = body.bytes().await?;
@@ -73,7 +73,7 @@ pub async fn parse_error(resp: Response<IncomingAsyncBody>) -> Result<Error> {
     };
 
     let mut message = match de::from_reader::<_, AzblobError>(bs.clone().reader()) {
-        Ok(azblob_err) => format!("{:?}", azblob_err),
+        Ok(azblob_err) => format!("{azblob_err:?}"),
         Err(_) => String::from_utf8_lossy(&bs).into_owned(),
     };
     // If there is no body here, fill with error code.
@@ -91,7 +91,7 @@ pub async fn parse_error(resp: Response<IncomingAsyncBody>) -> Result<Error> {
         }
     }
 
-    let mut err = Error::new(kind, &message).with_context("response", format!("{:?}", parts));
+    let mut err = Error::new(kind, &message).with_context("response", format!("{parts:?}"));
 
     if retryable {
         err = err.set_temporary();
@@ -117,7 +117,7 @@ mod tests {
         );
 
         let out: AzblobError = de::from_reader(bs.reader()).expect("must success");
-        println!("{:?}", out);
+        println!("{out:?}");
 
         assert_eq!(out.code, "string-value");
         assert_eq!(out.message, "string-value");
@@ -139,7 +139,7 @@ mod tests {
         );
 
         let out: AzblobError = de::from_reader(bs.reader()).expect("must success");
-        println!("{:?}", out);
+        println!("{out:?}");
 
         assert_eq!(out.code, "InvalidQueryParameterValue");
         assert_eq!(

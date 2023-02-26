@@ -1,4 +1,4 @@
-// Copyright 2022 Datafuse Labs.
+// Copyright 2022 Datafuse Labs
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@ use async_trait::async_trait;
 use futures::AsyncReadExt;
 
 use super::Adapter;
+use crate::ops::*;
 use crate::raw::*;
 use crate::*;
 
@@ -46,36 +47,37 @@ where
 }
 
 #[async_trait]
-impl<S> Accessor for Backend<S>
-where
-    S: Adapter,
-{
+impl<S: Adapter> Accessor for Backend<S> {
+    type Reader = output::Cursor;
+    type BlockingReader = output::Cursor;
+    type Pager = KvPager;
+    type BlockingPager = KvPager;
+
     fn metadata(&self) -> AccessorMetadata {
         let mut am: AccessorMetadata = self.kv.metadata().into();
         am.set_root(&self.root)
-            .set_hints(AccessorHint::ReadIsStreamable | AccessorHint::ReadIsSeekable);
+            .set_hints(AccessorHint::ReadStreamable | AccessorHint::ReadSeekable);
 
         am
     }
 
-    async fn create(&self, path: &str, args: OpCreate) -> Result<RpCreate> {
-        if args.mode() == ObjectMode::FILE {
-            self.kv.set(path, &[]).await?;
-        }
+    async fn create(&self, path: &str, _: OpCreate) -> Result<RpCreate> {
+        let p = build_abs_path(&self.root, path);
+        self.kv.set(&p, &[]).await?;
+        Ok(RpCreate::default())
+    }
+
+    fn blocking_create(&self, path: &str, _: OpCreate) -> Result<RpCreate> {
+        let p = build_abs_path(&self.root, path);
+        self.kv.blocking_set(&p, &[])?;
 
         Ok(RpCreate::default())
     }
 
-    fn blocking_create(&self, path: &str, args: OpCreate) -> Result<RpCreate> {
-        if args.mode() == ObjectMode::FILE {
-            self.kv.blocking_set(path, &[])?;
-        }
+    async fn read(&self, path: &str, args: OpRead) -> Result<(RpRead, Self::Reader)> {
+        let p = build_abs_path(&self.root, path);
 
-        Ok(RpCreate::default())
-    }
-
-    async fn read(&self, path: &str, args: OpRead) -> Result<(RpRead, output::Reader)> {
-        let bs = match self.kv.get(path).await? {
+        let bs = match self.kv.get(&p).await? {
             Some(bs) => bs,
             None => {
                 return Err(Error::new(
@@ -88,14 +90,13 @@ where
         let bs = self.apply_range(bs, args.range());
 
         let length = bs.len();
-        Ok((
-            RpRead::new(length as u64),
-            Box::new(output::Cursor::from(bs)),
-        ))
+        Ok((RpRead::new(length as u64), output::Cursor::from(bs)))
     }
 
-    fn blocking_read(&self, path: &str, args: OpRead) -> Result<(RpRead, output::BlockingReader)> {
-        let bs = match self.kv.blocking_get(path)? {
+    fn blocking_read(&self, path: &str, args: OpRead) -> Result<(RpRead, Self::BlockingReader)> {
+        let p = build_abs_path(&self.root, path);
+
+        let bs = match self.kv.blocking_get(&p)? {
             Some(bs) => bs,
             None => {
                 return Err(Error::new(
@@ -106,19 +107,18 @@ where
         };
 
         let bs = self.apply_range(bs, args.range());
-        Ok((
-            RpRead::new(bs.len() as u64),
-            Box::new(output::Cursor::from(bs)),
-        ))
+        Ok((RpRead::new(bs.len() as u64), output::Cursor::from(bs)))
     }
 
     async fn write(&self, path: &str, args: OpWrite, mut r: input::Reader) -> Result<RpWrite> {
+        let p = build_abs_path(&self.root, path);
+
         let mut bs = Vec::with_capacity(args.size() as usize);
         r.read_to_end(&mut bs)
             .await
             .map_err(|err| Error::new(ErrorKind::Unexpected, "read from source").set_source(err))?;
 
-        self.kv.set(path, &bs).await?;
+        self.kv.set(&p, &bs).await?;
 
         Ok(RpWrite::new(args.size()))
     }
@@ -129,20 +129,24 @@ where
         args: OpWrite,
         mut r: input::BlockingReader,
     ) -> Result<RpWrite> {
+        let p = build_abs_path(&self.root, path);
+
         let mut bs = Vec::with_capacity(args.size() as usize);
         r.read_to_end(&mut bs)
             .map_err(|err| Error::new(ErrorKind::Unexpected, "read from source").set_source(err))?;
 
-        self.kv.blocking_set(path, &bs)?;
+        self.kv.blocking_set(&p, &bs)?;
 
         Ok(RpWrite::new(args.size()))
     }
 
     async fn stat(&self, path: &str, _: OpStat) -> Result<RpStat> {
-        if path.ends_with('/') {
+        let p = build_abs_path(&self.root, path);
+
+        if p.is_empty() || p.ends_with('/') {
             Ok(RpStat::new(ObjectMetadata::new(ObjectMode::DIR)))
         } else {
-            let bs = self.kv.get(path).await?;
+            let bs = self.kv.get(&p).await?;
             match bs {
                 Some(bs) => Ok(RpStat::new(
                     ObjectMetadata::new(ObjectMode::FILE).with_content_length(bs.len() as u64),
@@ -156,10 +160,12 @@ where
     }
 
     fn blocking_stat(&self, path: &str, _: OpStat) -> Result<RpStat> {
-        if path.ends_with('/') {
+        let p = build_abs_path(&self.root, path);
+
+        if p.is_empty() || p.ends_with('/') {
             Ok(RpStat::new(ObjectMetadata::new(ObjectMode::DIR)))
         } else {
-            let bs = self.kv.blocking_get(path)?;
+            let bs = self.kv.blocking_get(&p)?;
             match bs {
                 Some(bs) => Ok(RpStat::new(
                     ObjectMetadata::new(ObjectMode::FILE).with_content_length(bs.len() as u64),
@@ -173,13 +179,33 @@ where
     }
 
     async fn delete(&self, path: &str, _: OpDelete) -> Result<RpDelete> {
-        self.kv.delete(path).await?;
+        let p = build_abs_path(&self.root, path);
+
+        self.kv.delete(&p).await?;
         Ok(RpDelete::default())
     }
 
     fn blocking_delete(&self, path: &str, _: OpDelete) -> Result<RpDelete> {
-        self.kv.blocking_delete(path)?;
+        let p = build_abs_path(&self.root, path);
+
+        self.kv.blocking_delete(&p)?;
         Ok(RpDelete::default())
+    }
+
+    async fn scan(&self, path: &str, _: OpScan) -> Result<(RpScan, Self::Pager)> {
+        let p = build_abs_path(&self.root, path);
+        let res = self.kv.scan(&p).await?;
+        let pager = KvPager::new(&self.root, res);
+
+        Ok((RpScan::default(), pager))
+    }
+
+    fn blocking_scan(&self, path: &str, _: OpScan) -> Result<(RpScan, Self::BlockingPager)> {
+        let p = build_abs_path(&self.root, path);
+        let res = self.kv.blocking_scan(&p)?;
+        let pager = KvPager::new(&self.root, res);
+
+        Ok((RpScan::default(), pager))
     }
 }
 
@@ -200,5 +226,61 @@ where
             (None, Some(size)) => bs.split_off(bs.len() - size as usize),
             (None, None) => bs,
         }
+    }
+}
+
+pub struct KvPager {
+    root: String,
+    inner: Option<Vec<String>>,
+}
+
+impl KvPager {
+    fn new(root: &str, inner: Vec<String>) -> Self {
+        let root = if root == "/" {
+            "".to_string()
+        } else {
+            root.to_string()
+        };
+
+        Self {
+            root,
+            inner: Some(inner),
+        }
+    }
+
+    fn inner_next_page(&mut self) -> Option<Vec<output::Entry>> {
+        let res = self
+            .inner
+            .take()?
+            .into_iter()
+            .map(|v| {
+                let mode = if v.ends_with('/') {
+                    ObjectMode::DIR
+                } else {
+                    ObjectMode::FILE
+                };
+
+                output::Entry::new(
+                    v.strip_prefix(&self.root)
+                        .expect("key must start with root"),
+                    ObjectMetadata::new(mode),
+                )
+            })
+            .collect();
+
+        Some(res)
+    }
+}
+
+#[async_trait]
+impl output::Page for KvPager {
+    async fn next_page(&mut self) -> Result<Option<Vec<output::Entry>>> {
+        Ok(self.inner_next_page())
+    }
+}
+
+impl output::BlockingPage for KvPager {
+    fn next_page(&mut self) -> Result<Option<Vec<output::Entry>>> {
+        Ok(self.inner_next_page())
     }
 }

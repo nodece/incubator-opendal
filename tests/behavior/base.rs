@@ -1,4 +1,4 @@
-// Copyright 2022 Datafuse Labs.
+// Copyright 2022 Datafuse Labs
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,7 +26,7 @@ macro_rules! behavior_base_test {
                         #[$meta]
                     )*
                     fn [< $test >]() -> anyhow::Result<()> {
-                        let op = $crate::utils::init_service(opendal::Scheme::$service, true);
+                        let op = $crate::utils::init_service::<opendal::services::$service>(true);
                         match op {
                             Some(op)  => $crate::base::$test(op),
                             None => {

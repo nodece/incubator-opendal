@@ -1,4 +1,4 @@
-// Copyright 2022 Datafuse Labs.
+// Copyright 2022 Datafuse Labs
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,13 +20,10 @@
 //! # use anyhow::Result;
 //! # use opendal::ObjectMode;
 //! # use opendal::Operator;
-//! # use opendal::Scheme;
 //! use opendal::ErrorKind;
-//! # use opendal::services::fs;
 //! # #[tokio::main]
-//! # async fn main() -> Result<()> {
-//! let op = Operator::from_env(Scheme::Fs)?;
-//! if let Err(e) = op.object("test_file").metadata().await {
+//! # async fn test(op: Operator) -> Result<()> {
+//! if let Err(e) = op.object("test_file").stat().await {
 //!     if e.kind() == ErrorKind::ObjectNotFound {
 //!         println!("object not exist")
 //!     }
@@ -49,7 +46,7 @@ pub type Result<T> = std::result::Result<T, Error>;
 #[non_exhaustive]
 pub enum ErrorKind {
     /// OpenDAL don't know what happened here, and no actions other than just
-    /// returning it back. For example, s3 returns an internal servie error.
+    /// returning it back. For example, s3 returns an internal service error.
     Unexpected,
     /// Underlying service doesn't support this operation.
     Unsupported,
@@ -102,7 +99,7 @@ impl From<ErrorKind> for &'static str {
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum ErrorStatus {
-    /// Permenent means without external changes, the error never changes.
+    /// Permanent means without external changes, the error never changes.
     ///
     /// For example, underlying services returns a not found error.
     ///
@@ -110,7 +107,7 @@ enum ErrorStatus {
     Permanent,
     /// Temporary means this error is returned for temporary.
     ///
-    /// For example, underlying services is rate limited or unailable for temporary.
+    /// For example, underlying services is rate limited or unavailable for temporary.
     ///
     /// Users CAN retry the operation to resolve it.
     Temporary,
@@ -118,7 +115,7 @@ enum ErrorStatus {
     ///
     /// For example, underlying services kept returning network errors.
     ///
-    /// Users MAY retry this opration but it's highly possible to error again.
+    /// Users MAY retry this operation but it's highly possible to error again.
     Persistent,
 }
 
@@ -166,7 +163,7 @@ impl Display for Error {
         }
 
         if let Some(source) = &self.source {
-            write!(f, ", source: {}", source)?;
+            write!(f, ", source: {source}")?;
         }
 
         Ok(())
@@ -202,7 +199,7 @@ impl Debug for Error {
         }
         if let Some(source) = &self.source {
             writeln!(f)?;
-            writeln!(f, "Source: {:?}", source)?;
+            writeln!(f, "Source: {source:?}")?;
         }
 
         Ok(())
@@ -270,7 +267,7 @@ impl Error {
         f(self)
     }
 
-    /// Set permenent status for error.
+    /// Set permanent status for error.
     pub fn set_permanent(mut self) -> Self {
         self.status = ErrorStatus::Permanent;
         self
@@ -284,7 +281,7 @@ impl Error {
         self
     }
 
-    /// Set perisistent status for error.
+    /// Set persistent status for error.
     ///
     /// By setting persistent, we indicate the retry should be stopped.
     pub fn set_persistent(mut self) -> Self {

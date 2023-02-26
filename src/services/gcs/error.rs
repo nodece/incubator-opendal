@@ -1,4 +1,4 @@
-// Copyright 2022 Datafuse Labs.
+// Copyright 2022 Datafuse Labs
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -46,7 +46,7 @@ struct GcsErrorDetail {
     reason: String,
 }
 
-/// Parse error respons into Error.
+/// Parse error response into Error.
 pub async fn parse_error(resp: Response<IncomingAsyncBody>) -> Result<Error> {
     let (parts, body) = resp.into_parts();
     let bs = body.bytes().await?;
@@ -62,21 +62,17 @@ pub async fn parse_error(resp: Response<IncomingAsyncBody>) -> Result<Error> {
     };
 
     let message = match de::from_slice::<GcsErrorResponse>(&bs) {
-        Ok(gcs_err) => format!("{:?}", gcs_err),
+        Ok(gcs_err) => format!("{gcs_err:?}"),
         Err(_) => String::from_utf8_lossy(&bs).into_owned(),
     };
 
-    let mut err = Error::new(kind, &message).with_context("response", format!("{:?}", parts));
+    let mut err = Error::new(kind, &message).with_context("response", format!("{parts:?}"));
 
     if retryable {
         err = err.set_temporary();
     }
 
     Ok(err)
-}
-
-pub fn parse_json_deserialize_error(e: serde_json::Error) -> Error {
-    Error::new(ErrorKind::Unexpected, "deserialize json").set_source(e)
 }
 
 #[cfg(test)]
@@ -106,7 +102,7 @@ mod tests {
         );
 
         let out: GcsErrorResponse = de::from_slice(&bs).expect("must success");
-        println!("{:?}", out);
+        println!("{out:?}");
 
         assert_eq!(out.error.code, 401);
         assert_eq!(out.error.message, "Login Required");

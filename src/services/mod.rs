@@ -1,4 +1,4 @@
-// Copyright 2022 Datafuse Labs.
+// Copyright 2022 Datafuse Labs
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,35 +12,90 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//! Providing specific services support.
+//! Services will provide builders to build underlying backends.
 //!
-//! In order to implement a service, we need the following things:
-//!
-//! - Builder: responsible for building the service backend.
-//! - Backend: the service backend which implements the [`Accessor`][crate::raw::Accessor] trait.
+//! More ongoing services support is tracked at [opendal#5](https://github.com/datafuselabs/opendal/issues/5). Please feel free to submit issues if there are services not covered.
 
-pub mod azblob;
-pub mod azdfs;
-pub mod fs;
+mod azblob;
+pub use azblob::Azblob;
+
+mod azdfs;
+pub use azdfs::Azdfs;
+
+#[cfg(feature = "services-dashmap")]
+mod dashmap;
+#[cfg(feature = "services-dashmap")]
+pub use self::dashmap::Dashmap;
+
+mod fs;
+pub use fs::Fs;
+
 #[cfg(feature = "services-ftp")]
-pub mod ftp;
-pub mod gcs;
-pub mod ghac;
+mod ftp;
+#[cfg(feature = "services-ftp")]
+pub use ftp::Ftp;
+
+mod gcs;
+pub use gcs::Gcs;
+
+mod ghac;
+pub use ghac::Ghac;
+
 #[cfg(feature = "services-hdfs")]
-pub mod hdfs;
-pub mod http;
+mod hdfs;
+#[cfg(feature = "services-hdfs")]
+pub use hdfs::Hdfs;
+
+mod http;
+pub use self::http::Http;
+
 #[cfg(feature = "services-ipfs")]
-pub mod ipfs;
-pub mod ipmfs;
+mod ipfs;
+#[cfg(feature = "services-ipfs")]
+pub use self::ipfs::Ipfs;
+
+mod ipmfs;
+pub use ipmfs::Ipmfs;
+
 #[cfg(feature = "services-memcached")]
-pub mod memcached;
-pub mod memory;
+mod memcached;
+#[cfg(feature = "services-memcached")]
+pub use memcached::Memcached;
+
+mod memory;
+pub use memory::Memory;
+
 #[cfg(feature = "services-moka")]
-pub mod moka;
-pub mod obs;
-pub mod oss;
+mod moka;
+#[cfg(feature = "services-moka")]
+pub use self::moka::Moka;
+
+mod obs;
+pub use obs::Obs;
+
+mod oss;
+pub use oss::Oss;
+
 #[cfg(feature = "services-redis")]
-pub mod redis;
+mod redis;
+#[cfg(feature = "services-redis")]
+pub use self::redis::Redis;
+
 #[cfg(feature = "services-rocksdb")]
-pub mod rocksdb;
-pub mod s3;
+mod rocksdb;
+#[cfg(feature = "services-rocksdb")]
+pub use self::rocksdb::Rocksdb;
+
+mod s3;
+pub use s3::S3;
+
+#[cfg(feature = "services-sled")]
+mod sled;
+#[cfg(feature = "services-sled")]
+pub use self::sled::Sled;
+
+mod webdav;
+pub use webdav::Webdav;
+
+mod webhdfs;
+pub use webhdfs::Webhdfs;

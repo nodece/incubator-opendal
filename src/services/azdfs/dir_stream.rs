@@ -1,4 +1,4 @@
-// Copyright 2022 Datafuse Labs.
+// Copyright 2022 Datafuse Labs
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -11,6 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 use std::sync::Arc;
 
 use async_trait::async_trait;
@@ -19,26 +20,33 @@ use serde_json::de;
 use time::format_description::well_known::Rfc2822;
 use time::OffsetDateTime;
 
-use super::backend::Backend;
+use super::backend::AzdfsBackend;
 use super::error::parse_error;
 use crate::raw::*;
 use crate::*;
 
 pub struct DirStream {
-    backend: Arc<Backend>,
+    backend: Arc<AzdfsBackend>,
     root: String,
     path: String,
+    limit: Option<usize>,
 
     continuation: String,
     done: bool,
 }
 
 impl DirStream {
-    pub fn new(backend: Arc<Backend>, root: String, path: String) -> Self {
+    pub fn new(
+        backend: Arc<AzdfsBackend>,
+        root: String,
+        path: String,
+        limit: Option<usize>,
+    ) -> Self {
         Self {
             backend,
             root,
             path,
+            limit,
 
             continuation: "".to_string(),
             done: false,
@@ -47,15 +55,15 @@ impl DirStream {
 }
 
 #[async_trait]
-impl ObjectPage for DirStream {
-    async fn next_page(&mut self) -> Result<Option<Vec<ObjectEntry>>> {
+impl output::Page for DirStream {
+    async fn next_page(&mut self) -> Result<Option<Vec<output::Entry>>> {
         if self.done {
             return Ok(None);
         }
 
         let resp = self
             .backend
-            .azdfs_list(&self.path, &self.continuation)
+            .azdfs_list(&self.path, &self.continuation, self.limit)
             .await?;
 
         // Azdfs will return not found for not-exist path.
@@ -97,7 +105,7 @@ impl ObjectPage for DirStream {
 
             let meta = ObjectMetadata::new(mode)
                 // Keep fit with ETag header.
-                .with_etag(&format!("\"{}\"", &object.etag))
+                .with_etag(format!("\"{}\"", &object.etag))
                 .with_content_length(object.content_length.parse().map_err(|err| {
                     Error::new(ErrorKind::Unexpected, "content length is not valid integer")
                         .set_source(err)
@@ -110,15 +118,14 @@ impl ObjectPage for DirStream {
                         )
                         .set_source(e)
                     })?,
-                )
-                .with_complete();
+                );
 
             let mut path = build_rel_path(&self.root, &object.name);
             if mode == ObjectMode::DIR {
                 path += "/"
             };
 
-            let de = ObjectEntry::new(&path, meta);
+            let de = output::Entry::new(&path, meta);
 
             entries.push(de);
         }
@@ -166,7 +173,7 @@ mod tests {
             r#"{"paths":[{"contentLength":"1977097","etag":"0x8DACF9B0061305F","group":"$superuser","lastModified":"Sat, 26 Nov 2022 10:43:05 GMT","name":"c3b3ef48-7783-4946-81bc-dc07e1728878/d4ea21d7-a533-4011-8b1f-d0e566d63725","owner":"$superuser","permissions":"rw-r-----"}]}"#,
         );
         let out: Output = de::from_slice(&bs).expect("must success");
-        println!("{:?}", out);
+        println!("{out:?}");
 
         assert_eq!(
             out.paths[0],

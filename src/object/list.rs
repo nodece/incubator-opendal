@@ -1,4 +1,4 @@
-// Copyright 2022 Datafuse Labs.
+// Copyright 2022 Datafuse Labs
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,7 +15,6 @@
 use std::collections::VecDeque;
 use std::mem;
 use std::pin::Pin;
-use std::sync::Arc;
 use std::task::Context;
 use std::task::Poll;
 
@@ -32,22 +31,22 @@ use crate::*;
 /// User can use object lister as `Stream<Item = Result<Object>>` or
 /// call `next_page` directly.
 pub struct ObjectLister {
-    acc: Arc<dyn Accessor>,
-    pager: Option<ObjectPager>,
+    acc: FusedAccessor,
+    pager: Option<output::Pager>,
 
-    buf: VecDeque<ObjectEntry>,
+    buf: VecDeque<output::Entry>,
     /// We will move `pager` inside future and return it back while future is ready.
     /// Thus, we should not allow calling other function while we already have
     /// a future.
     #[allow(clippy::type_complexity)]
-    fut: Option<BoxFuture<'static, (ObjectPager, Result<Option<Vec<ObjectEntry>>>)>>,
+    fut: Option<BoxFuture<'static, (output::Pager, Result<Option<Vec<output::Entry>>>)>>,
 }
 
 impl ObjectLister {
     /// Create a new object lister.
-    pub fn new(op: Operator, pager: ObjectPager) -> Self {
+    pub(crate) fn new(acc: FusedAccessor, pager: output::Pager) -> Self {
         Self {
-            acc: op.inner(),
+            acc,
             pager: Some(pager),
             buf: VecDeque::default(),
             fut: None,
@@ -55,7 +54,7 @@ impl ObjectLister {
     }
 
     /// Fetch the operator that used by this object.
-    pub fn operator(&self) -> Operator {
+    pub(crate) fn operator(&self) -> Operator {
         self.acc.clone().into()
     }
 
@@ -135,14 +134,14 @@ impl Stream for ObjectLister {
 }
 
 pub struct BlockingObjectLister {
-    acc: Arc<dyn Accessor>,
-    pager: BlockingObjectPager,
-    buf: VecDeque<ObjectEntry>,
+    acc: FusedAccessor,
+    pager: output::BlockingPager,
+    buf: VecDeque<output::Entry>,
 }
 
 impl BlockingObjectLister {
     /// Create a new object lister.
-    pub fn new(acc: Arc<dyn Accessor>, pager: BlockingObjectPager) -> Self {
+    pub(crate) fn new(acc: FusedAccessor, pager: output::BlockingPager) -> Self {
         Self {
             acc,
             pager,
@@ -151,7 +150,7 @@ impl BlockingObjectLister {
     }
 
     /// Fetch the operator that used by this object.
-    pub fn operator(&self) -> Operator {
+    pub(crate) fn operator(&self) -> Operator {
         self.acc.clone().into()
     }
 

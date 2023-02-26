@@ -1,4 +1,4 @@
-// Copyright 2022 Datafuse Labs.
+// Copyright 2022 Datafuse Labs
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -69,6 +69,7 @@ macro_rules! behavior_tests {
 
 behavior_tests!(Azblob);
 behavior_tests!(Azdfs);
+cfg_if::cfg_if! { if #[cfg(feature = "services-dashmap")] { behavior_tests!(Dashmap); }}
 behavior_tests!(Fs);
 cfg_if::cfg_if! { if #[cfg(feature = "services-ftp")] { behavior_tests!(Ftp); }}
 cfg_if::cfg_if! { if #[cfg(feature = "services-memcached")] { behavior_tests!(Memcached); }}
@@ -83,5 +84,8 @@ cfg_if::cfg_if! { if #[cfg(feature = "services-http")] { behavior_tests!(Http); 
 behavior_tests!(Obs);
 cfg_if::cfg_if! { if #[cfg(feature = "services-redis")] { behavior_tests!(Redis); }}
 cfg_if::cfg_if! { if #[cfg(feature = "services-rocksdb")] { behavior_tests!(Rocksdb); }}
-behavior_tests!(S3);
 behavior_tests!(Oss);
+behavior_tests!(S3);
+cfg_if::cfg_if! { if #[cfg(feature = "services-sled")] { behavior_tests!(Sled); }}
+behavior_tests!(Webdav);
+behavior_tests!(Webhdfs);

@@ -1,4 +1,4 @@
-// Copyright 2022 Datafuse Labs.
+// Copyright 2022 Datafuse Labs
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -59,20 +59,19 @@ pub struct DirStream {
 }
 
 impl DirStream {
-    pub fn new(path: &str, rd: ReadDir) -> Self {
+    pub fn new(path: &str, rd: ReadDir, limit: Option<usize>) -> Self {
         Self {
             path: path.to_string(),
-            // TODO: Make this a config
-            size: 256,
+            size: limit.unwrap_or(1000),
             rd,
         }
     }
 }
 
 #[async_trait]
-impl ObjectPage for DirStream {
-    async fn next_page(&mut self) -> Result<Option<Vec<ObjectEntry>>> {
-        let mut oes: Vec<ObjectEntry> = Vec::with_capacity(self.size);
+impl output::Page for DirStream {
+    async fn next_page(&mut self) -> Result<Option<Vec<output::Entry>>> {
+        let mut oes: Vec<output::Entry> = Vec::with_capacity(self.size);
 
         for _ in 0..self.size {
             let de = match self.rd.next() {
@@ -83,23 +82,16 @@ impl ObjectPage for DirStream {
             let path = self.path.to_string() + de.name();
 
             let d = if de.is_file() {
-                ObjectEntry::new(
+                output::Entry::new(
                     &path,
                     ObjectMetadata::new(ObjectMode::FILE)
                         .with_content_length(de.size() as u64)
-                        .with_last_modified(OffsetDateTime::from(de.modified()))
-                        .with_complete(),
+                        .with_last_modified(OffsetDateTime::from(de.modified())),
                 )
             } else if de.is_directory() {
-                ObjectEntry::new(
-                    &format!("{}/", &path),
-                    ObjectMetadata::new(ObjectMode::DIR).with_complete(),
-                )
+                output::Entry::new(&format!("{}/", &path), ObjectMetadata::new(ObjectMode::DIR))
             } else {
-                ObjectEntry::new(
-                    &path,
-                    ObjectMetadata::new(ObjectMode::Unknown).with_complete(),
-                )
+                output::Entry::new(&path, ObjectMetadata::new(ObjectMode::Unknown))
             };
 
             oes.push(d)

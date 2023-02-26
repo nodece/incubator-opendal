@@ -1,4 +1,4 @@
-// Copyright 2022 Datafuse Labs.
+// Copyright 2022 Datafuse Labs
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,7 +14,6 @@
 
 use std::io;
 use std::pin::Pin;
-use std::sync::Arc;
 use std::task::Context;
 use std::task::Poll;
 
@@ -23,13 +22,10 @@ use futures::ready;
 use futures::AsyncRead;
 use futures::AsyncSeek;
 use futures::Stream;
-use parking_lot::Mutex;
 
-use crate::error::Result;
+use crate::ops::OpRead;
 use crate::raw::*;
-use crate::ObjectMetadata;
-use crate::OpRead;
-use crate::OpStat;
+use crate::*;
 
 /// ObjectReader is the public API for users.
 ///
@@ -42,7 +38,7 @@ use crate::OpStat;
 /// - `Stream<Item = <io::Result<Bytes>>>`
 ///
 /// For reading data, we can use `AsyncRead` and `Stream`. The mainly
-/// different is where the `copy` happend.
+/// different is where the `copy` happens.
 ///
 /// `AsyncRead` requires user to prepare a buffer for `ObjectReader` to fill.
 /// And `Stream` will stream out a `Bytes` for user to decide when to copy
@@ -54,50 +50,6 @@ use crate::OpStat;
 ///
 /// Besides, `Stream` **COULD** reduce an extra copy if underlying reader is
 /// stream based (like services s3, azure which based on HTTP).
-///
-/// # Notes
-///
-/// All implementions of ObjectReader should be `zero cost`. In our cases,
-/// which means others must pay the same cost for the same feature provide
-/// by us.
-///
-/// For examples, call `read` without `seek` should always act the same as
-/// calling `read` on plain reader.
-///
-/// ## Read is Seekable
-///
-/// We use internal `AccessorHint::ReadIsSeekable` to decide the most
-/// suitable implementations.
-///
-/// If there is a hint that `ReadIsSeekable`, we will open it with given args
-/// directy. Otherwise, we will pick a seekable reader implementation based
-/// on input range for it.
-///
-/// - `Some(offset), Some(size)` => `RangeReader`
-/// - `Some(offset), None` and `None, None` => `OffsetReader`
-/// - `None, Some(size)` => get the total size first to convert as `RangeReader`
-///
-/// No matter which reader we use, we will make sure the `read` operation
-/// is zero cost.
-///
-/// ## Read is Streamable
-///
-/// We use internal `AccessorHint::ReadIsStreamable` to decide the most
-/// suitable implementations.
-///
-/// If there is a hint that `ReadIsStreamable`, we will use existing reader
-/// directly. Otherwise, we will use transform this reader as a stream.
-///
-/// ## Consume instead of Drop
-///
-/// Normally, if reader is seekable, we need to drop current reader and start
-/// a new read call.
-///
-/// We can consume the data if the seek position is close enough. For
-/// example, users try to seek to `Current(1)`, we can just read the data
-/// can consume it.
-///
-/// In this way, we can reduce the extra cost of dropping reader.
 pub struct ObjectReader {
     inner: output::Reader,
     seek_state: SeekState,
@@ -107,48 +59,12 @@ impl ObjectReader {
     /// Create a new object reader.
     ///
     /// Create will use internal information to decide the most suitable
-    /// implementaion for users.
+    /// implementation for users.
     ///
-    /// We don't want to expose those detials to users so keep this fuction
+    /// We don't want to expose those details to users so keep this function
     /// in crate only.
-    pub(crate) async fn create(
-        acc: Arc<dyn Accessor>,
-        path: &str,
-        meta: Arc<Mutex<ObjectMetadata>>,
-        op: OpRead,
-    ) -> Result<Self> {
-        let acc_meta = acc.metadata();
-
-        let r = if acc_meta.hints().contains(AccessorHint::ReadIsSeekable) {
-            let (_, r) = acc.read(path, op).await?;
-            r
-        } else {
-            match (op.range().offset(), op.range().size()) {
-                (Some(offset), Some(size)) => {
-                    Box::new(output::into_reader::by_range(acc, path, offset, size))
-                        as output::Reader
-                }
-                (Some(offset), None) => Box::new(output::into_reader::by_offset(acc, path, offset)),
-                (None, Some(size)) => {
-                    let total_size = get_total_size(acc.clone(), path, meta).await?;
-                    let (offset, size) = if size > total_size {
-                        (0, total_size)
-                    } else {
-                        (total_size - size, size)
-                    };
-
-                    Box::new(output::into_reader::by_range(acc, path, offset, size))
-                }
-                (None, None) => Box::new(output::into_reader::by_offset(acc, path, 0)),
-            }
-        };
-
-        let r = if acc_meta.hints().contains(AccessorHint::ReadIsStreamable) {
-            r
-        } else {
-            // Make this capacity configurable.
-            Box::new(output::into_reader::as_streamable(r, 256 * 1024))
-        };
+    pub(crate) async fn create(acc: FusedAccessor, path: &str, op: OpRead) -> Result<Self> {
+        let (_, r) = acc.read(path, op).await?;
 
         Ok(ObjectReader {
             inner: r,
@@ -255,20 +171,83 @@ impl Stream for ObjectReader {
     }
 }
 
-/// get_total_size will get total size via stat.
-async fn get_total_size(
-    acc: Arc<dyn Accessor>,
-    path: &str,
-    meta: Arc<Mutex<ObjectMetadata>>,
-) -> Result<u64> {
-    if let Some(v) = meta.lock().content_length_raw() {
-        return Ok(v);
+/// BlockingObjectReader is the public API for users.
+///
+/// It works nearly the same with [`ObjectReader`] but in blocking way.
+pub struct BlockingObjectReader {
+    pub(crate) inner: output::BlockingReader,
+}
+
+impl BlockingObjectReader {
+    /// Create a new blocking object reader.
+    ///
+    /// Create will use internal information to decide the most suitable
+    /// implementation for users.
+    ///
+    /// We don't want to expose those details to users so keep this function
+    /// in crate only.
+    pub(crate) fn create(acc: FusedAccessor, path: &str, op: OpRead) -> Result<Self> {
+        let acc_meta = acc.metadata();
+
+        let r = if acc_meta.hints().contains(AccessorHint::ReadSeekable) {
+            let (_, r) = acc.blocking_read(path, op)?;
+            r
+        } else {
+            return Err(Error::new(
+                ErrorKind::Unsupported,
+                "non seekable blocking reader is not supported",
+            ));
+        };
+
+        let r = if acc_meta.hints().contains(AccessorHint::ReadStreamable) {
+            r
+        } else {
+            // Make this capacity configurable.
+            Box::new(output::into_streamable_reader(r, 256 * 1024))
+        };
+
+        Ok(BlockingObjectReader { inner: r })
+    }
+}
+
+impl output::BlockingRead for BlockingObjectReader {
+    #[inline]
+    fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
+        self.inner.read(buf)
     }
 
-    let om = acc.stat(path, OpStat::new()).await?.into_metadata();
-    let size = om.content_length();
-    *(meta.lock()) = om;
-    Ok(size)
+    #[inline]
+    fn seek(&mut self, pos: io::SeekFrom) -> io::Result<u64> {
+        self.inner.seek(pos)
+    }
+
+    #[inline]
+    fn next(&mut self) -> Option<io::Result<Bytes>> {
+        output::BlockingRead::next(&mut self.inner)
+    }
+}
+
+impl io::Read for BlockingObjectReader {
+    #[inline]
+    fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
+        self.inner.read(buf)
+    }
+}
+
+impl io::Seek for BlockingObjectReader {
+    #[inline]
+    fn seek(&mut self, pos: io::SeekFrom) -> io::Result<u64> {
+        self.inner.seek(pos)
+    }
+}
+
+impl Iterator for BlockingObjectReader {
+    type Item = io::Result<Bytes>;
+
+    #[inline]
+    fn next(&mut self) -> Option<Self::Item> {
+        self.inner.next()
+    }
 }
 
 #[cfg(test)]
@@ -279,8 +258,8 @@ mod tests {
     use tokio::io::AsyncReadExt;
     use tokio::io::AsyncSeekExt;
 
+    use crate::services;
     use crate::Operator;
-    use crate::Scheme;
 
     fn gen_random_bytes() -> Vec<u8> {
         let mut rng = ThreadRng::default();
@@ -293,7 +272,9 @@ mod tests {
 
     #[tokio::test]
     async fn test_reader_async_read() {
-        let op = Operator::from_env(Scheme::Memory).unwrap();
+        let op = Operator::create(services::Memory::default())
+            .unwrap()
+            .finish();
         let obj = op.object("test_file");
 
         let content = gen_random_bytes();
@@ -313,7 +294,9 @@ mod tests {
 
     #[tokio::test]
     async fn test_reader_async_seek() {
-        let op = Operator::from_env(Scheme::Memory).unwrap();
+        let op = Operator::create(services::Memory::default())
+            .unwrap()
+            .finish();
         let obj = op.object("test_file");
 
         let content = gen_random_bytes();

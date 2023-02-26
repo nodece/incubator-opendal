@@ -1,4 +1,4 @@
-// Copyright 2022 Datafuse Labs.
+// Copyright 2022 Datafuse Labs
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,47 +20,56 @@ use serde_json;
 use time::format_description::well_known::Rfc3339;
 use time::OffsetDateTime;
 
-use super::backend::Backend;
+use super::backend::GcsBackend;
 use super::error::parse_error;
-use super::error::parse_json_deserialize_error;
 use crate::raw::*;
 use crate::*;
 
 /// DirStream takes over task of listing objects and
 /// helps walking directory
 pub struct DirStream {
-    backend: Arc<Backend>,
+    backend: Arc<GcsBackend>,
     root: String,
     path: String,
-    page_token: String,
+    delimiter: String,
+    limit: Option<usize>,
 
+    page_token: String,
     done: bool,
 }
 
 impl DirStream {
     /// Generate a new directory walker
-    pub fn new(backend: Arc<Backend>, root: &str, path: &str) -> Self {
+    pub fn new(
+        backend: Arc<GcsBackend>,
+        root: &str,
+        path: &str,
+        delimiter: &str,
+        limit: Option<usize>,
+    ) -> Self {
         Self {
             backend,
             root: root.to_string(),
             path: path.to_string(),
-            page_token: "".to_string(),
+            delimiter: delimiter.to_string(),
+            limit,
 
+            page_token: "".to_string(),
             done: false,
         }
     }
 }
 
 #[async_trait]
-impl ObjectPage for DirStream {
-    async fn next_page(&mut self) -> Result<Option<Vec<ObjectEntry>>> {
+impl output::Page for DirStream {
+    async fn next_page(&mut self) -> Result<Option<Vec<output::Entry>>> {
         if self.done {
             return Ok(None);
         }
 
         let resp = self
             .backend
-            .gcs_list_objects(&self.path, &self.page_token)
+            .gcs_list_objects(&self.path, &self.page_token, &self.delimiter, self.limit)
             .await?;
 
         if !resp.status().is_success() {
@@ -69,7 +78,7 @@ impl ObjectPage for DirStream {
         let bytes = resp.into_body().bytes().await?;
 
         let output: ListResponse =
-            serde_json::from_slice(&bytes).map_err(parse_json_deserialize_error)?;
+            serde_json::from_slice(&bytes).map_err(new_json_deserialize_error)?;
 
         if let Some(token) = &output.next_page_token {
             self.page_token = token.clone();
@@ -80,9 +89,9 @@ impl ObjectPage for DirStream {
         let mut entries = Vec::with_capacity(output.prefixes.len() + output.items.len());
 
         for prefix in output.prefixes {
-            let de = ObjectEntry::new(
+            let de = output::Entry::new(
                 &build_rel_path(&self.root, &prefix),
-                ObjectMetadata::new(ObjectMode::DIR).with_complete(),
+                ObjectMetadata::new(ObjectMode::DIR),
             );
 
             entries.push(de);
@@ -111,9 +120,8 @@ impl ObjectPage for DirStream {
                 Error::new(ErrorKind::Unexpected, "parse last modified as rfc3339").set_source(e)
             })?;
             meta.set_last_modified(dt);
-            meta.set_complete();
 
-            let de = ObjectEntry::new(&build_rel_path(&self.root, &object.name), meta);
+            let de = output::Entry::new(&build_rel_path(&self.root, &object.name), meta);
 
             entries.push(de);
         }

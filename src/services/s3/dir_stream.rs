@@ -1,4 +1,4 @@
-// Copyright 2022 Datafuse Labs.
+// Copyright 2022 Datafuse Labs
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,9 +21,8 @@ use serde::Deserialize;
 use time::format_description::well_known::Rfc3339;
 use time::OffsetDateTime;
 
-use super::backend::Backend;
+use super::backend::S3Backend;
 use super::error::parse_error;
-use super::error::parse_xml_deserialize_error;
 use crate::raw::*;
 use crate::Error;
 use crate::ErrorKind;
@@ -32,20 +31,30 @@ use crate::ObjectMode;
 use crate::Result;
 
 pub struct DirStream {
-    backend: Arc<Backend>,
+    backend: Arc<S3Backend>,
     root: String,
     path: String,
+    delimiter: String,
+    limit: Option<usize>,
 
     token: String,
     done: bool,
 }
 
 impl DirStream {
-    pub fn new(backend: Arc<Backend>, root: &str, path: &str) -> Self {
+    pub fn new(
+        backend: Arc<S3Backend>,
+        root: &str,
+        path: &str,
+        delimiter: &str,
+        limit: Option<usize>,
+    ) -> Self {
         Self {
             backend,
             root: root.to_string(),
             path: path.to_string(),
+            delimiter: delimiter.to_string(),
+            limit,
 
             token: "".to_string(),
             done: false,
@@ -54,15 +63,15 @@ impl DirStream {
 }
 
 #[async_trait]
-impl ObjectPage for DirStream {
-    async fn next_page(&mut self) -> Result<Option<Vec<ObjectEntry>>> {
+impl output::Page for DirStream {
+    async fn next_page(&mut self) -> Result<Option<Vec<output::Entry>>> {
         if self.done {
             return Ok(None);
         }
 
         let resp = self
             .backend
-            .s3_list_objects(&self.path, &self.token)
+            .s3_list_objects(&self.path, &self.token, &self.delimiter, self.limit)
             .await?;
 
         if resp.status() != http::StatusCode::OK {
@@ -71,7 +80,7 @@ impl ObjectPage for DirStream {
 
         let bs = resp.into_body().bytes().await?;
 
-        let output: Output = de::from_reader(bs.reader()).map_err(parse_xml_deserialize_error)?;
+        let output: Output = de::from_reader(bs.reader()).map_err(new_xml_deserialize_error)?;
 
         // Try our best to check whether this list is done.
         //
@@ -90,9 +99,9 @@ impl ObjectPage for DirStream {
         let mut entries = Vec::with_capacity(output.common_prefixes.len() + output.contents.len());
 
         for prefix in output.common_prefixes {
-            let de = ObjectEntry::new(
+            let de = output::Entry::new(
                 &build_rel_path(&self.root, &prefix.prefix),
-                ObjectMetadata::new(ObjectMode::DIR).with_complete(),
+                ObjectMetadata::new(ObjectMode::DIR),
             );
 
             entries.push(de);
@@ -128,7 +137,7 @@ impl ObjectPage for DirStream {
                 })?;
             meta.set_last_modified(dt);
 
-            let de = ObjectEntry::new(&build_rel_path(&self.root, &object.key), meta);
+            let de = output::Entry::new(&build_rel_path(&self.root, &object.key), meta);
 
             entries.push(de);
         }

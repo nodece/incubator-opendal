@@ -1,4 +1,4 @@
-// Copyright 2022 Datafuse Labs.
+// Copyright 2022 Datafuse Labs
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,17 +16,21 @@ use http::Request;
 
 use crate::*;
 
-/// Reply fro `create` operation
+/// Reply for `create` operation
 #[derive(Debug, Clone, Default)]
 pub struct RpCreate {}
 
-/// Reply fro `delete` operation
+/// Reply for `delete` operation
 #[derive(Debug, Clone, Default)]
 pub struct RpDelete {}
 
 /// Reply for `list` operation.
 #[derive(Debug, Clone, Default)]
 pub struct RpList {}
+
+/// Reply for `scan` operation.
+#[derive(Debug, Clone, Default)]
+pub struct RpScan {}
 
 /// Reply for `create_multipart` operation.
 #[derive(Debug, Clone, Default)]
@@ -172,9 +176,76 @@ impl RpRead {
         RpRead { meta }
     }
 
+    /// Get a ref of object metadata.
+    pub fn metadata(&self) -> &ObjectMetadata {
+        &self.meta
+    }
+
     /// Consume reply to get the object meta.
     pub fn into_metadata(self) -> ObjectMetadata {
         self.meta
+    }
+}
+
+/// Reply for `batch` operation.
+pub struct RpBatch {
+    results: BatchedResults,
+}
+
+impl RpBatch {
+    /// Create a new RpBatch.
+    pub fn new(results: BatchedResults) -> Self {
+        Self { results }
+    }
+
+    /// Get the results from RpBatch.
+    pub fn results(&self) -> &BatchedResults {
+        &self.results
+    }
+
+    /// Consume RpBatch to get the batched results.
+    pub fn into_results(self) -> BatchedResults {
+        self.results
+    }
+}
+
+/// Batch results of `bacth` operations.
+pub enum BatchedResults {
+    /// results of delete batch operation
+    Delete(Vec<(String, Result<RpDelete>)>),
+}
+
+impl BatchedResults {
+    /// Return the length of given results.
+    pub fn len(&self) -> usize {
+        use BatchedResults::*;
+        match self {
+            Delete(v) => v.len(),
+        }
+    }
+
+    /// Return if given results is empty.
+    pub fn is_empty(&self) -> bool {
+        use BatchedResults::*;
+        match self {
+            Delete(v) => v.is_empty(),
+        }
+    }
+
+    /// Return the length of ok results.
+    pub fn len_ok(&self) -> usize {
+        use BatchedResults::*;
+        match self {
+            Delete(v) => v.iter().filter(|v| v.1.is_ok()).count(),
+        }
+    }
+
+    /// Return the length of error results.
+    pub fn len_err(&self) -> usize {
+        use BatchedResults::*;
+        match self {
+            Delete(v) => v.iter().filter(|v| v.1.is_err()).count(),
+        }
     }
 }
 
@@ -188,6 +259,12 @@ impl RpStat {
     /// Create a new reply for stat.
     pub fn new(meta: ObjectMetadata) -> Self {
         RpStat { meta }
+    }
+
+    /// Operate on inner metadata.
+    pub fn map_metadata(mut self, f: impl FnOnce(ObjectMetadata) -> ObjectMetadata) -> Self {
+        self.meta = f(self.meta);
+        self
     }
 
     /// Consume RpStat to get the inner metadata.

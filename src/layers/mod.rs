@@ -1,4 +1,4 @@
-// Copyright 2022 Datafuse Labs.
+// Copyright 2022 Datafuse Labs
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,22 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//! Providing Layer trait and its implementations.
-
-mod layer;
-pub use layer::Layer;
+//! `Layer` is the mechanism to intercept operations.
 
 mod concurrent_limit;
 pub use concurrent_limit::ConcurrentLimitLayer;
-
-mod cache;
-pub use cache::*;
 
 mod immutable_index;
 pub use immutable_index::ImmutableIndexLayer;
 
 mod logging;
 pub use logging::LoggingLayer;
+
+#[cfg(feature = "layers-chaos")]
+mod chaos;
+#[cfg(feature = "layers-chaos")]
+pub use chaos::ChaosLayer;
 
 #[cfg(feature = "layers-metrics")]
 mod metrics;
@@ -37,10 +36,16 @@ pub use self::metrics::MetricsLayer;
 mod retry;
 pub use self::retry::RetryLayer;
 
-mod subdir;
-pub use subdir::SubdirLayer;
-
 #[cfg(feature = "layers-tracing")]
 mod tracing;
 #[cfg(feature = "layers-tracing")]
 pub use self::tracing::TracingLayer;
+
+mod type_eraser;
+pub(crate) use type_eraser::TypeEraseLayer;
+
+mod error_context;
+pub(crate) use error_context::ErrorContextLayer;
+
+mod complete;
+pub(crate) use complete::CompleteLayer;

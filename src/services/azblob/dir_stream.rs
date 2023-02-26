@@ -1,4 +1,4 @@
-// Copyright 2022 Datafuse Labs.
+// Copyright 2022 Datafuse Labs
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -11,6 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 use std::sync::Arc;
 
 use async_trait::async_trait;
@@ -20,26 +21,36 @@ use serde::Deserialize;
 use time::format_description::well_known::Rfc2822;
 use time::OffsetDateTime;
 
-use super::backend::Backend;
+use super::backend::AzblobBackend;
 use super::error::parse_error;
 use crate::raw::*;
 use crate::*;
 
 pub struct DirStream {
-    backend: Arc<Backend>,
+    backend: Arc<AzblobBackend>,
     root: String,
     path: String,
+    delimiter: String,
+    limit: Option<usize>,
 
     next_marker: String,
     done: bool,
 }
 
 impl DirStream {
-    pub fn new(backend: Arc<Backend>, root: String, path: String) -> Self {
+    pub fn new(
+        backend: Arc<AzblobBackend>,
+        root: String,
+        path: String,
+        delimiter: String,
+        limit: Option<usize>,
+    ) -> Self {
         Self {
             backend,
             root,
             path,
+            delimiter,
+            limit,
 
             next_marker: "".to_string(),
             done: false,
@@ -48,15 +59,15 @@ impl DirStream {
 }
 
 #[async_trait]
-impl ObjectPage for DirStream {
-    async fn next_page(&mut self) -> Result<Option<Vec<ObjectEntry>>> {
+impl output::Page for DirStream {
+    async fn next_page(&mut self) -> Result<Option<Vec<output::Entry>>> {
         if self.done {
             return Ok(None);
         }
 
         let resp = self
             .backend
-            .azblob_list_blobs(&self.path, &self.next_marker)
+            .azblob_list_blobs(&self.path, &self.next_marker, &self.delimiter, self.limit)
             .await?;
 
         if resp.status() != http::StatusCode::OK {
@@ -81,9 +92,9 @@ impl ObjectPage for DirStream {
         let mut entries = Vec::with_capacity(prefixes.len() + output.blobs.blob.len());
 
         for prefix in prefixes {
-            let de = ObjectEntry::new(
+            let de = output::Entry::new(
                 &build_rel_path(&self.root, &prefix.name),
-                ObjectMetadata::new(ObjectMode::DIR).with_complete(),
+                ObjectMetadata::new(ObjectMode::DIR),
             );
 
             entries.push(de)
@@ -99,10 +110,10 @@ impl ObjectPage for DirStream {
 
             let meta = ObjectMetadata::new(ObjectMode::FILE)
                 // Keep fit with ETag header.
-                .with_etag(&format!("\"{}\"", object.properties.etag.as_str()))
+                .with_etag(format!("\"{}\"", object.properties.etag.as_str()))
                 .with_content_length(object.properties.content_length)
-                .with_content_md5(object.properties.content_md5.as_str())
-                .with_content_type(&object.properties.content_type)
+                .with_content_md5(object.properties.content_md5)
+                .with_content_type(object.properties.content_type)
                 .with_last_modified(
                     OffsetDateTime::parse(object.properties.last_modified.as_str(), &Rfc2822)
                         .map_err(|e| {
@@ -112,10 +123,9 @@ impl ObjectPage for DirStream {
                             )
                             .set_source(e)
                         })?,
-                )
-                .with_complete();
+                );
 
-            let de = ObjectEntry::new(&build_rel_path(&self.root, &object.name), meta);
+            let de = output::Entry::new(&build_rel_path(&self.root, &object.name), meta);
 
             entries.push(de);
         }
@@ -261,7 +271,7 @@ mod tests {
             </EnumerationResults>"#,
         );
         let out: Output = de::from_reader(bs.reader()).expect("must success");
-        println!("{:?}", out);
+        println!("{out:?}");
 
         assert_eq!(
             out.blobs

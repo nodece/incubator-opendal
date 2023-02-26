@@ -5,6 +5,209 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [v0.28.0] - 2023-02-22
+
+### Added
+
+- feat: add dashmap support (#1390)
+
+### Changed
+
+- refactor: Implement query based object metadata cache (#1395)
+- refactor: Store complete inside bits and add more examples (#1397)
+- refactor: Trigger panic if users try to visit not fetched metadata (#1399)
+- refactor: Polish the implement of Query Based Metadata Cache (#1400)
+
+### Docs
+
+- RFC-1391: Object Metadataer (#1391)
+- RFC-1398: Query Based Metadata (#1398)
+
+## [v0.27.2] - 2023-02-20
+
+### Added
+
+- feat: Add batch API for Accessor (#1339)
+- feat: add Content-Disposition for inner API (#1347)
+- feat: add content-disposition support for services (#1350)
+- feat: webdav service support bearer token (#1349)
+- feat: support auth for HttpBackend (#1359)
+- feat: Add batch delete support (#1357)
+- feat(webdav): add list and improve create (#1330)
+- feat: Integrate batch with existing ecosystem better (#1378)
+- feat: Add batch delete support for oss (#1385)
+
+### Changed
+
+- refactor: Authorization logic for WebdavBackend (#1348)
+- refactor(webhdfs): handle 307 redirection instead of noredirect (#1358)
+- refactor: Polish http authorization related logic (#1367)
+- refactor: Cleanup duplicated code (#1373)
+- refactor: Cleanup some not needed error context (#1374)
+
+### Docs
+
+- docs: Fix broken links (#1344)
+- docs: clarify about opendal user defined client (#1356)
+
+### Fixed
+
+- fix(webhdfs): should prepend http:// scheme (#1354)
+
+### Infra
+
+- ci: Pin time <= 0.3.17 until we decide to bump MSRV (#1361)
+- ci: Only run service test on changing (#1363)
+- ci: run tests with nextest (#1370)
+
+## [v0.27.1] - 2023-02-13
+
+### Added
+
+- feat: Add username and password support for WebDAV (#1323)
+- ci: Add test case for webdav with basic auth (#1327)
+- feat(oli): support s3 uri without profile (#1328)
+- feat: Add scan support for kv adapter (#1333)
+- feat: Add scan support for sled (#1334)
+
+### Changed
+
+- chore(deps): update moka requirement from 0.9 to 0.10 (#1331)
+- chore(deps): update rocksdb requirement from 0.19 to 0.20 (#1332)
+
+### Fixed
+
+- fix(services/oss,s3): Metadata should be marked as complete (#1335)
+
+## [v0.27.0] - 2023-02-11
+
+### Added
+
+- feat: Add Retryable Pager Support (#1304)
+- feat: Add Sled support (#1305)
+- feat: Add Object::scan() support (#1314)
+- feat: Add object page size support (#1318)
+
+### Changed
+
+- refactor: Hide backon from our public API (#1302)
+- refactor: Don't expose ops structs to users directly (#1303)
+- refactor: Move and rename ObjectPager and ObjectEntry for more clear semantics (#1308)
+- refactor: Implement strong typed pager (#1311)
+- deps: remove unused deps (#1321)
+- refactor: Extract scan as a new API and remove ListStyle (#1324)
+
+### Docs
+
+- docs: Add risingwave in projects (#1322)
+
+### Fixed
+
+- ci: Fix dev container Dockerfile (#1298)
+- fix: Rocksdb's scheme not output correctly (#1300)
+- chore: fix name typo in oss backend (#1316)
+- chore: Add typos-cli and fix typos (#1320)
+
+## [v0.26.2] - 2023-02-07
+
+### Added
+
+- feat: Add ChaosLayer to inject errors into underlying services (#1287)
+- feat: Implement retry reader (#1291)
+- feat: use std::path::Path for fs backend (#1100)
+- feat: Implement services webhdfs (#1263)
+
+### Changed
+
+- refactor: Split CompleteReaderLayer from TypeEraserLayer (#1290)
+- refactor(services/fs): Remove not needed generic (#1292)
+
+### Docs
+
+- docs: fix typo (#1285)
+- docs: Polish docs for better reading (#1288)
+
+### Fixed
+
+- fix: FsBuilder can't be used with empty root anymore (#1293)
+- fix: Fix retry happened in seek's read ahead logic (#1294)
+
+## [v0.26.1] - 2023-02-05
+
+### Changed
+
+- refactor: Remove not used layer subdir (#1280)
+
+### Docs
+
+- docs: Add v0.26 upgrade guide (#1276)
+- docs: Add feature sets in services (#1277)
+- docs: Migrate all docs in rustdoc instead (#1281)
+- docs: Fix index page not redirected (#1282)
+
+## [v0.26.0] - 2023-02-04
+
+### Added
+
+- feat: Add benchmarks for blocking_seek operations (#1258)
+- feat: add dev container (#1261)
+- feat: Zero Cost OpenDAL (#1260)
+- feat: Allow dynamic dispatch layer (#1273)
+
+### Changed
+
+- refactor: remove the duplicated dependency in dev-dependencies (#1257)
+- refactor: some code in GitHub Actions (#1269)
+- refactor: Don't expose services mod directly (#1271)
+- refactor: Polish Builder API (#1272)
+
+## [v0.25.2] - 2023-01-30
+
+### Added
+
+- feat: Add basic object_store support (#1243)
+- feat: Implement webdav support (#1246)
+- feat: Allow passing content_type to OSS presign (#1252)
+- feat: Make sure short functions have been inlined (#1253)
+
+### Changed
+
+- refacor(services/fs): Make normalized path check optional (#1242)
+
+### Docs
+
+- docs(http): remove out-dated comments (#1240)
+- docs: Add bindings in README (#1244)
+- docs: Add docs for webdav and http services (#1248)
+- docs: Add webdav in lib docs (#1249)
+
+### Fixed
+
+- fix(services/ghac): Fix log message for ghac_upload in write (#1239)
+
+## [v0.25.1] - 2023-01-27
+
+### Added
+
+- ci: Setup benchmark workflow (#1200)
+- feat: Let's try play with python (#1205)
+- feat: Let's try play with Node.js (#1206)
+- feat: Allow retry sending read request (#1212)
+- ci: Make sure opendal is buildable on windows (#1221)
+- ci: Remove not needed audit checks (#1226)
+
+### Changed
+
+- refactor: Remove observe read/write (#1202)
+- refactor: Remove not used unwind safe feature (#1218)
+- cleanup: Move oli and oay into binaries (#1227)
+- cleanup: Move testdata into tests/data (#1228)
+- refactor(layers/metrics): Defer initiation of error counters (#1232)
+
+### Fixed
+
+- fix: Retry for read and write should at ObjectReader level (#1211)
+
 ## [v0.25.0] - 2023-01-18
 
 ### Added
@@ -215,7 +418,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Changed
 
-- refactor: Use seperate Error instead of std::io::Error to avoid confusing (#976)
+- refactor: Use separate Error instead of std::io::Error to avoid confusing (#976)
 - refactor: Return ReplyCreate for create operation (#981)
 - refactor: Add ReplyRead for read operation (#982)
 - refactor: Add RpWrite for write operation (#983)
@@ -229,7 +432,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - refactor: Move io to raw (#996)
 - refactor: Move {path,wrapper,http_util,io_util} into raw modules (#998)
 - refactor: Move ObjectEntry and ObjectPage into raw (#999)
-- refactor: Accept Operator intead of `Arc<dyn Accessor>` (#1001)
+- refactor: Accept Operator instead of `Arc<dyn Accessor>` (#1001)
 
 ### Fixed
 
@@ -271,7 +474,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - refactor: Return ObjectReader in Accessor::read (#929)
 - refactor(oay,oli): drop unnecessary patch.crates-io from `Cargo.toml`
 - refactor: Polish bytes range (#950)
-- refactor: Use simplifed kv adapter instead (#959)
+- refactor: Use simplified kv adapter instead (#959)
 
 ### Fixed
 
@@ -372,7 +575,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
-- fix: ObjectEntry returned in batch operator doesn't have corrent accessor (#839)
+- fix: ObjectEntry returned in batch operator doesn't have correct accessor (#839)
 - fix: Accessor in layers not set correctly (#840)
 
 ## [v0.19.0] - 2022-10-08
@@ -526,7 +729,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
-- fix: Immutable Index Layer could return duplicated pathes (#671)
+- fix: Immutable Index Layer could return duplicated paths (#671)
 - fix: Remove not needed type parameter for immutable_layer (#677)
 - fix: Don't trace buf field in poll_read (#682)
 - fix: List non-exist dir should return empty (#683)
@@ -550,7 +753,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - refactor: Remove list support from http service (#639)
 - refactor: Replace isahc with reqwest and ureq (#642)
 
-## Deps
+### Deps
 
 - deps: Bump reqsign to v0.4 (#643)
 - deps: Remove not used features (#658)
@@ -563,7 +766,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - docs: Fix typo (#650)
 - docs: Add docs for ftp services (#655)
 
-## RFCs
+### RFCs
 
 - RFC-0623: Redis Service (#623)
 
@@ -824,7 +1027,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Changed
 
-- refactor: Rename Metadata to ObjectMetadata for clearify (#339)
+- refactor: Rename Metadata to ObjectMetadata for clarify (#339)
 
 ### Others
 
@@ -1043,7 +1246,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - test: Add behavior test for not exist object (#166)
 - feat: Allow user input region (#168)
 
-## Changed
+### Changed
 
 - feat: Improve error handle for s3 service (#169)
 - feat: Read error response for better debugging (#170)
@@ -1211,6 +1414,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 Hello, OpenDAL!
 
+[v0.28.0]: https://github.com/datafuselabs/opendal/compare/v0.27.2...v0.28.0
+[v0.27.2]: https://github.com/datafuselabs/opendal/compare/v0.27.1...v0.27.2
+[v0.27.1]: https://github.com/datafuselabs/opendal/compare/v0.27.0...v0.27.1
+[v0.27.0]: https://github.com/datafuselabs/opendal/compare/v0.26.2...v0.27.0
+[v0.26.2]: https://github.com/datafuselabs/opendal/compare/v0.26.1...v0.26.2
+[v0.26.1]: https://github.com/datafuselabs/opendal/compare/v0.26.0...v0.26.1
+[v0.26.0]: https://github.com/datafuselabs/opendal/compare/v0.25.2...v0.26.0
+[v0.25.2]: https://github.com/datafuselabs/opendal/compare/v0.25.1...v0.25.2
+[v0.25.1]: https://github.com/datafuselabs/opendal/compare/v0.25.0...v0.25.1
 [v0.25.0]: https://github.com/datafuselabs/opendal/compare/v0.24.6...v0.25.0
 [v0.24.6]: https://github.com/datafuselabs/opendal/compare/v0.24.5...v0.24.6
 [v0.24.5]: https://github.com/datafuselabs/opendal/compare/v0.24.4...v0.24.5

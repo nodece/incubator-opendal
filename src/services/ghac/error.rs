@@ -1,4 +1,4 @@
-// Copyright 2022 Datafuse Labs.
+// Copyright 2022 Datafuse Labs
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@ use crate::Error;
 use crate::ErrorKind;
 use crate::Result;
 
-/// Parse error respons into Error.
+/// Parse error response into Error.
 pub async fn parse_error(resp: Response<IncomingAsyncBody>) -> Result<Error> {
     let (parts, body) = resp.into_parts();
 
@@ -38,7 +38,7 @@ pub async fn parse_error(resp: Response<IncomingAsyncBody>) -> Result<Error> {
 
     let bs = body.bytes().await?;
     let mut err = Error::new(kind, &String::from_utf8_lossy(&bs))
-        .with_context("response", format!("{:?}", parts));
+        .with_context("response", format!("{parts:?}"));
 
     if retryable {
         err = err.set_temporary();

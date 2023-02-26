@@ -1,4 +1,4 @@
-// Copyright 2022 Datafuse Labs.
+// Copyright 2022 Datafuse Labs
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,19 +25,19 @@ use serde::Deserialize;
 
 use super::dir_stream::DirStream;
 use super::error::parse_error;
-use super::error::parse_json_deserialize_error;
+use crate::ops::*;
 use crate::raw::*;
 use crate::*;
 
 /// Backend for IPFS service
 #[derive(Clone)]
-pub struct Backend {
+pub struct IpmfsBackend {
     root: String,
     endpoint: String,
     client: HttpClient,
 }
 
-impl fmt::Debug for Backend {
+impl fmt::Debug for IpmfsBackend {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("Backend")
             .field("root", &self.root)
@@ -46,7 +46,7 @@ impl fmt::Debug for Backend {
     }
 }
 
-impl Backend {
+impl IpmfsBackend {
     pub(crate) fn new(root: String, client: HttpClient, endpoint: String) -> Self {
         Self {
             root,
@@ -57,7 +57,12 @@ impl Backend {
 }
 
 #[async_trait]
-impl Accessor for Backend {
+impl Accessor for IpmfsBackend {
+    type Reader = IncomingAsyncBody;
+    type BlockingReader = ();
+    type Pager = DirStream;
+    type BlockingPager = ();
+
     fn metadata(&self) -> AccessorMetadata {
         let mut am = AccessorMetadata::default();
         am.set_scheme(Scheme::Ipmfs)
@@ -65,7 +70,7 @@ impl Accessor for Backend {
             .set_capabilities(
                 AccessorCapability::Read | AccessorCapability::Write | AccessorCapability::List,
             )
-            .set_hints(AccessorHint::ReadIsStreamable);
+            .set_hints(AccessorHint::ReadStreamable);
 
         am
     }
@@ -88,7 +93,7 @@ impl Accessor for Backend {
         }
     }
 
-    async fn read(&self, path: &str, args: OpRead) -> Result<(RpRead, output::Reader)> {
+    async fn read(&self, path: &str, args: OpRead) -> Result<(RpRead, Self::Reader)> {
         let resp = self.ipmfs_read(path, args.range()).await?;
 
         let status = resp.status();
@@ -96,7 +101,7 @@ impl Accessor for Backend {
         match status {
             StatusCode::OK => {
                 let meta = parse_into_object_metadata(path, resp.headers())?;
-                Ok((RpRead::with_metadata(meta), resp.into_body().reader()))
+                Ok((RpRead::with_metadata(meta), resp.into_body()))
             }
             _ => Err(parse_error(resp).await?),
         }
@@ -133,7 +138,7 @@ impl Accessor for Backend {
                 let bs = resp.into_body().bytes().await?;
 
                 let res: IpfsStatResponse =
-                    serde_json::from_slice(&bs).map_err(parse_json_deserialize_error)?;
+                    serde_json::from_slice(&bs).map_err(new_json_deserialize_error)?;
 
                 let mode = match res.file_type.as_str() {
                     "file" => ObjectMode::FILE,
@@ -164,15 +169,15 @@ impl Accessor for Backend {
         }
     }
 
-    async fn list(&self, path: &str, _: OpList) -> Result<(RpList, ObjectPager)> {
+    async fn list(&self, path: &str, _: OpList) -> Result<(RpList, Self::Pager)> {
         Ok((
             RpList::default(),
-            Box::new(DirStream::new(Arc::new(self.clone()), &self.root, path)),
+            DirStream::new(Arc::new(self.clone()), &self.root, path),
         ))
     }
 }
 
-impl Backend {
+impl IpmfsBackend {
     async fn ipmfs_stat(&self, path: &str) -> Result<Response<IncomingAsyncBody>> {
         let p = build_rooted_abs_path(&self.root, path);
 

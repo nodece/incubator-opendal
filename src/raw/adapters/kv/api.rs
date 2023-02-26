@@ -1,4 +1,4 @@
-// Copyright 2022 Datafuse Labs.
+// Copyright 2022 Datafuse Labs
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,7 +27,7 @@ use crate::Scheme;
 ///
 /// By implement this trait, any kv service can work as an OpenDAL Service.
 #[async_trait]
-pub trait Adapter: Send + Sync + Debug + Clone + 'static {
+pub trait Adapter: Send + Sync + Debug + Unpin + 'static {
     /// Return the medata of this key value accessor.
     fn metadata(&self) -> Metadata;
 
@@ -77,6 +77,29 @@ pub trait Adapter: Send + Sync + Debug + Clone + 'static {
             "kv adapter doesn't support this operation",
         )
         .with_operation("kv::Adapter::blocking_delete"))
+    }
+
+    /// Scan a key prefix to get all keys that start with this key.
+    async fn scan(&self, path: &str) -> Result<Vec<String>> {
+        let _ = path;
+
+        Err(Error::new(
+            ErrorKind::Unsupported,
+            "kv adapter doesn't support this operation",
+        )
+        .with_operation("kv::Adapter::scan"))
+    }
+
+    /// Scan a key prefix to get all keys that start with this key
+    /// in blocking way.
+    fn blocking_scan(&self, path: &str) -> Result<Vec<String>> {
+        let _ = path;
+
+        Err(Error::new(
+            ErrorKind::Unsupported,
+            "kv adapter doesn't support this operation",
+        )
+        .with_operation("kv::Adapter::blocking_scan"))
     }
 }
 

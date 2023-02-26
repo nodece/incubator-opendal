@@ -1,4 +1,4 @@
-// Copyright 2022 Datafuse Labs.
+// Copyright 2022 Datafuse Labs
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,23 +18,22 @@ use async_trait::async_trait;
 use http::StatusCode;
 use serde::Deserialize;
 
-use super::backend::Backend;
+use super::backend::IpmfsBackend;
 use super::error::parse_error;
-use super::error::parse_json_deserialize_error;
 use crate::raw::*;
 use crate::ObjectMetadata;
 use crate::ObjectMode;
 use crate::Result;
 
 pub struct DirStream {
-    backend: Arc<Backend>,
+    backend: Arc<IpmfsBackend>,
     root: String,
     path: String,
     consumed: bool,
 }
 
 impl DirStream {
-    pub fn new(backend: Arc<Backend>, root: &str, path: &str) -> Self {
+    pub fn new(backend: Arc<IpmfsBackend>, root: &str, path: &str) -> Self {
         Self {
             backend,
             root: root.to_string(),
@@ -45,8 +44,8 @@ impl DirStream {
 }
 
 #[async_trait]
-impl ObjectPage for DirStream {
-    async fn next_page(&mut self) -> Result<Option<Vec<ObjectEntry>>> {
+impl output::Page for DirStream {
+    async fn next_page(&mut self) -> Result<Option<Vec<output::Entry>>> {
         if self.consumed {
             return Ok(None);
         }
@@ -59,7 +58,7 @@ impl ObjectPage for DirStream {
 
         let bs = resp.into_body().bytes().await?;
         let entries_body: IpfsLsResponse =
-            serde_json::from_slice(&bs).map_err(parse_json_deserialize_error)?;
+            serde_json::from_slice(&bs).map_err(new_json_deserialize_error)?;
 
         // Mark dir stream has been consumed.
         self.consumed = true;
@@ -82,11 +81,9 @@ impl ObjectPage for DirStream {
 
                     let path = build_rel_path(&self.root, &path);
 
-                    ObjectEntry::new(
+                    output::Entry::new(
                         &path,
-                        ObjectMetadata::new(object.mode())
-                            .with_content_length(object.size)
-                            .with_complete(),
+                        ObjectMetadata::new(object.mode()).with_content_length(object.size),
                     )
                 })
                 .collect(),
