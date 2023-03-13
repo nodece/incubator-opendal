@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1678703727916,
+  "lastUpdate": 1678712729934,
   "repoUrl": "https://github.com/datafuselabs/opendal",
   "entries": {
     "Rust Benchmark": [
@@ -85319,6 +85319,414 @@ window.BENCHMARK_DATA = {
             "name": "service_memory_write_once/16.0 MiB",
             "value": 6363160,
             "range": "± 86126",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "github@xuanwo.io",
+            "name": "Xuanwo",
+            "username": "Xuanwo"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "4dbff2cbda470f83b41e40ef5e284cf98f50c128",
+          "message": "website: Let's deploy our new website (#1581)\n\n* website: Let's deploy our new website\r\n\r\nSigned-off-by: Xuanwo <github@xuanwo.io>\r\n\r\n* Don't run CI if other workflow changed\r\n\r\nSigned-off-by: Xuanwo <github@xuanwo.io>\r\n\r\n* Fix build\r\n\r\nSigned-off-by: Xuanwo <github@xuanwo.io>\r\n\r\n* Use ref instead\r\n\r\nSigned-off-by: Xuanwo <github@xuanwo.io>\r\n\r\n* Move into static\r\n\r\nSigned-off-by: Xuanwo <github@xuanwo.io>\r\n\r\n* Add docs\r\n\r\nSigned-off-by: Xuanwo <github@xuanwo.io>\r\n\r\n* try again\r\n\r\nSigned-off-by: Xuanwo <github@xuanwo.io>\r\n\r\n* Try fix\r\n\r\nSigned-off-by: Xuanwo <github@xuanwo.io>\r\n\r\n---------\r\n\r\nSigned-off-by: Xuanwo <github@xuanwo.io>",
+          "timestamp": "2023-03-13T20:45:09+08:00",
+          "tree_id": "51c0dedfe224e9ffea2226ee8e197122e1aff294",
+          "url": "https://github.com/datafuselabs/opendal/commit/4dbff2cbda470f83b41e40ef5e284cf98f50c128"
+        },
+        "date": 1678712727617,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "service_fs_read_full/4.00 KiB",
+            "value": 68410,
+            "range": "± 18618",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "service_fs_read_full/256 KiB",
+            "value": 770974,
+            "range": "± 11816",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "service_fs_read_full/4.00 MiB",
+            "value": 11546165,
+            "range": "± 522686",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "service_fs_read_full/16.0 MiB",
+            "value": 48836526,
+            "range": "± 895059",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "service_fs_read_part/4.00 KiB",
+            "value": 89062,
+            "range": "± 2210",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "service_fs_read_part/256 KiB",
+            "value": 1125614,
+            "range": "± 51272",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "service_fs_read_part/4.00 MiB",
+            "value": 17552140,
+            "range": "± 1117439",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "service_fs_read_part/16.0 MiB",
+            "value": 73776955,
+            "range": "± 1441003",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "service_fs_read_parallel/1x4.00 KiB",
+            "value": 88967,
+            "range": "± 1173",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "service_fs_read_parallel/2x4.00 KiB",
+            "value": 87335,
+            "range": "± 9911",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "service_fs_read_parallel/4x4.00 KiB",
+            "value": 137899,
+            "range": "± 15521",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "service_fs_read_parallel/8x4.00 KiB",
+            "value": 216101,
+            "range": "± 3320",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "service_fs_read_parallel/16x4.00 KiB",
+            "value": 436554,
+            "range": "± 21011",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "service_fs_read_parallel/1x256 KiB",
+            "value": 134346,
+            "range": "± 4084",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "service_fs_read_parallel/2x256 KiB",
+            "value": 149559,
+            "range": "± 12875",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "service_fs_read_parallel/4x256 KiB",
+            "value": 297320,
+            "range": "± 9262",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "service_fs_read_parallel/8x256 KiB",
+            "value": 475905,
+            "range": "± 55679",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "service_fs_read_parallel/16x256 KiB",
+            "value": 1128341,
+            "range": "± 81925",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "service_fs_read_parallel/1x4.00 MiB",
+            "value": 1102678,
+            "range": "± 16401",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "service_fs_read_parallel/2x4.00 MiB",
+            "value": 1871481,
+            "range": "± 17354",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "service_fs_read_parallel/4x4.00 MiB",
+            "value": 3148221,
+            "range": "± 257504",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "service_fs_read_parallel/8x4.00 MiB",
+            "value": 20837047,
+            "range": "± 1048967",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "service_fs_read_parallel/16x4.00 MiB",
+            "value": 43665756,
+            "range": "± 2011953",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "service_fs_read_parallel/1x16.0 MiB",
+            "value": 5853648,
+            "range": "± 229972",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "service_fs_read_parallel/2x16.0 MiB",
+            "value": 17761226,
+            "range": "± 505097",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "service_fs_read_parallel/4x16.0 MiB",
+            "value": 35138032,
+            "range": "± 1182833",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "service_fs_read_parallel/8x16.0 MiB",
+            "value": 69386030,
+            "range": "± 2595356",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "service_fs_read_parallel/16x16.0 MiB",
+            "value": 137759721,
+            "range": "± 4502194",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "service_memory_read_full/4.00 KiB",
+            "value": 1366,
+            "range": "± 13",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "service_memory_read_full/256 KiB",
+            "value": 13653,
+            "range": "± 8",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "service_memory_read_full/4.00 MiB",
+            "value": 437068,
+            "range": "± 1280",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "service_memory_read_full/16.0 MiB",
+            "value": 1878862,
+            "range": "± 72407",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "service_memory_read_part/4.00 KiB",
+            "value": 1492,
+            "range": "± 2",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "service_memory_read_part/256 KiB",
+            "value": 46493,
+            "range": "± 40",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "service_memory_read_part/4.00 MiB",
+            "value": 1391864,
+            "range": "± 9589",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "service_memory_read_part/16.0 MiB",
+            "value": 14837368,
+            "range": "± 248548",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "service_memory_read_parallel/1x4.00 KiB",
+            "value": 1993,
+            "range": "± 10",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "service_memory_read_parallel/2x4.00 KiB",
+            "value": 3886,
+            "range": "± 12",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "service_memory_read_parallel/4x4.00 KiB",
+            "value": 7738,
+            "range": "± 18",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "service_memory_read_parallel/8x4.00 KiB",
+            "value": 15278,
+            "range": "± 33",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "service_memory_read_parallel/16x4.00 KiB",
+            "value": 30825,
+            "range": "± 49",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "service_memory_read_parallel/1x256 KiB",
+            "value": 113025,
+            "range": "± 218",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "service_memory_read_parallel/2x256 KiB",
+            "value": 217954,
+            "range": "± 239",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "service_memory_read_parallel/4x256 KiB",
+            "value": 451012,
+            "range": "± 6734",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "service_memory_read_parallel/8x256 KiB",
+            "value": 902464,
+            "range": "± 662",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "service_memory_read_parallel/16x256 KiB",
+            "value": 1804382,
+            "range": "± 1643",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "service_memory_read_parallel/1x4.00 MiB",
+            "value": 2743595,
+            "range": "± 65731",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "service_memory_read_parallel/2x4.00 MiB",
+            "value": 5498802,
+            "range": "± 117032",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "service_memory_read_parallel/4x4.00 MiB",
+            "value": 10867316,
+            "range": "± 187545",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "service_memory_read_parallel/8x4.00 MiB",
+            "value": 21806640,
+            "range": "± 577756",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "service_memory_read_parallel/16x4.00 MiB",
+            "value": 43961027,
+            "range": "± 1113726",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "service_memory_read_parallel/1x16.0 MiB",
+            "value": 30753258,
+            "range": "± 395241",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "service_memory_read_parallel/2x16.0 MiB",
+            "value": 59506078,
+            "range": "± 961441",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "service_memory_read_parallel/4x16.0 MiB",
+            "value": 118342716,
+            "range": "± 1650756",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "service_memory_read_parallel/8x16.0 MiB",
+            "value": 243164614,
+            "range": "± 3063991",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "service_memory_read_parallel/16x16.0 MiB",
+            "value": 469335884,
+            "range": "± 7018622",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "service_fs_write_once/4.00 KiB",
+            "value": 427617,
+            "range": "± 20878",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "service_fs_write_once/256 KiB",
+            "value": 1344751,
+            "range": "± 496491",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "service_fs_write_once/4.00 MiB",
+            "value": 17676733,
+            "range": "± 5694045",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "service_fs_write_once/16.0 MiB",
+            "value": 94815501,
+            "range": "± 25087035",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "service_memory_write_once/4.00 KiB",
+            "value": 1235,
+            "range": "± 4",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "service_memory_write_once/256 KiB",
+            "value": 17597,
+            "range": "± 9",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "service_memory_write_once/4.00 MiB",
+            "value": 1002528,
+            "range": "± 15135",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "service_memory_write_once/16.0 MiB",
+            "value": 4328437,
+            "range": "± 63777",
             "unit": "ns/iter"
           }
         ]
