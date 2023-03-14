@@ -350,6 +350,7 @@
 <a href="#350" id="350">350</a>
 <a href="#351" id="351">351</a>
 <a href="#352" id="352">352</a>
+<a href="#353" id="353">353</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -403,6 +404,7 @@
 ///     .layer(ConcurrentLimitLayer::new(1024))
 ///     .finish();
 /// ```
+</span><span class="attr">#[derive(Clone)]
 </span><span class="kw">pub struct </span>ConcurrentLimitLayer {
     permits: usize,
 }
