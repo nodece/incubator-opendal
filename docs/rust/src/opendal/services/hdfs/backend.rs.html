@@ -870,7 +870,7 @@
 
         <span class="kw">let </span>p = build_rooted_abs_path(<span class="kw-2">&amp;</span><span class="self">self</span>.root, path);
 
-        <span class="comment">// This will be addressed by https://github.com/datafuselabs/opendal/issues/506
+        <span class="comment">// This will be addressed by https://github.com/apache/incubator-opendal/issues/506
         </span><span class="kw">let </span>meta = <span class="self">self</span>.client.metadata(<span class="kw-2">&amp;</span>p).map_err(parse_io_error)<span class="question-mark">?</span>;
 
         <span class="kw">let </span>f = <span class="self">self
@@ -1039,7 +1039,7 @@
 
         <span class="kw">let </span>p = build_rooted_abs_path(<span class="kw-2">&amp;</span><span class="self">self</span>.root, path);
 
-        <span class="comment">// This will be addressed by https://github.com/datafuselabs/opendal/issues/506
+        <span class="comment">// This will be addressed by https://github.com/apache/incubator-opendal/issues/506
         </span><span class="kw">let </span>meta = <span class="self">self</span>.client.metadata(<span class="kw-2">&amp;</span>p).map_err(parse_io_error)<span class="question-mark">?</span>;
 
         <span class="kw">let </span>f = <span class="self">self

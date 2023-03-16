@@ -152,7 +152,7 @@ w.close()</code></pre></div>
 <li><code>o.seekable_reader</code> =&gt; <code>o.range_reader</code></li>
 </ul>
 <p>Most changes only happen inside. Users not using <code>opendal::raw::*</code> will not be affected.</p>
-<p>Sorry for the inconvenience. I think those changes are required and make OpenDAL better! Welcome any comments at <a href="https://github.com/datafuselabs/opendal/discussions">Discussion</a>.</p>
+<p>Sorry for the inconvenience. I think those changes are required and make OpenDAL better! Welcome any comments at <a href="https://github.com/apache/incubator-opendal/discussions">Discussion</a>.</p>
 <h2 id="upgrade-to-v021"><a href="#upgrade-to-v021">Upgrade to v0.21</a></h2>
 <p>v0.21 is an internal refactor version of OpenDAL. In this version, we refactored our error handling and our <code>Accessor</code> APIs. Thanks to those internal changes, we added an object-level metadata cache, making it nearly zero cost to reuse existing metadata continuously.</p>
 <p>Let’s start with our errors.</p>
