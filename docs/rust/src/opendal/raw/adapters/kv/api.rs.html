@@ -153,6 +153,31 @@
 <a href="#153" id="153">153</a>
 <a href="#154" id="154">154</a>
 <a href="#155" id="155">155</a>
+<a href="#156" id="156">156</a>
+<a href="#157" id="157">157</a>
+<a href="#158" id="158">158</a>
+<a href="#159" id="159">159</a>
+<a href="#160" id="160">160</a>
+<a href="#161" id="161">161</a>
+<a href="#162" id="162">162</a>
+<a href="#163" id="163">163</a>
+<a href="#164" id="164">164</a>
+<a href="#165" id="165">165</a>
+<a href="#166" id="166">166</a>
+<a href="#167" id="167">167</a>
+<a href="#168" id="168">168</a>
+<a href="#169" id="169">169</a>
+<a href="#170" id="170">170</a>
+<a href="#171" id="171">171</a>
+<a href="#172" id="172">172</a>
+<a href="#173" id="173">173</a>
+<a href="#174" id="174">174</a>
+<a href="#175" id="175">175</a>
+<a href="#176" id="176">176</a>
+<a href="#177" id="177">177</a>
+<a href="#178" id="178">178</a>
+<a href="#179" id="179">179</a>
+<a href="#180" id="180">180</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -258,6 +283,31 @@
             <span class="string">&quot;kv adapter doesn&#39;t support this operation&quot;</span>,
         )
         .with_operation(<span class="string">&quot;kv::Adapter::blocking_scan&quot;</span>))
+    }
+
+    <span class="doccomment">/// Append a key into service
+    </span><span class="kw">async fn </span>append(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, value: <span class="kw-2">&amp;</span>[u8]) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        <span class="kw">let _ </span>= path;
+        <span class="kw">let _ </span>= value;
+
+        <span class="prelude-val">Err</span>(Error::new(
+            ErrorKind::Unsupported,
+            <span class="string">&quot;kv adapter doesn&#39;t support this operation&quot;</span>,
+        )
+        .with_operation(<span class="string">&quot;kv::Adapter::append&quot;</span>))
+    }
+
+    <span class="doccomment">/// Append a key into service
+    /// in blocking way.
+    </span><span class="kw">fn </span>blocking_append(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, value: <span class="kw-2">&amp;</span>[u8]) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        <span class="kw">let _ </span>= path;
+        <span class="kw">let _ </span>= value;
+
+        <span class="prelude-val">Err</span>(Error::new(
+            ErrorKind::Unsupported,
+            <span class="string">&quot;kv adapter doesn&#39;t support this operation&quot;</span>,
+        )
+        .with_operation(<span class="string">&quot;kv::Adapter::blocking_append&quot;</span>))
     }
 }
 
