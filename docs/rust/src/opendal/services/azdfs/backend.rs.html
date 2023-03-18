@@ -1349,9 +1349,9 @@
 
 <span class="attr">#[cfg(test)]
 </span><span class="kw">mod </span>tests {
-    <span class="kw">use crate</span>::{services::azdfs::backend::infer_storage_name_from_endpoint, Builder};
-
     <span class="kw">use </span><span class="kw">super</span>::AzdfsBuilder;
+    <span class="kw">use </span><span class="kw">crate</span>::services::azdfs::backend::infer_storage_name_from_endpoint;
+    <span class="kw">use </span><span class="kw">crate</span>::Builder;
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>test_infer_storage_name_from_endpoint() {
