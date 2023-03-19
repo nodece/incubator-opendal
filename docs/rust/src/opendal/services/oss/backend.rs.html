@@ -913,6 +913,8 @@
 <a href="#913" id="913">913</a>
 <a href="#914" id="914">914</a>
 <a href="#915" id="915">915</a>
+<a href="#916" id="916">916</a>
+<a href="#917" id="917">917</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -1225,8 +1227,10 @@
         <span class="comment">// Handle endpoint, region and bucket name.
         </span><span class="kw">let </span>bucket = <span class="kw">match </span><span class="self">self</span>.bucket.is_empty() {
             <span class="bool-val">false </span>=&gt; <span class="prelude-val">Ok</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.bucket),
-            <span class="bool-val">true </span>=&gt; <span class="prelude-val">Err</span>(Error::new(ErrorKind::ConfigInvalid, <span class="string">&quot;bucket is empty&quot;</span>)
-                .with_context(<span class="string">&quot;service&quot;</span>, Scheme::Oss)),
+            <span class="bool-val">true </span>=&gt; <span class="prelude-val">Err</span>(
+                Error::new(ErrorKind::ConfigInvalid, <span class="string">&quot;The bucket is misconfigured&quot;</span>)
+                    .with_context(<span class="string">&quot;service&quot;</span>, Scheme::Oss),
+            ),
         }<span class="question-mark">?</span>;
 
         <span class="kw">let </span>client = <span class="kw">if let </span><span class="prelude-val">Some</span>(client) = <span class="self">self</span>.http_client.take() {
