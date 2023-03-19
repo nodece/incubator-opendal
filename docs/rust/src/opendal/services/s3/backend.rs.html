@@ -3383,7 +3383,7 @@
             <span class="self">self</span>.endpoint,
             percent_encode_path(<span class="kw-2">&amp;</span>p),
             part_number,
-            upload_id
+            percent_encode_path(upload_id)
         );
 
         <span class="kw">let </span><span class="kw-2">mut </span>req = Request::put(<span class="kw-2">&amp;</span>url);
@@ -3413,7 +3413,7 @@
             <span class="string">&quot;{}/{}?uploadId={}&quot;</span>,
             <span class="self">self</span>.endpoint,
             percent_encode_path(<span class="kw-2">&amp;</span>p),
-            upload_id
+            percent_encode_path(upload_id)
         );
 
         <span class="kw">let </span>req = Request::post(<span class="kw-2">&amp;</span>url);
