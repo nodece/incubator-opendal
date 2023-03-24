@@ -650,6 +650,7 @@
 <a href="#650" id="650">650</a>
 <a href="#651" id="651">651</a>
 <a href="#652" id="652">652</a>
+<a href="#653" id="653">653</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -946,12 +947,13 @@
         <span class="kw">let </span>path = normalize_path(path);
 
         <span class="kw">if </span>!validate_path(<span class="kw-2">&amp;</span>path, EntryMode::DIR) {
-            <span class="kw">return </span><span class="prelude-val">Err</span>(
-                Error::new(ErrorKind::NotADirectory, <span class="string">&quot;read path is not a directory&quot;</span>)
-                    .with_operation(<span class="string">&quot;create_dir&quot;</span>)
-                    .with_context(<span class="string">&quot;service&quot;</span>, <span class="self">self</span>.inner().info().scheme())
-                    .with_context(<span class="string">&quot;path&quot;</span>, <span class="kw-2">&amp;</span>path),
-            );
+            <span class="kw">return </span><span class="prelude-val">Err</span>(Error::new(
+                ErrorKind::NotADirectory,
+                <span class="string">&quot;the path trying to create should end with `/`&quot;</span>,
+            )
+            .with_operation(<span class="string">&quot;create_dir&quot;</span>)
+            .with_context(<span class="string">&quot;service&quot;</span>, <span class="self">self</span>.inner().info().scheme())
+            .with_context(<span class="string">&quot;path&quot;</span>, <span class="kw-2">&amp;</span>path));
         }
 
         <span class="self">self</span>.inner()
@@ -1241,7 +1243,7 @@
         <span class="kw">if </span>!validate_path(<span class="kw-2">&amp;</span>path, EntryMode::DIR) {
             <span class="kw">return </span><span class="prelude-val">Err</span>(Error::new(
                 ErrorKind::NotADirectory,
-                <span class="string">&quot;the path trying to list is not a directory&quot;</span>,
+                <span class="string">&quot;the path trying to list should end with `/`&quot;</span>,
             )
             .with_operation(<span class="string">&quot;BlockingOperator::list&quot;</span>)
             .with_context(<span class="string">&quot;service&quot;</span>, <span class="self">self</span>.info().scheme().into_static())
@@ -1291,7 +1293,7 @@
         <span class="kw">if </span>!validate_path(<span class="kw-2">&amp;</span>path, EntryMode::DIR) {
             <span class="kw">return </span><span class="prelude-val">Err</span>(Error::new(
                 ErrorKind::NotADirectory,
-                <span class="string">&quot;the path trying to list is not a directory&quot;</span>,
+                <span class="string">&quot;the path trying to scan should end with `/`&quot;</span>,
             )
             .with_operation(<span class="string">&quot;BlockingOperator::scan&quot;</span>)
             .with_context(<span class="string">&quot;service&quot;</span>, <span class="self">self</span>.info().scheme().into_static())
