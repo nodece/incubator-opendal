@@ -1876,6 +1876,24 @@
 <a href="#1876" id="1876">1876</a>
 <a href="#1877" id="1877">1877</a>
 <a href="#1878" id="1878">1878</a>
+<a href="#1879" id="1879">1879</a>
+<a href="#1880" id="1880">1880</a>
+<a href="#1881" id="1881">1881</a>
+<a href="#1882" id="1882">1882</a>
+<a href="#1883" id="1883">1883</a>
+<a href="#1884" id="1884">1884</a>
+<a href="#1885" id="1885">1885</a>
+<a href="#1886" id="1886">1886</a>
+<a href="#1887" id="1887">1887</a>
+<a href="#1888" id="1888">1888</a>
+<a href="#1889" id="1889">1889</a>
+<a href="#1890" id="1890">1890</a>
+<a href="#1891" id="1891">1891</a>
+<a href="#1892" id="1892">1892</a>
+<a href="#1893" id="1893">1893</a>
+<a href="#1894" id="1894">1894</a>
+<a href="#1895" id="1895">1895</a>
+<a href="#1896" id="1896">1896</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -1954,6 +1972,8 @@
     <span class="kw">pub const </span>X_AMZ_SERVER_SIDE_ENCRYPTION_AWS_KMS_KEY_ID: <span class="kw-2">&amp;</span>str =
         <span class="string">&quot;x-amz-server-side-encryption-aws-kms-key-id&quot;</span>;
     <span class="kw">pub const </span>X_AMZ_BUCKET_REGION: <span class="kw-2">&amp;</span>str = <span class="string">&quot;x-amz-bucket-region&quot;</span>;
+
+    <span class="kw">pub const </span>RESPONSE_CONTENT_DISPOSITION: <span class="kw-2">&amp;</span>str = <span class="string">&quot;response-content-disposition&quot;</span>;
 }
 
 <span class="doccomment">/// Aws S3 and compatible services (including minio, digitalocean space and so on) support
@@ -3117,7 +3137,9 @@
         <span class="comment">// We will not send this request out, just for signing.
         </span><span class="kw">let </span><span class="kw-2">mut </span>req = <span class="kw">match </span>args.operation() {
             PresignOperation::Stat(<span class="kw">_</span>) =&gt; <span class="self">self</span>.s3_head_object_request(path)<span class="question-mark">?</span>,
-            PresignOperation::Read(v) =&gt; <span class="self">self</span>.s3_get_object_request(path, v.range())<span class="question-mark">?</span>,
+            PresignOperation::Read(v) =&gt; {
+                <span class="self">self</span>.s3_get_object_request(path, v.range(), v.override_content_disposition())<span class="question-mark">?
+            </span>}
             PresignOperation::Write(<span class="kw">_</span>) =&gt; {
                 <span class="self">self</span>.s3_put_object_request(path, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, AsyncBody::Empty)<span class="question-mark">?
             </span>}
@@ -3203,10 +3225,24 @@
         <span class="prelude-val">Ok</span>(req)
     }
 
-    <span class="kw">fn </span>s3_get_object_request(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, range: BytesRange) -&gt; <span class="prelude-ty">Result</span>&lt;Request&lt;AsyncBody&gt;&gt; {
+    <span class="kw">fn </span>s3_get_object_request(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        path: <span class="kw-2">&amp;</span>str,
+        range: BytesRange,
+        override_content_disposition: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Request&lt;AsyncBody&gt;&gt; {
         <span class="kw">let </span>p = build_abs_path(<span class="kw-2">&amp;</span><span class="self">self</span>.root, path);
 
-        <span class="kw">let </span>url = <span class="macro">format!</span>(<span class="string">&quot;{}/{}&quot;</span>, <span class="self">self</span>.endpoint, percent_encode_path(<span class="kw-2">&amp;</span>p));
+        <span class="comment">// Construct headers to add to the request
+        </span><span class="kw">let </span><span class="kw-2">mut </span>url = <span class="macro">format!</span>(<span class="string">&quot;{}/{}&quot;</span>, <span class="self">self</span>.endpoint, percent_encode_path(<span class="kw-2">&amp;</span>p));
+
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(override_content_disposition) = override_content_disposition {
+            url.push_str(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
+                <span class="string">&quot;?{}={}&quot;</span>,
+                constants::RESPONSE_CONTENT_DISPOSITION,
+                percent_encode_path(override_content_disposition)
+            ));
+        }
 
         <span class="kw">let </span><span class="kw-2">mut </span>req = Request::get(<span class="kw-2">&amp;</span>url);
 
@@ -3230,7 +3266,7 @@
         path: <span class="kw-2">&amp;</span>str,
         range: BytesRange,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Response&lt;IncomingAsyncBody&gt;&gt; {
-        <span class="kw">let </span><span class="kw-2">mut </span>req = <span class="self">self</span>.s3_get_object_request(path, range)<span class="question-mark">?</span>;
+        <span class="kw">let </span><span class="kw-2">mut </span>req = <span class="self">self</span>.s3_get_object_request(path, range, <span class="prelude-val">None</span>)<span class="question-mark">?</span>;
 
         <span class="self">self</span>.signer.sign(<span class="kw-2">&amp;mut </span>req).map_err(new_request_sign_error)<span class="question-mark">?</span>;
 

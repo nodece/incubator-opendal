@@ -314,6 +314,22 @@
 <a href="#314" id="314">314</a>
 <a href="#315" id="315">315</a>
 <a href="#316" id="316">316</a>
+<a href="#317" id="317">317</a>
+<a href="#318" id="318">318</a>
+<a href="#319" id="319">319</a>
+<a href="#320" id="320">320</a>
+<a href="#321" id="321">321</a>
+<a href="#322" id="322">322</a>
+<a href="#323" id="323">323</a>
+<a href="#324" id="324">324</a>
+<a href="#325" id="325">325</a>
+<a href="#326" id="326">326</a>
+<a href="#327" id="327">327</a>
+<a href="#328" id="328">328</a>
+<a href="#329" id="329">329</a>
+<a href="#330" id="330">330</a>
+<a href="#331" id="331">331</a>
+<a href="#332" id="332">332</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -546,6 +562,7 @@
 </span><span class="attr">#[derive(Debug, Clone, Default)]
 </span><span class="kw">pub struct </span>OpRead {
     br: BytesRange,
+    override_content_disposition: <span class="prelude-ty">Option</span>&lt;String&gt;,
 }
 
 <span class="kw">impl </span>OpRead {
@@ -563,6 +580,21 @@
     <span class="doccomment">/// Get range from OpRead.
     </span><span class="kw">pub fn </span>range(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; BytesRange {
         <span class="self">self</span>.br
+    }
+
+    <span class="doccomment">/// Sets the content-disposition header that should be send back by the remote read operation.
+    </span><span class="kw">pub fn </span>with_override_content_disposition(
+        <span class="kw-2">mut </span><span class="self">self</span>,
+        content_disposition: <span class="kw">impl </span>Into&lt;String&gt;,
+    ) -&gt; <span class="self">Self </span>{
+        <span class="self">self</span>.override_content_disposition = <span class="prelude-val">Some</span>(content_disposition.into());
+        <span class="self">self
+    </span>}
+
+    <span class="doccomment">/// Returns the content-disposition header that should be send back by the remote read
+    /// operation.
+    </span><span class="kw">pub fn </span>override_content_disposition(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt; {
+        <span class="self">self</span>.override_content_disposition.as_deref()
     }
 }
 
