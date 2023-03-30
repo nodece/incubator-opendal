@@ -152,6 +152,7 @@
 <a href="#152" id="152">152</a>
 <a href="#153" id="153">153</a>
 <a href="#154" id="154">154</a>
+<a href="#155" id="155">155</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -215,6 +216,7 @@
             <span class="prelude-val">Some</span>(bs.len()),
             <span class="self">self</span>.op.content_type(),
             <span class="self">self</span>.op.content_disposition(),
+            <span class="self">self</span>.op.cache_control(),
             AsyncBody::Bytes(bs),
         )<span class="question-mark">?</span>;
 

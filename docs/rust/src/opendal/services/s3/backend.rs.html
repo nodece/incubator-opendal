@@ -1894,6 +1894,51 @@
 <a href="#1894" id="1894">1894</a>
 <a href="#1895" id="1895">1895</a>
 <a href="#1896" id="1896">1896</a>
+<a href="#1897" id="1897">1897</a>
+<a href="#1898" id="1898">1898</a>
+<a href="#1899" id="1899">1899</a>
+<a href="#1900" id="1900">1900</a>
+<a href="#1901" id="1901">1901</a>
+<a href="#1902" id="1902">1902</a>
+<a href="#1903" id="1903">1903</a>
+<a href="#1904" id="1904">1904</a>
+<a href="#1905" id="1905">1905</a>
+<a href="#1906" id="1906">1906</a>
+<a href="#1907" id="1907">1907</a>
+<a href="#1908" id="1908">1908</a>
+<a href="#1909" id="1909">1909</a>
+<a href="#1910" id="1910">1910</a>
+<a href="#1911" id="1911">1911</a>
+<a href="#1912" id="1912">1912</a>
+<a href="#1913" id="1913">1913</a>
+<a href="#1914" id="1914">1914</a>
+<a href="#1915" id="1915">1915</a>
+<a href="#1916" id="1916">1916</a>
+<a href="#1917" id="1917">1917</a>
+<a href="#1918" id="1918">1918</a>
+<a href="#1919" id="1919">1919</a>
+<a href="#1920" id="1920">1920</a>
+<a href="#1921" id="1921">1921</a>
+<a href="#1922" id="1922">1922</a>
+<a href="#1923" id="1923">1923</a>
+<a href="#1924" id="1924">1924</a>
+<a href="#1925" id="1925">1925</a>
+<a href="#1926" id="1926">1926</a>
+<a href="#1927" id="1927">1927</a>
+<a href="#1928" id="1928">1928</a>
+<a href="#1929" id="1929">1929</a>
+<a href="#1930" id="1930">1930</a>
+<a href="#1931" id="1931">1931</a>
+<a href="#1932" id="1932">1932</a>
+<a href="#1933" id="1933">1933</a>
+<a href="#1934" id="1934">1934</a>
+<a href="#1935" id="1935">1935</a>
+<a href="#1936" id="1936">1936</a>
+<a href="#1937" id="1937">1937</a>
+<a href="#1938" id="1938">1938</a>
+<a href="#1939" id="1939">1939</a>
+<a href="#1940" id="1940">1940</a>
+<a href="#1941" id="1941">1941</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -1922,10 +1967,10 @@
 <span class="kw">use </span>base64::Engine;
 <span class="kw">use </span>bytes::Buf;
 <span class="kw">use </span>bytes::Bytes;
-<span class="kw">use </span>http::header::HeaderName;
 <span class="kw">use </span>http::header::CONTENT_DISPOSITION;
 <span class="kw">use </span>http::header::CONTENT_LENGTH;
 <span class="kw">use </span>http::header::CONTENT_TYPE;
+<span class="kw">use </span>http::header::{HeaderName, CACHE_CONTROL};
 <span class="kw">use </span>http::HeaderValue;
 <span class="kw">use </span>http::Request;
 <span class="kw">use </span>http::Response;
@@ -1974,6 +2019,7 @@
     <span class="kw">pub const </span>X_AMZ_BUCKET_REGION: <span class="kw-2">&amp;</span>str = <span class="string">&quot;x-amz-bucket-region&quot;</span>;
 
     <span class="kw">pub const </span>RESPONSE_CONTENT_DISPOSITION: <span class="kw-2">&amp;</span>str = <span class="string">&quot;response-content-disposition&quot;</span>;
+    <span class="kw">pub const </span>RESPONSE_CACHE_CONTROL: <span class="kw-2">&amp;</span>str = <span class="string">&quot;response-cache-control&quot;</span>;
 }
 
 <span class="doccomment">/// Aws S3 and compatible services (including minio, digitalocean space and so on) support
@@ -3030,7 +3076,8 @@
     }
 
     <span class="kw">async fn </span>create(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, <span class="kw">_</span>: OpCreate) -&gt; <span class="prelude-ty">Result</span>&lt;RpCreate&gt; {
-        <span class="kw">let </span><span class="kw-2">mut </span>req = <span class="self">self</span>.s3_put_object_request(path, <span class="prelude-val">Some</span>(<span class="number">0</span>), <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, AsyncBody::Empty)<span class="question-mark">?</span>;
+        <span class="kw">let </span><span class="kw-2">mut </span>req =
+            <span class="self">self</span>.s3_put_object_request(path, <span class="prelude-val">Some</span>(<span class="number">0</span>), <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, AsyncBody::Empty)<span class="question-mark">?</span>;
 
         <span class="self">self</span>.signer.sign(<span class="kw-2">&amp;mut </span>req).map_err(new_request_sign_error)<span class="question-mark">?</span>;
 
@@ -3063,7 +3110,14 @@
 
     <span class="kw">async fn </span>write(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpWrite) -&gt; <span class="prelude-ty">Result</span>&lt;(RpWrite, <span class="self">Self</span>::Writer)&gt; {
         <span class="kw">let </span>upload_id = <span class="kw">if </span>args.append() {
-            <span class="kw">let </span>resp = <span class="self">self</span>.s3_initiate_multipart_upload(path).<span class="kw">await</span><span class="question-mark">?</span>;
+            <span class="kw">let </span>resp = <span class="self">self
+                </span>.s3_initiate_multipart_upload(
+                    path,
+                    args.content_type(),
+                    args.content_disposition(),
+                    args.cache_control(),
+                )
+                .<span class="kw">await</span><span class="question-mark">?</span>;
 
             <span class="kw">let </span>status = resp.status();
 
@@ -3137,11 +3191,14 @@
         <span class="comment">// We will not send this request out, just for signing.
         </span><span class="kw">let </span><span class="kw-2">mut </span>req = <span class="kw">match </span>args.operation() {
             PresignOperation::Stat(<span class="kw">_</span>) =&gt; <span class="self">self</span>.s3_head_object_request(path)<span class="question-mark">?</span>,
-            PresignOperation::Read(v) =&gt; {
-                <span class="self">self</span>.s3_get_object_request(path, v.range(), v.override_content_disposition())<span class="question-mark">?
-            </span>}
+            PresignOperation::Read(v) =&gt; <span class="self">self</span>.s3_get_object_request(
+                path,
+                v.range(),
+                v.override_content_disposition(),
+                v.override_cache_control(),
+            )<span class="question-mark">?</span>,
             PresignOperation::Write(<span class="kw">_</span>) =&gt; {
-                <span class="self">self</span>.s3_put_object_request(path, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, AsyncBody::Empty)<span class="question-mark">?
+                <span class="self">self</span>.s3_put_object_request(path, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, AsyncBody::Empty)<span class="question-mark">?
             </span>}
         };
 
@@ -3230,18 +3287,31 @@
         path: <span class="kw-2">&amp;</span>str,
         range: BytesRange,
         override_content_disposition: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;,
+        override_cache_control: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Request&lt;AsyncBody&gt;&gt; {
         <span class="kw">let </span>p = build_abs_path(<span class="kw-2">&amp;</span><span class="self">self</span>.root, path);
 
         <span class="comment">// Construct headers to add to the request
         </span><span class="kw">let </span><span class="kw-2">mut </span>url = <span class="macro">format!</span>(<span class="string">&quot;{}/{}&quot;</span>, <span class="self">self</span>.endpoint, percent_encode_path(<span class="kw-2">&amp;</span>p));
 
+        <span class="comment">// Add query arguments to the URL based on response overrides
+        </span><span class="kw">let </span><span class="kw-2">mut </span>query_args = Vec::new();
         <span class="kw">if let </span><span class="prelude-val">Some</span>(override_content_disposition) = override_content_disposition {
-            url.push_str(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
-                <span class="string">&quot;?{}={}&quot;</span>,
+            query_args.push(<span class="macro">format!</span>(
+                <span class="string">&quot;{}={}&quot;</span>,
                 constants::RESPONSE_CONTENT_DISPOSITION,
                 percent_encode_path(override_content_disposition)
-            ));
+            ))
+        }
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(override_cache_control) = override_cache_control {
+            query_args.push(<span class="macro">format!</span>(
+                <span class="string">&quot;{}={}&quot;</span>,
+                constants::RESPONSE_CACHE_CONTROL,
+                percent_encode_path(override_cache_control)
+            ))
+        }
+        <span class="kw">if </span>!query_args.is_empty() {
+            url.push_str(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;?{}&quot;</span>, query_args.join(<span class="string">&quot;&amp;&quot;</span>)));
         }
 
         <span class="kw">let </span><span class="kw-2">mut </span>req = Request::get(<span class="kw-2">&amp;</span>url);
@@ -3266,7 +3336,7 @@
         path: <span class="kw-2">&amp;</span>str,
         range: BytesRange,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Response&lt;IncomingAsyncBody&gt;&gt; {
-        <span class="kw">let </span><span class="kw-2">mut </span>req = <span class="self">self</span>.s3_get_object_request(path, range, <span class="prelude-val">None</span>)<span class="question-mark">?</span>;
+        <span class="kw">let </span><span class="kw-2">mut </span>req = <span class="self">self</span>.s3_get_object_request(path, range, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>)<span class="question-mark">?</span>;
 
         <span class="self">self</span>.signer.sign(<span class="kw-2">&amp;mut </span>req).map_err(new_request_sign_error)<span class="question-mark">?</span>;
 
@@ -3279,6 +3349,7 @@
         size: <span class="prelude-ty">Option</span>&lt;usize&gt;,
         content_type: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;,
         content_disposition: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;,
+        cache_control: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;,
         body: AsyncBody,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Request&lt;AsyncBody&gt;&gt; {
         <span class="kw">let </span>p = build_abs_path(<span class="kw-2">&amp;</span><span class="self">self</span>.root, path);
@@ -3297,6 +3368,10 @@
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>(pos) = content_disposition {
             req = req.header(CONTENT_DISPOSITION, pos)
+        }
+
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(cache_control) = cache_control {
+            req = req.header(CACHE_CONTROL, cache_control)
         }
 
         <span class="comment">// Set SSE headers.
@@ -3385,12 +3460,27 @@
     <span class="kw">async fn </span>s3_initiate_multipart_upload(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         path: <span class="kw-2">&amp;</span>str,
+        content_type: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;,
+        content_disposition: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;,
+        cache_control: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Response&lt;IncomingAsyncBody&gt;&gt; {
         <span class="kw">let </span>p = build_abs_path(<span class="kw-2">&amp;</span><span class="self">self</span>.root, path);
 
         <span class="kw">let </span>url = <span class="macro">format!</span>(<span class="string">&quot;{}/{}?uploads&quot;</span>, <span class="self">self</span>.endpoint, percent_encode_path(<span class="kw-2">&amp;</span>p));
 
-        <span class="kw">let </span>req = Request::post(<span class="kw-2">&amp;</span>url);
+        <span class="kw">let </span><span class="kw-2">mut </span>req = Request::post(<span class="kw-2">&amp;</span>url);
+
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(mime) = content_type {
+            req = req.header(CONTENT_TYPE, mime)
+        }
+
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(content_disposition) = content_disposition {
+            req = req.header(CONTENT_DISPOSITION, content_disposition)
+        }
+
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(cache_control) = cache_control {
+            req = req.header(CACHE_CONTROL, cache_control)
+        }
 
         <span class="comment">// Set SSE headers.
         </span><span class="kw">let </span>req = <span class="self">self</span>.insert_sse_headers(req, <span class="bool-val">true</span>);
