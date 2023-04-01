@@ -1939,6 +1939,31 @@
 <a href="#1939" id="1939">1939</a>
 <a href="#1940" id="1940">1940</a>
 <a href="#1941" id="1941">1941</a>
+<a href="#1942" id="1942">1942</a>
+<a href="#1943" id="1943">1943</a>
+<a href="#1944" id="1944">1944</a>
+<a href="#1945" id="1945">1945</a>
+<a href="#1946" id="1946">1946</a>
+<a href="#1947" id="1947">1947</a>
+<a href="#1948" id="1948">1948</a>
+<a href="#1949" id="1949">1949</a>
+<a href="#1950" id="1950">1950</a>
+<a href="#1951" id="1951">1951</a>
+<a href="#1952" id="1952">1952</a>
+<a href="#1953" id="1953">1953</a>
+<a href="#1954" id="1954">1954</a>
+<a href="#1955" id="1955">1955</a>
+<a href="#1956" id="1956">1956</a>
+<a href="#1957" id="1957">1957</a>
+<a href="#1958" id="1958">1958</a>
+<a href="#1959" id="1959">1959</a>
+<a href="#1960" id="1960">1960</a>
+<a href="#1961" id="1961">1961</a>
+<a href="#1962" id="1962">1962</a>
+<a href="#1963" id="1963">1963</a>
+<a href="#1964" id="1964">1964</a>
+<a href="#1965" id="1965">1965</a>
+<a href="#1966" id="1966">1966</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -3095,7 +3120,9 @@
     }
 
     <span class="kw">async fn </span>read(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpRead) -&gt; <span class="prelude-ty">Result</span>&lt;(RpRead, <span class="self">Self</span>::Reader)&gt; {
-        <span class="kw">let </span>resp = <span class="self">self</span>.s3_get_object(path, args.range()).<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="kw">let </span>resp = <span class="self">self
+            </span>.s3_get_object(path, args.range(), args.if_none_match())
+            .<span class="kw">await</span><span class="question-mark">?</span>;
 
         <span class="kw">let </span>status = resp.status();
 
@@ -3143,13 +3170,13 @@
         ))
     }
 
-    <span class="kw">async fn </span>stat(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, <span class="kw">_</span>: OpStat) -&gt; <span class="prelude-ty">Result</span>&lt;RpStat&gt; {
+    <span class="kw">async fn </span>stat(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpStat) -&gt; <span class="prelude-ty">Result</span>&lt;RpStat&gt; {
         <span class="comment">// Stat root always returns a DIR.
         </span><span class="kw">if </span>path == <span class="string">&quot;/&quot; </span>{
             <span class="kw">return </span><span class="prelude-val">Ok</span>(RpStat::new(Metadata::new(EntryMode::DIR)));
         }
 
-        <span class="kw">let </span>resp = <span class="self">self</span>.s3_head_object(path).<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="kw">let </span>resp = <span class="self">self</span>.s3_head_object(path, args.if_none_match()).<span class="kw">await</span><span class="question-mark">?</span>;
 
         <span class="kw">let </span>status = resp.status();
 
@@ -3190,12 +3217,13 @@
     <span class="kw">fn </span>presign(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpPresign) -&gt; <span class="prelude-ty">Result</span>&lt;RpPresign&gt; {
         <span class="comment">// We will not send this request out, just for signing.
         </span><span class="kw">let </span><span class="kw-2">mut </span>req = <span class="kw">match </span>args.operation() {
-            PresignOperation::Stat(<span class="kw">_</span>) =&gt; <span class="self">self</span>.s3_head_object_request(path)<span class="question-mark">?</span>,
+            PresignOperation::Stat(v) =&gt; <span class="self">self</span>.s3_head_object_request(path, v.if_none_match())<span class="question-mark">?</span>,
             PresignOperation::Read(v) =&gt; <span class="self">self</span>.s3_get_object_request(
                 path,
                 v.range(),
                 v.override_content_disposition(),
                 v.override_cache_control(),
+                v.if_none_match(),
             )<span class="question-mark">?</span>,
             PresignOperation::Write(<span class="kw">_</span>) =&gt; {
                 <span class="self">self</span>.s3_put_object_request(path, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, AsyncBody::Empty)<span class="question-mark">?
@@ -3266,7 +3294,11 @@
 }
 
 <span class="kw">impl </span>S3Backend {
-    <span class="kw">fn </span>s3_head_object_request(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;Request&lt;AsyncBody&gt;&gt; {
+    <span class="kw">fn </span>s3_head_object_request(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        path: <span class="kw-2">&amp;</span>str,
+        if_none_match: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Request&lt;AsyncBody&gt;&gt; {
         <span class="kw">let </span>p = build_abs_path(<span class="kw-2">&amp;</span><span class="self">self</span>.root, path);
 
         <span class="kw">let </span>url = <span class="macro">format!</span>(<span class="string">&quot;{}/{}&quot;</span>, <span class="self">self</span>.endpoint, percent_encode_path(<span class="kw-2">&amp;</span>p));
@@ -3274,6 +3306,10 @@
         <span class="kw">let </span><span class="kw-2">mut </span>req = Request::head(<span class="kw-2">&amp;</span>url);
 
         req = <span class="self">self</span>.insert_sse_headers(req, <span class="bool-val">false</span>);
+
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(if_none_match) = if_none_match {
+            req = req.header(http::header::IF_NONE_MATCH, if_none_match);
+        }
 
         <span class="kw">let </span>req = req
             .body(AsyncBody::Empty)
@@ -3288,6 +3324,7 @@
         range: BytesRange,
         override_content_disposition: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;,
         override_cache_control: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;,
+        if_none_match: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Request&lt;AsyncBody&gt;&gt; {
         <span class="kw">let </span>p = build_abs_path(<span class="kw-2">&amp;</span><span class="self">self</span>.root, path);
 
@@ -3320,6 +3357,10 @@
             req = req.header(http::header::RANGE, range.to_header());
         }
 
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(if_none_match) = if_none_match {
+            req = req.header(http::header::IF_NONE_MATCH, if_none_match);
+        }
+
         <span class="comment">// Set SSE headers.
         // TODO: how will this work with presign?
         </span>req = <span class="self">self</span>.insert_sse_headers(req, <span class="bool-val">false</span>);
@@ -3335,8 +3376,9 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         path: <span class="kw-2">&amp;</span>str,
         range: BytesRange,
+        if_none_match: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Response&lt;IncomingAsyncBody&gt;&gt; {
-        <span class="kw">let </span><span class="kw-2">mut </span>req = <span class="self">self</span>.s3_get_object_request(path, range, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>)<span class="question-mark">?</span>;
+        <span class="kw">let </span><span class="kw-2">mut </span>req = <span class="self">self</span>.s3_get_object_request(path, range, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, if_none_match)<span class="question-mark">?</span>;
 
         <span class="self">self</span>.signer.sign(<span class="kw-2">&amp;mut </span>req).map_err(new_request_sign_error)<span class="question-mark">?</span>;
 
@@ -3383,7 +3425,11 @@
         <span class="prelude-val">Ok</span>(req)
     }
 
-    <span class="kw">async fn </span>s3_head_object(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;Response&lt;IncomingAsyncBody&gt;&gt; {
+    <span class="kw">async fn </span>s3_head_object(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        path: <span class="kw-2">&amp;</span>str,
+        if_none_match: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Response&lt;IncomingAsyncBody&gt;&gt; {
         <span class="kw">let </span>p = build_abs_path(<span class="kw-2">&amp;</span><span class="self">self</span>.root, path);
 
         <span class="kw">let </span>url = <span class="macro">format!</span>(<span class="string">&quot;{}/{}&quot;</span>, <span class="self">self</span>.endpoint, percent_encode_path(<span class="kw-2">&amp;</span>p));
@@ -3392,6 +3438,10 @@
 
         <span class="comment">// Set SSE headers.
         </span>req = <span class="self">self</span>.insert_sse_headers(req, <span class="bool-val">false</span>);
+
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(if_none_match) = if_none_match {
+            req = req.header(http::header::IF_NONE_MATCH, if_none_match);
+        }
 
         <span class="kw">let </span><span class="kw-2">mut </span>req = req
             .body(AsyncBody::Empty)
