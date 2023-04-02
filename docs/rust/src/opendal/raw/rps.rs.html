@@ -274,6 +274,14 @@
 <a href="#274" id="274">274</a>
 <a href="#275" id="275">275</a>
 <a href="#276" id="276">276</a>
+<a href="#277" id="277">277</a>
+<a href="#278" id="278">278</a>
+<a href="#279" id="279">279</a>
+<a href="#280" id="280">280</a>
+<a href="#281" id="281">281</a>
+<a href="#282" id="282">282</a>
+<a href="#283" id="283">283</a>
+<a href="#284" id="284">284</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -464,6 +472,14 @@
         <span class="kw">use </span>BatchedResults::<span class="kw-2">*</span>;
         <span class="kw">match </span><span class="self">self </span>{
             Delete(v) =&gt; v.iter().filter(|v| v.<span class="number">1</span>.is_err()).count(),
+        }
+    }
+
+    <span class="doccomment">/// Return an iterator over error results.
+    </span><span class="kw">pub fn </span>errors(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Box&lt;<span class="kw">dyn </span>Iterator&lt;Item = <span class="kw-2">&amp;</span>Error&gt; + <span class="lifetime">&#39;_</span>&gt; {
+        <span class="kw">use </span>BatchedResults::<span class="kw-2">*</span>;
+        <span class="kw">match </span><span class="self">self </span>{
+            Delete(v) =&gt; Box::new(v.iter().filter_map(|v| v.<span class="number">1</span>.as_ref().err())),
         }
     }
 }
