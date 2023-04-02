@@ -911,10 +911,6 @@
 <a href="#911" id="911">911</a>
 <a href="#912" id="912">912</a>
 <a href="#913" id="913">913</a>
-<a href="#914" id="914">914</a>
-<a href="#915" id="915">915</a>
-<a href="#916" id="916">916</a>
-<a href="#917" id="917">917</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -1461,61 +1457,57 @@
 
     <span class="kw">async fn </span>batch(<span class="kw-2">&amp;</span><span class="self">self</span>, args: OpBatch) -&gt; <span class="prelude-ty">Result</span>&lt;RpBatch&gt; {
         <span class="kw">let </span>ops = args.into_operation();
-        <span class="kw">match </span>ops {
-            BatchOperations::Delete(ops) =&gt; {
-                <span class="comment">// Sadly, OSS will not return failed keys, so we will build
-                // a set to calculate the failed keys.
-                </span><span class="kw">let </span><span class="kw-2">mut </span>keys = HashSet::new();
+        <span class="comment">// Sadly, OSS will not return failed keys, so we will build
+        // a set to calculate the failed keys.
+        </span><span class="kw">let </span><span class="kw-2">mut </span>keys = HashSet::new();
 
-                <span class="kw">let </span>ops_len = ops.len();
-                <span class="kw">if </span>ops_len &gt; <span class="number">1000 </span>{
-                    <span class="kw">return </span><span class="prelude-val">Err</span>(Error::new(
-                        ErrorKind::Unsupported,
-                        <span class="string">&quot;oss services only allow delete up to 1000 keys at once&quot;</span>,
-                    )
-                    .with_context(<span class="string">&quot;length&quot;</span>, ops_len.to_string()));
-                }
+        <span class="kw">let </span>ops_len = ops.len();
+        <span class="kw">if </span>ops_len &gt; <span class="number">1000 </span>{
+            <span class="kw">return </span><span class="prelude-val">Err</span>(Error::new(
+                ErrorKind::Unsupported,
+                <span class="string">&quot;oss services only allow delete up to 1000 keys at once&quot;</span>,
+            )
+            .with_context(<span class="string">&quot;length&quot;</span>, ops_len.to_string()));
+        }
 
-                <span class="kw">let </span>paths = ops
-                    .into_iter()
-                    .map(|(p, <span class="kw">_</span>)| {
-                        keys.insert(p.clone());
-                        p
-                    })
-                    .collect();
+        <span class="kw">let </span>paths = ops
+            .into_iter()
+            .map(|(p, <span class="kw">_</span>)| {
+                keys.insert(p.clone());
+                p
+            })
+            .collect();
 
-                <span class="kw">let </span>resp = <span class="self">self</span>.oss_delete_objects(paths).<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="kw">let </span>resp = <span class="self">self</span>.oss_delete_objects(paths).<span class="kw">await</span><span class="question-mark">?</span>;
 
-                <span class="kw">let </span>status = resp.status();
+        <span class="kw">let </span>status = resp.status();
 
-                <span class="kw">if let </span>StatusCode::OK = status {
-                    <span class="kw">let </span>bs = resp.into_body().bytes().<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="kw">if let </span>StatusCode::OK = status {
+            <span class="kw">let </span>bs = resp.into_body().bytes().<span class="kw">await</span><span class="question-mark">?</span>;
 
-                    <span class="kw">let </span>result: DeleteObjectsResult = quick_xml::de::from_reader(bs.reader())
-                        .map_err(new_xml_deserialize_error)<span class="question-mark">?</span>;
+            <span class="kw">let </span>result: DeleteObjectsResult =
+                quick_xml::de::from_reader(bs.reader()).map_err(new_xml_deserialize_error)<span class="question-mark">?</span>;
 
-                    <span class="kw">let </span><span class="kw-2">mut </span>batched_result = Vec::with_capacity(ops_len);
-                    <span class="kw">for </span>i <span class="kw">in </span>result.deleted {
-                        <span class="kw">let </span>path = build_rel_path(<span class="kw-2">&amp;</span><span class="self">self</span>.root, <span class="kw-2">&amp;</span>i.key);
-                        keys.remove(<span class="kw-2">&amp;</span>path);
-                        batched_result.push((path, <span class="prelude-val">Ok</span>(RpDelete::default())));
-                    }
-                    <span class="comment">// TODO: we should handle those errors with code.
-                    </span><span class="kw">for </span>i <span class="kw">in </span>keys {
-                        batched_result.push((
-                            i,
-                            <span class="prelude-val">Err</span>(Error::new(
-                                ErrorKind::Unexpected,
-                                <span class="string">&quot;oss delete this key failed for reason we don&#39;t know&quot;</span>,
-                            )),
-                        ));
-                    }
-
-                    <span class="prelude-val">Ok</span>(RpBatch::new(BatchedResults::Delete(batched_result)))
-                } <span class="kw">else </span>{
-                    <span class="prelude-val">Err</span>(parse_error(resp).<span class="kw">await</span><span class="question-mark">?</span>)
-                }
+            <span class="kw">let </span><span class="kw-2">mut </span>batched_result = Vec::with_capacity(ops_len);
+            <span class="kw">for </span>i <span class="kw">in </span>result.deleted {
+                <span class="kw">let </span>path = build_rel_path(<span class="kw-2">&amp;</span><span class="self">self</span>.root, <span class="kw-2">&amp;</span>i.key);
+                keys.remove(<span class="kw-2">&amp;</span>path);
+                batched_result.push((path, <span class="prelude-val">Ok</span>(RpDelete::default().into())));
             }
+            <span class="comment">// TODO: we should handle those errors with code.
+            </span><span class="kw">for </span>i <span class="kw">in </span>keys {
+                batched_result.push((
+                    i,
+                    <span class="prelude-val">Err</span>(Error::new(
+                        ErrorKind::Unexpected,
+                        <span class="string">&quot;oss delete this key failed for reason we don&#39;t know&quot;</span>,
+                    )),
+                ));
+            }
+
+            <span class="prelude-val">Ok</span>(RpBatch::new(batched_result))
+        } <span class="kw">else </span>{
+            <span class="prelude-val">Err</span>(parse_error(resp).<span class="kw">await</span><span class="question-mark">?</span>)
         }
     }
 }
