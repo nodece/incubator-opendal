@@ -1906,6 +1906,53 @@
 <a href="#1906" id="1906">1906</a>
 <a href="#1907" id="1907">1907</a>
 <a href="#1908" id="1908">1908</a>
+<a href="#1909" id="1909">1909</a>
+<a href="#1910" id="1910">1910</a>
+<a href="#1911" id="1911">1911</a>
+<a href="#1912" id="1912">1912</a>
+<a href="#1913" id="1913">1913</a>
+<a href="#1914" id="1914">1914</a>
+<a href="#1915" id="1915">1915</a>
+<a href="#1916" id="1916">1916</a>
+<a href="#1917" id="1917">1917</a>
+<a href="#1918" id="1918">1918</a>
+<a href="#1919" id="1919">1919</a>
+<a href="#1920" id="1920">1920</a>
+<a href="#1921" id="1921">1921</a>
+<a href="#1922" id="1922">1922</a>
+<a href="#1923" id="1923">1923</a>
+<a href="#1924" id="1924">1924</a>
+<a href="#1925" id="1925">1925</a>
+<a href="#1926" id="1926">1926</a>
+<a href="#1927" id="1927">1927</a>
+<a href="#1928" id="1928">1928</a>
+<a href="#1929" id="1929">1929</a>
+<a href="#1930" id="1930">1930</a>
+<a href="#1931" id="1931">1931</a>
+<a href="#1932" id="1932">1932</a>
+<a href="#1933" id="1933">1933</a>
+<a href="#1934" id="1934">1934</a>
+<a href="#1935" id="1935">1935</a>
+<a href="#1936" id="1936">1936</a>
+<a href="#1937" id="1937">1937</a>
+<a href="#1938" id="1938">1938</a>
+<a href="#1939" id="1939">1939</a>
+<a href="#1940" id="1940">1940</a>
+<a href="#1941" id="1941">1941</a>
+<a href="#1942" id="1942">1942</a>
+<a href="#1943" id="1943">1943</a>
+<a href="#1944" id="1944">1944</a>
+<a href="#1945" id="1945">1945</a>
+<a href="#1946" id="1946">1946</a>
+<a href="#1947" id="1947">1947</a>
+<a href="#1948" id="1948">1948</a>
+<a href="#1949" id="1949">1949</a>
+<a href="#1950" id="1950">1950</a>
+<a href="#1951" id="1951">1951</a>
+<a href="#1952" id="1952">1952</a>
+<a href="#1953" id="1953">1953</a>
+<a href="#1954" id="1954">1954</a>
+<a href="#1955" id="1955">1955</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -1984,6 +2031,13 @@
     <span class="kw">pub const </span>X_AMZ_SERVER_SIDE_ENCRYPTION_AWS_KMS_KEY_ID: <span class="kw-2">&amp;</span>str =
         <span class="string">&quot;x-amz-server-side-encryption-aws-kms-key-id&quot;</span>;
     <span class="kw">pub const </span>X_AMZ_STORAGE_CLASS: <span class="kw-2">&amp;</span>str = <span class="string">&quot;x-amz-storage-class&quot;</span>;
+
+    <span class="kw">pub const </span>X_AMZ_COPY_SOURCE_SERVER_SIDE_ENCRYPTION_CUSTOMER_ALGORITHM: <span class="kw-2">&amp;</span>str =
+        <span class="string">&quot;x-amz-copy-source-server-side-encryption-customer-algorithm&quot;</span>;
+    <span class="kw">pub const </span>X_AMZ_COPY_SOURCE_SERVER_SIDE_ENCRYPTION_CUSTOMER_KEY: <span class="kw-2">&amp;</span>str =
+        <span class="string">&quot;x-amz-copy-source-server-side-encryption-customer-key&quot;</span>;
+    <span class="kw">pub const </span>X_AMZ_COPY_SOURCE_SERVER_SIDE_ENCRYPTION_CUSTOMER_KEY_MD5: <span class="kw-2">&amp;</span>str =
+        <span class="string">&quot;x-amz-copy-source-server-side-encryption-customer-key-md5&quot;</span>;
 
     <span class="kw">pub const </span>RESPONSE_CONTENT_DISPOSITION: <span class="kw-2">&amp;</span>str = <span class="string">&quot;response-content-disposition&quot;</span>;
     <span class="kw">pub const </span>RESPONSE_CACHE_CONTROL: <span class="kw-2">&amp;</span>str = <span class="string">&quot;response-cache-control&quot;</span>;
@@ -2274,7 +2328,6 @@
         <span class="kw">if </span><span class="self">self</span>.server_side_encryption_customer_key_md5.is_some() {
             d.field(<span class="string">&quot;server_side_encryption_customer_key_md5&quot;</span>, <span class="kw-2">&amp;</span><span class="string">&quot;&lt;redacted&gt;&quot;</span>);
         }
-
         <span class="kw">if </span><span class="self">self</span>.security_token.is_some() {
             d.field(<span class="string">&quot;security_token&quot;</span>, <span class="kw-2">&amp;</span><span class="string">&quot;&lt;redacted&gt;&quot;</span>);
         }
@@ -3365,7 +3418,48 @@
         <span class="kw">let </span>source = <span class="macro">format!</span>(<span class="string">&quot;{}/{}&quot;</span>, <span class="self">self</span>.bucket, percent_encode_path(<span class="kw-2">&amp;</span>from));
         <span class="kw">let </span>target = <span class="macro">format!</span>(<span class="string">&quot;{}/{}&quot;</span>, <span class="self">self</span>.endpoint, percent_encode_path(<span class="kw-2">&amp;</span>to));
 
-        <span class="kw">let </span><span class="kw-2">mut </span>req = Request::put(<span class="kw-2">&amp;</span>target)
+        <span class="kw">let </span><span class="kw-2">mut </span>req = Request::put(<span class="kw-2">&amp;</span>target);
+
+        <span class="comment">// Set SSE headers.
+        </span>req = <span class="self">self</span>.insert_sse_headers(req, <span class="bool-val">true</span>);
+
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(v) = <span class="kw-2">&amp;</span><span class="self">self</span>.server_side_encryption_customer_algorithm {
+            <span class="kw">let </span><span class="kw-2">mut </span>v = v.clone();
+            v.set_sensitive(<span class="bool-val">true</span>);
+
+            req = req.header(
+                HeaderName::from_static(
+                    constants::X_AMZ_COPY_SOURCE_SERVER_SIDE_ENCRYPTION_CUSTOMER_ALGORITHM,
+                ),
+                v,
+            )
+        }
+
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(v) = <span class="kw-2">&amp;</span><span class="self">self</span>.server_side_encryption_customer_key {
+            <span class="kw">let </span><span class="kw-2">mut </span>v = v.clone();
+            v.set_sensitive(<span class="bool-val">true</span>);
+
+            req = req.header(
+                HeaderName::from_static(
+                    constants::X_AMZ_COPY_SOURCE_SERVER_SIDE_ENCRYPTION_CUSTOMER_KEY,
+                ),
+                v,
+            )
+        }
+
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(v) = <span class="kw-2">&amp;</span><span class="self">self</span>.server_side_encryption_customer_key_md5 {
+            <span class="kw">let </span><span class="kw-2">mut </span>v = v.clone();
+            v.set_sensitive(<span class="bool-val">true</span>);
+
+            req = req.header(
+                HeaderName::from_static(
+                    constants::X_AMZ_COPY_SOURCE_SERVER_SIDE_ENCRYPTION_CUSTOMER_KEY_MD5,
+                ),
+                v,
+            )
+        }
+
+        <span class="kw">let </span><span class="kw-2">mut </span>req = req
             .header(constants::X_AMZ_COPY_SOURCE, percent_encode_path(<span class="kw-2">&amp;</span>source))
             .body(AsyncBody::Empty)
             .map_err(new_request_build_error)<span class="question-mark">?</span>;
