@@ -1869,6 +1869,43 @@
 <a href="#1869" id="1869">1869</a>
 <a href="#1870" id="1870">1870</a>
 <a href="#1871" id="1871">1871</a>
+<a href="#1872" id="1872">1872</a>
+<a href="#1873" id="1873">1873</a>
+<a href="#1874" id="1874">1874</a>
+<a href="#1875" id="1875">1875</a>
+<a href="#1876" id="1876">1876</a>
+<a href="#1877" id="1877">1877</a>
+<a href="#1878" id="1878">1878</a>
+<a href="#1879" id="1879">1879</a>
+<a href="#1880" id="1880">1880</a>
+<a href="#1881" id="1881">1881</a>
+<a href="#1882" id="1882">1882</a>
+<a href="#1883" id="1883">1883</a>
+<a href="#1884" id="1884">1884</a>
+<a href="#1885" id="1885">1885</a>
+<a href="#1886" id="1886">1886</a>
+<a href="#1887" id="1887">1887</a>
+<a href="#1888" id="1888">1888</a>
+<a href="#1889" id="1889">1889</a>
+<a href="#1890" id="1890">1890</a>
+<a href="#1891" id="1891">1891</a>
+<a href="#1892" id="1892">1892</a>
+<a href="#1893" id="1893">1893</a>
+<a href="#1894" id="1894">1894</a>
+<a href="#1895" id="1895">1895</a>
+<a href="#1896" id="1896">1896</a>
+<a href="#1897" id="1897">1897</a>
+<a href="#1898" id="1898">1898</a>
+<a href="#1899" id="1899">1899</a>
+<a href="#1900" id="1900">1900</a>
+<a href="#1901" id="1901">1901</a>
+<a href="#1902" id="1902">1902</a>
+<a href="#1903" id="1903">1903</a>
+<a href="#1904" id="1904">1904</a>
+<a href="#1905" id="1905">1905</a>
+<a href="#1906" id="1906">1906</a>
+<a href="#1907" id="1907">1907</a>
+<a href="#1908" id="1908">1908</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -1935,6 +1972,8 @@
 });
 
 <span class="kw">mod </span>constants {
+    <span class="kw">pub const </span>X_AMZ_COPY_SOURCE: <span class="kw-2">&amp;</span>str = <span class="string">&quot;x-amz-copy-source&quot;</span>;
+
     <span class="kw">pub const </span>X_AMZ_SERVER_SIDE_ENCRYPTION: <span class="kw-2">&amp;</span>str = <span class="string">&quot;x-amz-server-side-encryption&quot;</span>;
     <span class="kw">pub const </span>X_AMZ_SERVER_SIDE_ENCRYPTION_CUSTOMER_ALGORITHM: <span class="kw-2">&amp;</span>str =
         <span class="string">&quot;x-amz-server-side-encryption-customer-algorithm&quot;</span>;
@@ -1958,6 +1997,7 @@
 ///
 /// - [x] read
 /// - [x] write
+/// - [x] copy
 /// - [x] list
 /// - [x] scan
 /// - [x] presign
@@ -2929,7 +2969,7 @@
             .set_root(<span class="kw-2">&amp;</span><span class="self">self</span>.root)
             .set_name(<span class="kw-2">&amp;</span><span class="self">self</span>.bucket)
             .set_max_batch_operations(<span class="number">1000</span>)
-            .set_capabilities(Read | Write | List | Scan | Presign | Batch)
+            .set_capabilities(Read | Write | List | Scan | Presign | Batch | Copy)
             .set_hints(ReadStreamable);
 
         am
@@ -3003,6 +3043,23 @@
             RpWrite::default(),
             S3Writer::new(<span class="self">self</span>.clone(), args, path.to_string(), upload_id),
         ))
+    }
+
+    <span class="kw">async fn </span>copy(<span class="kw-2">&amp;</span><span class="self">self</span>, from: <span class="kw-2">&amp;</span>str, to: <span class="kw-2">&amp;</span>str, _args: OpCopy) -&gt; <span class="prelude-ty">Result</span>&lt;RpCopy&gt; {
+        <span class="kw">let </span>resp = <span class="self">self</span>.s3_copy_object(from, to).<span class="kw">await</span><span class="question-mark">?</span>;
+
+        <span class="kw">let </span>status = resp.status();
+
+        <span class="kw">match </span>status {
+            StatusCode::OK =&gt; {
+                <span class="comment">// According to the documentation, when using copy_object, a 200 error may occur and we need to detect it.
+                // https://docs.aws.amazon.com/AmazonS3/latest/API/API_CopyObject.html#API_CopyObject_RequestSyntax
+                </span>resp.into_body().consume().<span class="kw">await</span><span class="question-mark">?</span>;
+
+                <span class="prelude-val">Ok</span>(RpCopy::default())
+            }
+            <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(parse_error(resp).<span class="kw">await</span><span class="question-mark">?</span>),
+        }
     }
 
     <span class="kw">async fn </span>stat(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpStat) -&gt; <span class="prelude-ty">Result</span>&lt;RpStat&gt; {
@@ -3293,6 +3350,23 @@
         <span class="kw">let </span>url = <span class="macro">format!</span>(<span class="string">&quot;{}/{}&quot;</span>, <span class="self">self</span>.endpoint, percent_encode_path(<span class="kw-2">&amp;</span>p));
 
         <span class="kw">let </span><span class="kw-2">mut </span>req = Request::delete(<span class="kw-2">&amp;</span>url)
+            .body(AsyncBody::Empty)
+            .map_err(new_request_build_error)<span class="question-mark">?</span>;
+
+        <span class="self">self</span>.signer.sign(<span class="kw-2">&amp;mut </span>req).map_err(new_request_sign_error)<span class="question-mark">?</span>;
+
+        <span class="self">self</span>.client.send_async(req).<span class="kw">await
+    </span>}
+
+    <span class="kw">async fn </span>s3_copy_object(<span class="kw-2">&amp;</span><span class="self">self</span>, from: <span class="kw-2">&amp;</span>str, to: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;Response&lt;IncomingAsyncBody&gt;&gt; {
+        <span class="kw">let </span>from = build_abs_path(<span class="kw-2">&amp;</span><span class="self">self</span>.root, from);
+        <span class="kw">let </span>to = build_abs_path(<span class="kw-2">&amp;</span><span class="self">self</span>.root, to);
+
+        <span class="kw">let </span>source = <span class="macro">format!</span>(<span class="string">&quot;{}/{}&quot;</span>, <span class="self">self</span>.bucket, percent_encode_path(<span class="kw-2">&amp;</span>from));
+        <span class="kw">let </span>target = <span class="macro">format!</span>(<span class="string">&quot;{}/{}&quot;</span>, <span class="self">self</span>.endpoint, percent_encode_path(<span class="kw-2">&amp;</span>to));
+
+        <span class="kw">let </span><span class="kw-2">mut </span>req = Request::put(<span class="kw-2">&amp;</span>target)
+            .header(constants::X_AMZ_COPY_SOURCE, percent_encode_path(<span class="kw-2">&amp;</span>source))
             .body(AsyncBody::Empty)
             .map_err(new_request_build_error)<span class="question-mark">?</span>;
 
