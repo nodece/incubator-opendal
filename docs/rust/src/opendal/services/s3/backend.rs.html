@@ -1819,6 +1819,56 @@
 <a href="#1819" id="1819">1819</a>
 <a href="#1820" id="1820">1820</a>
 <a href="#1821" id="1821">1821</a>
+<a href="#1822" id="1822">1822</a>
+<a href="#1823" id="1823">1823</a>
+<a href="#1824" id="1824">1824</a>
+<a href="#1825" id="1825">1825</a>
+<a href="#1826" id="1826">1826</a>
+<a href="#1827" id="1827">1827</a>
+<a href="#1828" id="1828">1828</a>
+<a href="#1829" id="1829">1829</a>
+<a href="#1830" id="1830">1830</a>
+<a href="#1831" id="1831">1831</a>
+<a href="#1832" id="1832">1832</a>
+<a href="#1833" id="1833">1833</a>
+<a href="#1834" id="1834">1834</a>
+<a href="#1835" id="1835">1835</a>
+<a href="#1836" id="1836">1836</a>
+<a href="#1837" id="1837">1837</a>
+<a href="#1838" id="1838">1838</a>
+<a href="#1839" id="1839">1839</a>
+<a href="#1840" id="1840">1840</a>
+<a href="#1841" id="1841">1841</a>
+<a href="#1842" id="1842">1842</a>
+<a href="#1843" id="1843">1843</a>
+<a href="#1844" id="1844">1844</a>
+<a href="#1845" id="1845">1845</a>
+<a href="#1846" id="1846">1846</a>
+<a href="#1847" id="1847">1847</a>
+<a href="#1848" id="1848">1848</a>
+<a href="#1849" id="1849">1849</a>
+<a href="#1850" id="1850">1850</a>
+<a href="#1851" id="1851">1851</a>
+<a href="#1852" id="1852">1852</a>
+<a href="#1853" id="1853">1853</a>
+<a href="#1854" id="1854">1854</a>
+<a href="#1855" id="1855">1855</a>
+<a href="#1856" id="1856">1856</a>
+<a href="#1857" id="1857">1857</a>
+<a href="#1858" id="1858">1858</a>
+<a href="#1859" id="1859">1859</a>
+<a href="#1860" id="1860">1860</a>
+<a href="#1861" id="1861">1861</a>
+<a href="#1862" id="1862">1862</a>
+<a href="#1863" id="1863">1863</a>
+<a href="#1864" id="1864">1864</a>
+<a href="#1865" id="1865">1865</a>
+<a href="#1866" id="1866">1866</a>
+<a href="#1867" id="1867">1867</a>
+<a href="#1868" id="1868">1868</a>
+<a href="#1869" id="1869">1869</a>
+<a href="#1870" id="1870">1870</a>
+<a href="#1871" id="1871">1871</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -1894,6 +1944,7 @@
         <span class="string">&quot;x-amz-server-side-encryption-customer-key-md5&quot;</span>;
     <span class="kw">pub const </span>X_AMZ_SERVER_SIDE_ENCRYPTION_AWS_KMS_KEY_ID: <span class="kw-2">&amp;</span>str =
         <span class="string">&quot;x-amz-server-side-encryption-aws-kms-key-id&quot;</span>;
+    <span class="kw">pub const </span>X_AMZ_STORAGE_CLASS: <span class="kw-2">&amp;</span>str = <span class="string">&quot;x-amz-storage-class&quot;</span>;
 
     <span class="kw">pub const </span>RESPONSE_CONTENT_DISPOSITION: <span class="kw-2">&amp;</span>str = <span class="string">&quot;response-content-disposition&quot;</span>;
     <span class="kw">pub const </span>RESPONSE_CACHE_CONTROL: <span class="kw-2">&amp;</span>str = <span class="string">&quot;response-cache-control&quot;</span>;
@@ -1921,6 +1972,7 @@
 /// - `access_key_id`: Set the access_key_id for backend.
 /// - `secret_access_key`: Set the secret_access_key for backend.
 /// - `security_token`: Set the security_token for backend.
+/// - `default_storage_class`: Set the default storage_class for backend.
 /// - `server_side_encryption`: Set the server_side_encryption for backend.
 /// - `server_side_encryption_aws_kms_key_id`: Set the server_side_encryption_aws_kms_key_id for backend.
 /// - `server_side_encryption_customer_algorithm`: Set the server_side_encryption_customer_algorithm for backend.
@@ -2135,6 +2187,7 @@
     server_side_encryption_customer_algorithm: <span class="prelude-ty">Option</span>&lt;String&gt;,
     server_side_encryption_customer_key: <span class="prelude-ty">Option</span>&lt;String&gt;,
     server_side_encryption_customer_key_md5: <span class="prelude-ty">Option</span>&lt;String&gt;,
+    default_storage_class: <span class="prelude-ty">Option</span>&lt;String&gt;,
 
     <span class="doccomment">/// temporary credentials, check the official [doc](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_temp.html) for detail
     </span>security_token: <span class="prelude-ty">Option</span>&lt;String&gt;,
@@ -2157,7 +2210,8 @@
             .field(<span class="string">&quot;role_arn&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.role_arn)
             .field(<span class="string">&quot;external_id&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.external_id)
             .field(<span class="string">&quot;disable_config_load&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.disable_config_load)
-            .field(<span class="string">&quot;enable_virtual_host_style&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.enable_virtual_host_style);
+            .field(<span class="string">&quot;enable_virtual_host_style&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.enable_virtual_host_style)
+            .field(<span class="string">&quot;default_storage_class&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.default_storage_class);
 
         <span class="kw">if </span><span class="self">self</span>.access_key_id.is_some() {
             d.field(<span class="string">&quot;access_key_id&quot;</span>, <span class="kw-2">&amp;</span><span class="string">&quot;&lt;redacted&gt;&quot;</span>);
@@ -2279,6 +2333,26 @@
     </span><span class="kw">pub fn </span>external_id(<span class="kw-2">&amp;mut </span><span class="self">self</span>, v: <span class="kw-2">&amp;</span>str) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self </span>{
         <span class="kw">if </span>!v.is_empty() {
             <span class="self">self</span>.external_id = <span class="prelude-val">Some</span>(v.to_string())
+        }
+
+        <span class="self">self
+    </span>}
+
+    <span class="doccomment">/// Set default storage_class for this backend.
+    ///
+    /// Available values:
+    /// - `DEEP_ARCHIVE`
+    /// - `GLACIER`
+    /// - `GLACIER_IR`
+    /// - `INTELLIGENT_TIERING`
+    /// - `ONEZONE_IA`
+    /// - `OUTPOSTS`
+    /// - `REDUCED_REDUNDANCY`
+    /// - `STANDARD`
+    /// - `STANDARD_IA`
+    </span><span class="kw">pub fn </span>default_storage_class(<span class="kw-2">&amp;mut </span><span class="self">self</span>, v: <span class="kw-2">&amp;</span>str) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self </span>{
+        <span class="kw">if </span>!v.is_empty() {
+            <span class="self">self</span>.default_storage_class = <span class="prelude-val">Some</span>(v.to_string())
         }
 
         <span class="self">self
@@ -2564,6 +2638,8 @@
         map.get(<span class="string">&quot;enable_virtual_host_style&quot;</span>)
             .filter(|v| <span class="kw-2">*</span>v == <span class="string">&quot;on&quot; </span>|| <span class="kw-2">*</span>v == <span class="string">&quot;true&quot;</span>)
             .map(|<span class="kw">_</span>| builder.enable_virtual_host_style());
+        map.get(<span class="string">&quot;default_storage_class&quot;</span>)
+            .map(|v| builder.default_storage_class(v));
 
         builder
     }
@@ -2583,6 +2659,18 @@
             ),
         }<span class="question-mark">?</span>;
         <span class="macro">debug!</span>(<span class="string">&quot;backend use bucket {}&quot;</span>, <span class="kw-2">&amp;</span>bucket);
+
+        <span class="kw">let </span>default_storage_class = <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.default_storage_class {
+            <span class="prelude-val">None </span>=&gt; <span class="prelude-val">None</span>,
+            <span class="prelude-val">Some</span>(v) =&gt; <span class="prelude-val">Some</span>(v.parse().map_err(|e| {
+                Error::new(
+                    ErrorKind::ConfigInvalid,
+                    <span class="string">&quot;default_storage_class value is invalid&quot;</span>,
+                )
+                .with_context(<span class="string">&quot;value&quot;</span>, v)
+                .set_source(e)
+            })<span class="question-mark">?</span>),
+        };
 
         <span class="kw">let </span>server_side_encryption = <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.server_side_encryption {
             <span class="prelude-val">None </span>=&gt; <span class="prelude-val">None</span>,
@@ -2737,6 +2825,7 @@
             server_side_encryption_customer_algorithm,
             server_side_encryption_customer_key,
             server_side_encryption_customer_key_md5,
+            default_storage_class,
         })
     }
 }
@@ -2756,6 +2845,7 @@
     server_side_encryption_customer_algorithm: <span class="prelude-ty">Option</span>&lt;HeaderValue&gt;,
     server_side_encryption_customer_key: <span class="prelude-ty">Option</span>&lt;HeaderValue&gt;,
     server_side_encryption_customer_key_md5: <span class="prelude-ty">Option</span>&lt;HeaderValue&gt;,
+    default_storage_class: <span class="prelude-ty">Option</span>&lt;HeaderValue&gt;,
 }
 
 <span class="kw">impl </span>S3Backend {
@@ -3156,6 +3246,11 @@
             req = req.header(CACHE_CONTROL, cache_control)
         }
 
+        <span class="comment">// Set storage class header
+        </span><span class="kw">if let </span><span class="prelude-val">Some</span>(v) = <span class="kw-2">&amp;</span><span class="self">self</span>.default_storage_class {
+            req = req.header(HeaderName::from_static(constants::X_AMZ_STORAGE_CLASS), v);
+        }
+
         <span class="comment">// Set SSE headers.
         </span>req = <span class="self">self</span>.insert_sse_headers(req, <span class="bool-val">true</span>);
 
@@ -3270,6 +3365,11 @@
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>(cache_control) = cache_control {
             req = req.header(CACHE_CONTROL, cache_control)
+        }
+
+        <span class="comment">// Set storage class header
+        </span><span class="kw">if let </span><span class="prelude-val">Some</span>(v) = <span class="kw-2">&amp;</span><span class="self">self</span>.default_storage_class {
+            req = req.header(HeaderName::from_static(constants::X_AMZ_STORAGE_CLASS), v);
         }
 
         <span class="comment">// Set SSE headers.
