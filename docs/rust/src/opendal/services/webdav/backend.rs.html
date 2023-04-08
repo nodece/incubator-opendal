@@ -625,6 +625,46 @@
 <a href="#625" id="625">625</a>
 <a href="#626" id="626">626</a>
 <a href="#627" id="627">627</a>
+<a href="#628" id="628">628</a>
+<a href="#629" id="629">629</a>
+<a href="#630" id="630">630</a>
+<a href="#631" id="631">631</a>
+<a href="#632" id="632">632</a>
+<a href="#633" id="633">633</a>
+<a href="#634" id="634">634</a>
+<a href="#635" id="635">635</a>
+<a href="#636" id="636">636</a>
+<a href="#637" id="637">637</a>
+<a href="#638" id="638">638</a>
+<a href="#639" id="639">639</a>
+<a href="#640" id="640">640</a>
+<a href="#641" id="641">641</a>
+<a href="#642" id="642">642</a>
+<a href="#643" id="643">643</a>
+<a href="#644" id="644">644</a>
+<a href="#645" id="645">645</a>
+<a href="#646" id="646">646</a>
+<a href="#647" id="647">647</a>
+<a href="#648" id="648">648</a>
+<a href="#649" id="649">649</a>
+<a href="#650" id="650">650</a>
+<a href="#651" id="651">651</a>
+<a href="#652" id="652">652</a>
+<a href="#653" id="653">653</a>
+<a href="#654" id="654">654</a>
+<a href="#655" id="655">655</a>
+<a href="#656" id="656">656</a>
+<a href="#657" id="657">657</a>
+<a href="#658" id="658">658</a>
+<a href="#659" id="659">659</a>
+<a href="#660" id="660">660</a>
+<a href="#661" id="661">661</a>
+<a href="#662" id="662">662</a>
+<a href="#663" id="663">663</a>
+<a href="#664" id="664">664</a>
+<a href="#665" id="665">665</a>
+<a href="#666" id="666">666</a>
+<a href="#667" id="667">667</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -672,6 +712,7 @@
 /// - [x] read
 /// - [x] write
 /// - [x] copy
+/// - [x] rename
 /// - [x] list
 /// - [ ] ~~scan~~
 /// - [ ] ~~presign~~
@@ -896,6 +937,7 @@
                 AccessorCapability::Read
                     | AccessorCapability::Write
                     | AccessorCapability::Copy
+                    | AccessorCapability::Rename
                     | AccessorCapability::List,
             )
             .set_hints(AccessorHint::ReadStreamable);
@@ -946,6 +988,19 @@
 
         <span class="kw">match </span>status {
             StatusCode::CREATED | StatusCode::NO_CONTENT =&gt; <span class="prelude-val">Ok</span>(RpCopy::default()),
+            <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(parse_error(resp).<span class="kw">await</span><span class="question-mark">?</span>),
+        }
+    }
+
+    <span class="kw">async fn </span>rename(<span class="kw-2">&amp;</span><span class="self">self</span>, from: <span class="kw-2">&amp;</span>str, to: <span class="kw-2">&amp;</span>str, _args: OpRename) -&gt; <span class="prelude-ty">Result</span>&lt;RpRename&gt; {
+        <span class="self">self</span>.ensure_parent_path(to).<span class="kw">await</span><span class="question-mark">?</span>;
+
+        <span class="kw">let </span>resp = <span class="self">self</span>.webdav_move(from, to).<span class="kw">await</span><span class="question-mark">?</span>;
+
+        <span class="kw">let </span>status = resp.status();
+
+        <span class="kw">match </span>status {
+            StatusCode::CREATED | StatusCode::NO_CONTENT =&gt; <span class="prelude-val">Ok</span>(RpRename::default()),
             <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(parse_error(resp).<span class="kw">await</span><span class="question-mark">?</span>),
         }
     }
@@ -1189,6 +1244,31 @@
         <span class="kw">let </span>target = <span class="macro">format!</span>(<span class="string">&quot;{}/{}&quot;</span>, <span class="self">self</span>.endpoint, percent_encode_path(<span class="kw-2">&amp;</span>target));
 
         <span class="kw">let </span><span class="kw-2">mut </span>req = Request::builder().method(<span class="string">&quot;COPY&quot;</span>).uri(<span class="kw-2">&amp;</span>source);
+
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(auth) = <span class="kw-2">&amp;</span><span class="self">self</span>.authorization {
+            req = req.header(header::AUTHORIZATION, auth);
+        }
+
+        req = req.header(<span class="string">&quot;Destination&quot;</span>, target);
+
+        <span class="comment">// We always specific &quot;T&quot; for keeping to overwrite the destination.
+        </span>req = req.header(<span class="string">&quot;Overwrite&quot;</span>, <span class="string">&quot;T&quot;</span>);
+
+        <span class="kw">let </span>req = req
+            .body(AsyncBody::Empty)
+            .map_err(new_request_build_error)<span class="question-mark">?</span>;
+
+        <span class="self">self</span>.client.send_async(req).<span class="kw">await
+    </span>}
+
+    <span class="kw">async fn </span>webdav_move(<span class="kw-2">&amp;</span><span class="self">self</span>, from: <span class="kw-2">&amp;</span>str, to: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;Response&lt;IncomingAsyncBody&gt;&gt; {
+        <span class="kw">let </span>source = build_abs_path(<span class="kw-2">&amp;</span><span class="self">self</span>.root, from);
+        <span class="kw">let </span>target = build_abs_path(<span class="kw-2">&amp;</span><span class="self">self</span>.root, to);
+
+        <span class="kw">let </span>source = <span class="macro">format!</span>(<span class="string">&quot;{}/{}&quot;</span>, <span class="self">self</span>.endpoint, percent_encode_path(<span class="kw-2">&amp;</span>source));
+        <span class="kw">let </span>target = <span class="macro">format!</span>(<span class="string">&quot;{}/{}&quot;</span>, <span class="self">self</span>.endpoint, percent_encode_path(<span class="kw-2">&amp;</span>target));
+
+        <span class="kw">let </span><span class="kw-2">mut </span>req = Request::builder().method(<span class="string">&quot;MOVE&quot;</span>).uri(<span class="kw-2">&amp;</span>source);
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>(auth) = <span class="kw-2">&amp;</span><span class="self">self</span>.authorization {
             req = req.header(header::AUTHORIZATION, auth);
