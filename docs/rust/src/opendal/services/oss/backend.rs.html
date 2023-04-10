@@ -1911,14 +1911,14 @@
         <span class="kw">let </span><span class="kw-2">mut </span>req = <span class="self">self</span>.oss_get_object_request(path, range, <span class="bool-val">false</span>)<span class="question-mark">?</span>;
 
         <span class="self">self</span>.signer.sign(<span class="kw-2">&amp;mut </span>req).map_err(new_request_sign_error)<span class="question-mark">?</span>;
-        <span class="self">self</span>.client.send_async(req).<span class="kw">await
+        <span class="self">self</span>.client.send(req).<span class="kw">await
     </span>}
 
     <span class="kw">async fn </span>oss_head_object(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;Response&lt;IncomingAsyncBody&gt;&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>req = <span class="self">self</span>.oss_head_object_request(path, <span class="bool-val">false</span>)<span class="question-mark">?</span>;
 
         <span class="self">self</span>.signer.sign(<span class="kw-2">&amp;mut </span>req).map_err(new_request_sign_error)<span class="question-mark">?</span>;
-        <span class="self">self</span>.client.send_async(req).<span class="kw">await
+        <span class="self">self</span>.client.send(req).<span class="kw">await
     </span>}
 
     <span class="kw">async fn </span>oss_put_object(
@@ -1939,7 +1939,7 @@
         )<span class="question-mark">?</span>;
 
         <span class="self">self</span>.signer.sign(<span class="kw-2">&amp;mut </span>req).map_err(new_request_sign_error)<span class="question-mark">?</span>;
-        <span class="self">self</span>.client.send_async(req).<span class="kw">await
+        <span class="self">self</span>.client.send(req).<span class="kw">await
     </span>}
 
     <span class="kw">async fn </span>oss_copy_object(<span class="kw-2">&amp;</span><span class="self">self</span>, from: <span class="kw-2">&amp;</span>str, to: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;Response&lt;IncomingAsyncBody&gt;&gt; {
@@ -1959,7 +1959,7 @@
             .map_err(new_request_build_error)<span class="question-mark">?</span>;
 
         <span class="self">self</span>.signer.sign(<span class="kw-2">&amp;mut </span>req).map_err(new_request_sign_error)<span class="question-mark">?</span>;
-        <span class="self">self</span>.client.send_async(req).<span class="kw">await
+        <span class="self">self</span>.client.send(req).<span class="kw">await
     </span>}
 
     <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">async fn </span>oss_list_object(
@@ -1972,13 +1972,13 @@
         <span class="kw">let </span><span class="kw-2">mut </span>req = <span class="self">self</span>.oss_list_object_request(path, token, delimiter, limit)<span class="question-mark">?</span>;
 
         <span class="self">self</span>.signer.sign(<span class="kw-2">&amp;mut </span>req).map_err(new_request_sign_error)<span class="question-mark">?</span>;
-        <span class="self">self</span>.client.send_async(req).<span class="kw">await
+        <span class="self">self</span>.client.send(req).<span class="kw">await
     </span>}
 
     <span class="kw">async fn </span>oss_delete_object(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;Response&lt;IncomingAsyncBody&gt;&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>req = <span class="self">self</span>.oss_delete_object_request(path)<span class="question-mark">?</span>;
         <span class="self">self</span>.signer.sign(<span class="kw-2">&amp;mut </span>req).map_err(new_request_sign_error)<span class="question-mark">?</span>;
-        <span class="self">self</span>.client.send_async(req).<span class="kw">await
+        <span class="self">self</span>.client.send(req).<span class="kw">await
     </span>}
 
     <span class="kw">async fn </span>oss_delete_objects(<span class="kw-2">&amp;</span><span class="self">self</span>, paths: Vec&lt;String&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;Response&lt;IncomingAsyncBody&gt;&gt; {
@@ -2009,7 +2009,7 @@
 
         <span class="self">self</span>.signer.sign(<span class="kw-2">&amp;mut </span>req).map_err(new_request_sign_error)<span class="question-mark">?</span>;
 
-        <span class="self">self</span>.client.send_async(req).<span class="kw">await
+        <span class="self">self</span>.client.send(req).<span class="kw">await
     </span>}
 
     <span class="kw">fn </span>get_endpoint(<span class="kw-2">&amp;</span><span class="self">self</span>, is_presign: bool) -&gt; <span class="kw-2">&amp;</span>str {
@@ -2022,7 +2022,7 @@
 
     <span class="kw">async fn </span>oss_initiate_upload(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;Response&lt;IncomingAsyncBody&gt;&gt; {
         <span class="kw">let </span>req = <span class="self">self</span>.oss_initiate_upload_request(path, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, AsyncBody::Empty, <span class="bool-val">false</span>)<span class="question-mark">?</span>;
-        <span class="self">self</span>.client.send_async(req).<span class="kw">await
+        <span class="self">self</span>.client.send(req).<span class="kw">await
     </span>}
 
     <span class="doccomment">/// Creates a request that initiates multipart upload
@@ -2113,7 +2113,7 @@
             .map_err(new_request_build_error)<span class="question-mark">?</span>;
 
         <span class="self">self</span>.signer.sign(<span class="kw-2">&amp;mut </span>req).map_err(new_request_sign_error)<span class="question-mark">?</span>;
-        <span class="self">self</span>.client.send_async(req).<span class="kw">await
+        <span class="self">self</span>.client.send(req).<span class="kw">await
     </span>}
 }
 

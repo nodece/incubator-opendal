@@ -981,7 +981,7 @@
             <span class="kw">return </span><span class="prelude-val">Ok</span>(req);
         }
 
-        <span class="kw">let </span>resp = <span class="self">self</span>.client.send_async(req).<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="kw">let </span>resp = <span class="self">self</span>.client.send(req).<span class="kw">await</span><span class="question-mark">?</span>;
 
         <span class="comment">// should be a 307 TEMPORARY_REDIRECT
         </span><span class="kw">if </span>resp.status() != StatusCode::TEMPORARY_REDIRECT {
@@ -1084,7 +1084,7 @@
         range: BytesRange,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Response&lt;IncomingAsyncBody&gt;&gt; {
         <span class="kw">let </span>req = <span class="self">self</span>.webhdfs_open_req(path, <span class="kw-2">&amp;</span>range).<span class="kw">await</span><span class="question-mark">?</span>;
-        <span class="kw">let </span>resp = <span class="self">self</span>.client.send_async(req).<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="kw">let </span>resp = <span class="self">self</span>.client.send(req).<span class="kw">await</span><span class="question-mark">?</span>;
 
         <span class="comment">// this should be a 307 redirect
         </span><span class="kw">if </span>resp.status() != StatusCode::TEMPORARY_REDIRECT {
@@ -1095,7 +1095,7 @@
         <span class="kw">let </span>re_req = Request::get(<span class="kw-2">&amp;</span>re_url)
             .body(AsyncBody::Empty)
             .map_err(new_request_build_error)<span class="question-mark">?</span>;
-        <span class="self">self</span>.client.send_async(re_req).<span class="kw">await
+        <span class="self">self</span>.client.send(re_req).<span class="kw">await
     </span>}
 
     <span class="kw">async fn </span>webhdfs_status_object(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;Response&lt;IncomingAsyncBody&gt;&gt; {
@@ -1115,7 +1115,7 @@
             .body(AsyncBody::Empty)
             .map_err(new_request_build_error)<span class="question-mark">?</span>;
 
-        <span class="self">self</span>.client.send_async(req).<span class="kw">await
+        <span class="self">self</span>.client.send(req).<span class="kw">await
     </span>}
 
     <span class="kw">async fn </span>webhdfs_delete_object(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;Response&lt;IncomingAsyncBody&gt;&gt; {
@@ -1134,7 +1134,7 @@
             .body(AsyncBody::Empty)
             .map_err(new_request_build_error)<span class="question-mark">?</span>;
 
-        <span class="self">self</span>.client.send_async(req).<span class="kw">await
+        <span class="self">self</span>.client.send(req).<span class="kw">await
     </span>}
 }
 
@@ -1257,7 +1257,7 @@
             </span>.webhdfs_create_object_req(<span class="kw-2">&amp;</span>path, <span class="prelude-val">Some</span>(<span class="number">0</span>), <span class="prelude-val">None</span>, AsyncBody::Empty)
             .<span class="kw">await</span><span class="question-mark">?</span>;
 
-        <span class="kw">let </span>resp = <span class="self">self</span>.client.send_async(req).<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="kw">let </span>resp = <span class="self">self</span>.client.send(req).<span class="kw">await</span><span class="question-mark">?</span>;
 
         <span class="kw">let </span>status = resp.status();
 
@@ -1359,7 +1359,7 @@
         <span class="kw">let </span>path = path.trim_end_matches(<span class="string">&#39;/&#39;</span>);
         <span class="kw">let </span>req = <span class="self">self</span>.webhdfs_list_status_req(path)<span class="question-mark">?</span>;
 
-        <span class="kw">let </span>resp = <span class="self">self</span>.client.send_async(req).<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="kw">let </span>resp = <span class="self">self</span>.client.send(req).<span class="kw">await</span><span class="question-mark">?</span>;
         <span class="kw">match </span>resp.status() {
             StatusCode::OK =&gt; {
                 <span class="kw">let </span>body_bs = resp.into_body().bytes().<span class="kw">await</span><span class="question-mark">?</span>;

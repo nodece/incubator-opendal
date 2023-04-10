@@ -160,7 +160,7 @@
             .sign(<span class="kw-2">&amp;mut </span>req)
             .map_err(new_request_sign_error)<span class="question-mark">?</span>;
 
-        <span class="kw">let </span>resp = <span class="self">self</span>.backend.client.send_async(req).<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="kw">let </span>resp = <span class="self">self</span>.backend.client.send(req).<span class="kw">await</span><span class="question-mark">?</span>;
 
         <span class="kw">let </span>status = resp.status();
         <span class="kw">match </span>status {
@@ -183,7 +183,7 @@
             .sign(<span class="kw-2">&amp;mut </span>req)
             .map_err(new_request_sign_error)<span class="question-mark">?</span>;
 
-        <span class="kw">let </span>resp = <span class="self">self</span>.backend.client.send_async(req).<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="kw">let </span>resp = <span class="self">self</span>.backend.client.send(req).<span class="kw">await</span><span class="question-mark">?</span>;
 
         <span class="kw">let </span>status = resp.status();
         <span class="kw">match </span>status {

@@ -3091,7 +3091,7 @@
 
         <span class="self">self</span>.signer.sign(<span class="kw-2">&amp;mut </span>req).map_err(new_request_sign_error)<span class="question-mark">?</span>;
 
-        <span class="kw">let </span>resp = <span class="self">self</span>.client.send_async(req).<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="kw">let </span>resp = <span class="self">self</span>.client.send(req).<span class="kw">await</span><span class="question-mark">?</span>;
 
         <span class="kw">let </span>status = resp.status();
 
@@ -3379,7 +3379,7 @@
 
         <span class="self">self</span>.signer.sign(<span class="kw-2">&amp;mut </span>req).map_err(new_request_sign_error)<span class="question-mark">?</span>;
 
-        <span class="self">self</span>.client.send_async(req).<span class="kw">await
+        <span class="self">self</span>.client.send(req).<span class="kw">await
     </span>}
 
     <span class="kw">pub fn </span>s3_put_object_request(
@@ -3451,7 +3451,7 @@
 
         <span class="self">self</span>.signer.sign(<span class="kw-2">&amp;mut </span>req).map_err(new_request_sign_error)<span class="question-mark">?</span>;
 
-        <span class="self">self</span>.client.send_async(req).<span class="kw">await
+        <span class="self">self</span>.client.send(req).<span class="kw">await
     </span>}
 
     <span class="kw">async fn </span>s3_delete_object(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;Response&lt;IncomingAsyncBody&gt;&gt; {
@@ -3465,7 +3465,7 @@
 
         <span class="self">self</span>.signer.sign(<span class="kw-2">&amp;mut </span>req).map_err(new_request_sign_error)<span class="question-mark">?</span>;
 
-        <span class="self">self</span>.client.send_async(req).<span class="kw">await
+        <span class="self">self</span>.client.send(req).<span class="kw">await
     </span>}
 
     <span class="kw">async fn </span>s3_copy_object(<span class="kw-2">&amp;</span><span class="self">self</span>, from: <span class="kw-2">&amp;</span>str, to: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;Response&lt;IncomingAsyncBody&gt;&gt; {
@@ -3523,7 +3523,7 @@
 
         <span class="self">self</span>.signer.sign(<span class="kw-2">&amp;mut </span>req).map_err(new_request_sign_error)<span class="question-mark">?</span>;
 
-        <span class="self">self</span>.client.send_async(req).<span class="kw">await
+        <span class="self">self</span>.client.send(req).<span class="kw">await
     </span>}
 
     <span class="doccomment">/// Make this functions as `pub(suber)` because `DirStream` depends
@@ -3564,7 +3564,7 @@
 
         <span class="self">self</span>.signer.sign(<span class="kw-2">&amp;mut </span>req).map_err(new_request_sign_error)<span class="question-mark">?</span>;
 
-        <span class="self">self</span>.client.send_async(req).<span class="kw">await
+        <span class="self">self</span>.client.send(req).<span class="kw">await
     </span>}
 
     <span class="kw">async fn </span>s3_initiate_multipart_upload(
@@ -3606,7 +3606,7 @@
 
         <span class="self">self</span>.signer.sign(<span class="kw-2">&amp;mut </span>req).map_err(new_request_sign_error)<span class="question-mark">?</span>;
 
-        <span class="self">self</span>.client.send_async(req).<span class="kw">await
+        <span class="self">self</span>.client.send(req).<span class="kw">await
     </span>}
 
     <span class="kw">pub fn </span>s3_upload_part_request(
@@ -3677,7 +3677,7 @@
 
         <span class="self">self</span>.signer.sign(<span class="kw-2">&amp;mut </span>req).map_err(new_request_sign_error)<span class="question-mark">?</span>;
 
-        <span class="self">self</span>.client.send_async(req).<span class="kw">await
+        <span class="self">self</span>.client.send(req).<span class="kw">await
     </span>}
 
     <span class="kw">async fn </span>s3_delete_objects(<span class="kw-2">&amp;</span><span class="self">self</span>, paths: Vec&lt;String&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;Response&lt;IncomingAsyncBody&gt;&gt; {
@@ -3708,7 +3708,7 @@
 
         <span class="self">self</span>.signer.sign(<span class="kw-2">&amp;mut </span>req).map_err(new_request_sign_error)<span class="question-mark">?</span>;
 
-        <span class="self">self</span>.client.send_async(req).<span class="kw">await
+        <span class="self">self</span>.client.send(req).<span class="kw">await
     </span>}
 }
 
