@@ -2285,11 +2285,11 @@
     /// use anyhow::Result;
     /// use futures::io;
     /// use opendal::Operator;
-    /// use time::Duration;
+    /// use std::time::Duration;
     ///
     /// #[tokio::main]
     /// async fn test(op: Operator) -&gt; Result&lt;()&gt; {
-    ///     let signed_req = op.presign_stat(&quot;test&quot;,Duration::hours(1)).await?;
+    ///     let signed_req = op.presign_stat(&quot;test&quot;,Duration::from_secs(3600)).await?;
     ///     let req = http::Request::builder()
     ///         .method(signed_req.method())
     ///         .uri(signed_req.uri())
@@ -2315,11 +2315,11 @@
     /// use anyhow::Result;
     /// use futures::io;
     /// use opendal::Operator;
-    /// use time::Duration;
+    /// use std::time::Duration;
     ///
     /// #[tokio::main]
     /// async fn test(op: Operator) -&gt; Result&lt;()&gt; {
-    ///     let signed_req = op.presign_read(&quot;test.txt&quot;, Duration::hours(1)).await?;
+    ///     let signed_req = op.presign_read(&quot;test.txt&quot;, Duration::from_secs(3600)).await?;
     /// #    Ok(())
     /// # }
     /// ```
@@ -2352,14 +2352,14 @@
     /// use anyhow::Result;
     /// use futures::io;
     /// use opendal::Operator;
-    /// use time::Duration;
+    /// use std::time::Duration;
     /// use opendal::ops::OpRead;
     ///
     /// #[tokio::main]
     /// async fn test(op: Operator) -&gt; Result&lt;()&gt; {
     ///     let args = OpRead::new()
     ///         .with_override_content_disposition(&quot;attachment; filename=\&quot;othertext.txt\&quot;&quot;);
-    ///     let signed_req = op.presign_read_with(&quot;test.txt&quot;, args, Duration::hours(1)).await?;
+    ///     let signed_req = op.presign_read_with(&quot;test.txt&quot;, args, Duration::from_secs(3600)).await?;
     /// #    Ok(())
     /// # }
     /// ```
@@ -2385,11 +2385,11 @@
     /// use anyhow::Result;
     /// use futures::io;
     /// use opendal::Operator;
-    /// use time::Duration;
+    /// use std::time::Duration;
     ///
     /// #[tokio::main]
     /// async fn test(op: Operator) -&gt; Result&lt;()&gt; {
-    ///     let signed_req = op.presign_write(&quot;test.txt&quot;, Duration::hours(1)).await?;
+    ///     let signed_req = op.presign_write(&quot;test.txt&quot;, Duration::from_secs(3600)).await?;
     /// #    Ok(())
     /// # }
     /// ```
@@ -2418,12 +2418,12 @@
     /// use futures::io;
     /// use opendal::ops::OpWrite;
     /// use opendal::Operator;
-    /// use time::Duration;
+    /// use std::time::Duration;
     ///
     /// #[tokio::main]
     /// async fn test(op: Operator) -&gt; Result&lt;()&gt; {
     ///     let args = OpWrite::new().with_content_type(&quot;text/csv&quot;);
-    ///     let signed_req = op.presign_write_with(&quot;test&quot;, args, Duration::hours(1)).await?;
+    ///     let signed_req = op.presign_write_with(&quot;test&quot;, args, Duration::from_secs(3600)).await?;
     ///     let req = http::Request::builder()
     ///         .method(signed_req.method())
     ///         .uri(signed_req.uri())
