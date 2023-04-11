@@ -523,12 +523,6 @@
 <a href="#523" id="523">523</a>
 <a href="#524" id="524">524</a>
 <a href="#525" id="525">525</a>
-<a href="#526" id="526">526</a>
-<a href="#527" id="527">527</a>
-<a href="#528" id="528">528</a>
-<a href="#529" id="529">529</a>
-<a href="#530" id="530">530</a>
-<a href="#531" id="531">531</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -556,6 +550,7 @@
 <span class="kw">use </span>log::debug;
 <span class="kw">use </span>reqsign_0_9::GoogleCredentialLoader;
 <span class="kw">use </span>reqsign_0_9::GoogleSigner;
+<span class="kw">use </span>reqsign_0_9::GoogleTokenLoad;
 <span class="kw">use </span>reqsign_0_9::GoogleTokenLoader;
 <span class="kw">use </span>serde::Deserialize;
 <span class="kw">use </span>serde_json;
@@ -622,7 +617,7 @@
 ///     Ok(())
 /// }
 /// ```
-</span><span class="attr">#[derive(Clone, Default)]
+</span><span class="attr">#[derive(Default)]
 </span><span class="kw">pub struct </span>GcsBuilder {
     <span class="doccomment">/// root URI, all operations happens under `root`
     </span>root: <span class="prelude-ty">Option</span>&lt;String&gt;,
@@ -642,7 +637,7 @@
     </span>credential_path: <span class="prelude-ty">Option</span>&lt;String&gt;,
 
     http_client: <span class="prelude-ty">Option</span>&lt;HttpClient&gt;,
-    signer: <span class="prelude-ty">Option</span>&lt;Arc&lt;GoogleSigner&gt;&gt;,
+    customed_token_loader: <span class="prelude-ty">Option</span>&lt;Box&lt;<span class="kw">dyn </span>GoogleTokenLoad&gt;&gt;,
 }
 
 <span class="kw">impl </span>GcsBuilder {
@@ -725,19 +720,9 @@
         <span class="self">self
     </span>}
 
-    <span class="doccomment">/// Specify the signer directly instead of building by OpenDAL.
-    ///
-    /// If signer is specified, the following settings will not be used
-    /// any more:
-    ///
-    /// - `scope`
-    /// - `service_account`
-    /// - `credential`
-    /// - `credential_path`
-    ///
-    /// PLEASE USE THIS API CAREFULLY.
-    </span><span class="kw">pub fn </span>signer(<span class="kw-2">&amp;mut </span><span class="self">self</span>, signer: GoogleSigner) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self </span>{
-        <span class="self">self</span>.signer = <span class="prelude-val">Some</span>(Arc::new(signer));
+    <span class="doccomment">/// Specify the customed token loader used by this service.
+    </span><span class="kw">pub fn </span>customed_token_loader(<span class="kw-2">&amp;mut </span><span class="self">self</span>, token_load: Box&lt;<span class="kw">dyn </span>GoogleTokenLoad&gt;) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self </span>{
+        <span class="self">self</span>.customed_token_loader = <span class="prelude-val">Some</span>(token_load);
         <span class="self">self
     </span>}
 }
@@ -825,6 +810,9 @@
         }
         <span class="kw">if let </span><span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(cred)) = cred_loader.load() {
             token_loader = token_loader.with_credentials(cred)
+        }
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(loader) = <span class="self">self</span>.customed_token_loader.take() {
+            token_loader = token_loader.with_customed_token_loader(loader)
         }
 
         <span class="kw">let </span>signer = GoogleSigner::new(<span class="string">&quot;storage&quot;</span>);
