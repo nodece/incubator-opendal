@@ -244,12 +244,6 @@
 <a href="#244" id="244">244</a>
 <a href="#245" id="245">245</a>
 <a href="#246" id="246">246</a>
-<a href="#247" id="247">247</a>
-<a href="#248" id="248">248</a>
-<a href="#249" id="249">249</a>
-<a href="#250" id="250">250</a>
-<a href="#251" id="251">251</a>
-<a href="#252" id="252">252</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -277,7 +271,8 @@
 <span class="kw">use </span>time::format_description::well_known::Rfc3339;
 <span class="kw">use </span>time::OffsetDateTime;
 
-<span class="kw">use </span><span class="kw">super</span>::backend::OssBackend;
+<span class="kw">use </span><span class="kw">super</span>::core::<span class="kw-2">*</span>;
+
 <span class="kw">use </span><span class="kw">super</span>::error::parse_error;
 <span class="kw">use </span><span class="kw">crate</span>::raw::<span class="kw-2">*</span>;
 <span class="kw">use </span><span class="kw">crate</span>::EntryMode;
@@ -287,8 +282,8 @@
 <span class="kw">use </span><span class="kw">crate</span>::Result;
 
 <span class="kw">pub struct </span>OssPager {
-    backend: Arc&lt;OssBackend&gt;,
-    root: String,
+    core: Arc&lt;OssCore&gt;,
+
     path: String,
     delimiter: String,
     limit: <span class="prelude-ty">Option</span>&lt;usize&gt;,
@@ -298,16 +293,9 @@
 }
 
 <span class="kw">impl </span>OssPager {
-    <span class="kw">pub fn </span>new(
-        backend: Arc&lt;OssBackend&gt;,
-        root: <span class="kw-2">&amp;</span>str,
-        path: <span class="kw-2">&amp;</span>str,
-        delimiter: <span class="kw-2">&amp;</span>str,
-        limit: <span class="prelude-ty">Option</span>&lt;usize&gt;,
-    ) -&gt; <span class="self">Self </span>{
+    <span class="kw">pub fn </span>new(core: Arc&lt;OssCore&gt;, path: <span class="kw-2">&amp;</span>str, delimiter: <span class="kw-2">&amp;</span>str, limit: <span class="prelude-ty">Option</span>&lt;usize&gt;) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
-            backend,
-            root: root.to_string(),
+            core,
             path: path.to_string(),
             delimiter: delimiter.to_string(),
             limit,
@@ -327,7 +315,7 @@
         }
 
         <span class="kw">let </span>resp = <span class="self">self
-            </span>.backend
+            </span>.core
             .oss_list_object(
                 <span class="kw-2">&amp;</span><span class="self">self</span>.path,
                 <span class="self">self</span>.token.as_deref(),
@@ -352,7 +340,7 @@
 
         <span class="kw">for </span>prefix <span class="kw">in </span>output.common_prefixes {
             <span class="kw">let </span>de = oio::Entry::new(
-                <span class="kw-2">&amp;</span>build_rel_path(<span class="kw-2">&amp;</span><span class="self">self</span>.root, <span class="kw-2">&amp;</span>prefix.prefix),
+                <span class="kw-2">&amp;</span>build_rel_path(<span class="kw-2">&amp;</span><span class="self">self</span>.core.root, <span class="kw-2">&amp;</span>prefix.prefix),
                 Metadata::new(EntryMode::DIR),
             );
             entries.push(de);
@@ -377,7 +365,7 @@
                 })<span class="question-mark">?</span>;
             meta.set_last_modified(dt);
 
-            <span class="kw">let </span>rel = build_rel_path(<span class="kw-2">&amp;</span><span class="self">self</span>.root, <span class="kw-2">&amp;</span>object.key);
+            <span class="kw">let </span>rel = build_rel_path(<span class="kw-2">&amp;</span><span class="self">self</span>.core.root, <span class="kw-2">&amp;</span>object.key);
             <span class="kw">let </span>path = unescape(<span class="kw-2">&amp;</span>rel)
                 .map_err(|e| Error::new(ErrorKind::Unexpected, <span class="string">&quot;excapse xml&quot;</span>).set_source(e))<span class="question-mark">?</span>;
             <span class="kw">let </span>de = oio::Entry::new(<span class="kw-2">&amp;</span>path, meta);
