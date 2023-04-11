@@ -1170,6 +1170,10 @@
 <a href="#1170" id="1170">1170</a>
 <a href="#1171" id="1171">1171</a>
 <a href="#1172" id="1172">1172</a>
+<a href="#1173" id="1173">1173</a>
+<a href="#1174" id="1174">1174</a>
+<a href="#1175" id="1175">1175</a>
+<a href="#1176" id="1176">1176</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -1724,7 +1728,11 @@
         };
 
         <span class="self">self</span>.signer
-            .sign_query(<span class="kw-2">&amp;mut </span>req, args.expire())
+            .sign_query(
+                <span class="kw-2">&amp;mut </span>req,
+                <span class="comment">// TODO: convert to std::time::Duration
+                </span>time::Duration::seconds_f64(args.expire().as_secs_f64()),
+            )
             .map_err(new_request_sign_error)<span class="question-mark">?</span>;
 
         <span class="comment">// We don&#39;t need this request anymore, consume it directly.

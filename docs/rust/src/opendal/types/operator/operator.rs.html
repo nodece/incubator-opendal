@@ -1240,6 +1240,7 @@
 // under the License.
 
 </span><span class="kw">use </span>std::ops::RangeBounds;
+<span class="kw">use </span>std::time::Duration;
 
 <span class="kw">use </span>bytes::Bytes;
 <span class="kw">use </span>flagset::FlagSet;
@@ -1248,7 +1249,6 @@
 <span class="kw">use </span>futures::Stream;
 <span class="kw">use </span>futures::StreamExt;
 <span class="kw">use </span>futures::TryStreamExt;
-<span class="kw">use </span>time::Duration;
 <span class="kw">use </span>tokio::io::ReadBuf;
 
 <span class="kw">use </span><span class="kw">super</span>::BlockingOperator;

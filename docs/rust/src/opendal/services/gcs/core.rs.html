@@ -260,6 +260,11 @@
 <a href="#260" id="260">260</a>
 <a href="#261" id="261">261</a>
 <a href="#262" id="262">262</a>
+<a href="#263" id="263">263</a>
+<a href="#264" id="264">264</a>
+<a href="#265" id="265">265</a>
+<a href="#266" id="266">266</a>
+<a href="#267" id="267">267</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -281,10 +286,13 @@
 <span class="kw">use </span>std::fmt::Formatter;
 <span class="kw">use </span>std::fmt::Write;
 
+<span class="kw">use </span>backon::ExponentialBuilder;
+<span class="kw">use </span>backon::Retryable;
 <span class="kw">use </span>http::header::CONTENT_LENGTH;
 <span class="kw">use </span>http::header::CONTENT_TYPE;
 <span class="kw">use </span>http::Request;
 <span class="kw">use </span>http::Response;
+<span class="kw">use </span>once_cell::sync::Lazy;
 <span class="kw">use </span>reqsign_0_9::GoogleCredentialLoader;
 <span class="kw">use </span>reqsign_0_9::GoogleSigner;
 <span class="kw">use </span>reqsign_0_9::GoogleToken;
@@ -315,11 +323,13 @@
     }
 }
 
+<span class="kw">static </span>BACKOFF: Lazy&lt;ExponentialBuilder&gt; =
+    Lazy::new(|| ExponentialBuilder::default().with_jitter());
+
 <span class="kw">impl </span>GcsCore {
     <span class="kw">async fn </span>load_token(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;GoogleToken&gt; {
-        <span class="kw">let </span>cred = <span class="self">self
-            </span>.token_loader
-            .load()
+        <span class="kw">let </span>cred = { || <span class="self">self</span>.token_loader.load() }
+            .retry(<span class="kw-2">&amp;*</span>BACKOFF)
             .<span class="kw">await
             </span>.map_err(new_request_credential_error)<span class="question-mark">?</span>;
 
