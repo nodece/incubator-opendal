@@ -658,6 +658,13 @@
 <a href="#658" id="658">658</a>
 <a href="#659" id="659">659</a>
 <a href="#660" id="660">660</a>
+<a href="#661" id="661">661</a>
+<a href="#662" id="662">662</a>
+<a href="#663" id="663">663</a>
+<a href="#664" id="664">664</a>
+<a href="#665" id="665">665</a>
+<a href="#666" id="666">666</a>
+<a href="#667" id="667">667</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -722,7 +729,7 @@
 }
 
 <span class="kw">impl </span>OssCore {
-    <span class="kw">async fn </span>load_credential(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;AliyunCredential&gt; {
+    <span class="kw">async fn </span>load_credential(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;AliyunCredential&gt;&gt; {
         <span class="kw">let </span>cred = <span class="self">self
             </span>.loader
             .load()
@@ -730,22 +737,29 @@
             </span>.map_err(new_request_credential_error)<span class="question-mark">?</span>;
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>(cred) = cred {
-            <span class="prelude-val">Ok</span>(cred)
+            <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(cred))
         } <span class="kw">else </span>{
-            <span class="prelude-val">Err</span>(Error::new(
-                ErrorKind::ConfigInvalid,
-                <span class="string">&quot;no valid credential found&quot;</span>,
-            ))
+            <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>)
         }
     }
 
     <span class="kw">pub async fn </span>sign&lt;T&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, req: <span class="kw-2">&amp;mut </span>Request&lt;T&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="kw">let </span>cred = <span class="self">self</span>.load_credential().<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="kw">let </span>cred = <span class="kw">if let </span><span class="prelude-val">Some</span>(cred) = <span class="self">self</span>.load_credential().<span class="kw">await</span><span class="question-mark">? </span>{
+            cred
+        } <span class="kw">else </span>{
+            <span class="kw">return </span><span class="prelude-val">Ok</span>(());
+        };
+
         <span class="self">self</span>.signer.sign(req, <span class="kw-2">&amp;</span>cred).map_err(new_request_sign_error)
     }
 
     <span class="kw">pub async fn </span>sign_query&lt;T&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, req: <span class="kw-2">&amp;mut </span>Request&lt;T&gt;, duration: Duration) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="kw">let </span>cred = <span class="self">self</span>.load_credential().<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="kw">let </span>cred = <span class="kw">if let </span><span class="prelude-val">Some</span>(cred) = <span class="self">self</span>.load_credential().<span class="kw">await</span><span class="question-mark">? </span>{
+            cred
+        } <span class="kw">else </span>{
+            <span class="kw">return </span><span class="prelude-val">Ok</span>(());
+        };
+
         <span class="self">self</span>.signer
             .sign_query(req, duration, <span class="kw-2">&amp;</span>cred)
             .map_err(new_request_sign_error)
