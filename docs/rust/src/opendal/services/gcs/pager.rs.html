@@ -295,11 +295,6 @@
 <a href="#295" id="295">295</a>
 <a href="#296" id="296">296</a>
 <a href="#297" id="297">297</a>
-<a href="#298" id="298">298</a>
-<a href="#299" id="299">299</a>
-<a href="#300" id="300">300</a>
-<a href="#301" id="301">301</a>
-<a href="#302" id="302">302</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -322,8 +317,6 @@
 <span class="kw">use </span>async_trait::async_trait;
 <span class="kw">use </span>serde::Deserialize;
 <span class="kw">use </span>serde_json;
-<span class="kw">use </span>time::format_description::well_known::Rfc3339;
-<span class="kw">use </span>time::OffsetDateTime;
 
 <span class="kw">use </span><span class="kw">super</span>::core::GcsCore;
 <span class="kw">use </span><span class="kw">super</span>::error::parse_error;
@@ -415,10 +408,7 @@
                 meta.set_content_type(<span class="kw-2">&amp;</span>object.content_type);
             }
 
-            <span class="kw">let </span>dt = OffsetDateTime::parse(object.updated.as_str(), <span class="kw-2">&amp;</span>Rfc3339).map_err(|e| {
-                Error::new(ErrorKind::Unexpected, <span class="string">&quot;parse last modified as rfc3339&quot;</span>).set_source(e)
-            })<span class="question-mark">?</span>;
-            meta.set_last_modified(dt);
+            meta.set_last_modified(parse_datetime_from_rfc3339(object.updated.as_str())<span class="question-mark">?</span>);
 
             <span class="kw">let </span>de = oio::Entry::new(<span class="kw-2">&amp;</span>build_rel_path(<span class="kw-2">&amp;</span><span class="self">self</span>.core.root, <span class="kw-2">&amp;</span>object.name), meta);
 

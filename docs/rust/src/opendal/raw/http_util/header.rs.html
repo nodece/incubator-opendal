@@ -343,14 +343,6 @@
 <a href="#343" id="343">343</a>
 <a href="#344" id="344">344</a>
 <a href="#345" id="345">345</a>
-<a href="#346" id="346">346</a>
-<a href="#347" id="347">347</a>
-<a href="#348" id="348">348</a>
-<a href="#349" id="349">349</a>
-<a href="#350" id="350">350</a>
-<a href="#351" id="351">351</a>
-<a href="#352" id="352">352</a>
-<a href="#353" id="353">353</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -370,6 +362,8 @@
 
 </span><span class="kw">use </span>base64::engine::general_purpose;
 <span class="kw">use </span>base64::Engine;
+<span class="kw">use </span>chrono::DateTime;
+<span class="kw">use </span>chrono::Utc;
 <span class="kw">use </span>http::header::HeaderName;
 <span class="kw">use </span>http::header::CONTENT_DISPOSITION;
 <span class="kw">use </span>http::header::CONTENT_LENGTH;
@@ -381,8 +375,6 @@
 <span class="kw">use </span>http::HeaderMap;
 <span class="kw">use </span>http::HeaderValue;
 <span class="kw">use </span>md5::Digest;
-<span class="kw">use </span>time::format_description::well_known::Rfc2822;
-<span class="kw">use </span>time::OffsetDateTime;
 
 <span class="kw">use </span><span class="kw">crate</span>::raw::<span class="kw-2">*</span>;
 <span class="kw">use </span><span class="kw">crate</span>::EntryMode;
@@ -483,7 +475,7 @@
 }
 
 <span class="doccomment">/// Parse last modified from header map.
-</span><span class="kw">pub fn </span>parse_last_modified(headers: <span class="kw-2">&amp;</span>HeaderMap) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;OffsetDateTime&gt;&gt; {
+</span><span class="kw">pub fn </span>parse_last_modified(headers: <span class="kw-2">&amp;</span>HeaderMap) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;DateTime&lt;Utc&gt;&gt;&gt; {
     <span class="kw">match </span>headers.get(LAST_MODIFIED) {
         <span class="prelude-val">None </span>=&gt; <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>),
         <span class="prelude-val">Some</span>(v) =&gt; {
@@ -495,16 +487,8 @@
                 .with_operation(<span class="string">&quot;http_util::parse_last_modified&quot;</span>)
                 .set_source(e)
             })<span class="question-mark">?</span>;
-            <span class="kw">let </span>t = OffsetDateTime::parse(v, <span class="kw-2">&amp;</span>Rfc2822).map_err(|e| {
-                Error::new(
-                    ErrorKind::Unexpected,
-                    <span class="string">&quot;header value is not valid rfc2822 time&quot;</span>,
-                )
-                .with_operation(<span class="string">&quot;http_util::parse_last_modified&quot;</span>)
-                .set_source(e)
-            })<span class="question-mark">?</span>;
 
-            <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(t))
+            <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(parse_datetime_from_rfc2822(v)<span class="question-mark">?</span>))
         }
     }
 }

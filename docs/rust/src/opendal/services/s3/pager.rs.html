@@ -229,22 +229,6 @@
 <a href="#229" id="229">229</a>
 <a href="#230" id="230">230</a>
 <a href="#231" id="231">231</a>
-<a href="#232" id="232">232</a>
-<a href="#233" id="233">233</a>
-<a href="#234" id="234">234</a>
-<a href="#235" id="235">235</a>
-<a href="#236" id="236">236</a>
-<a href="#237" id="237">237</a>
-<a href="#238" id="238">238</a>
-<a href="#239" id="239">239</a>
-<a href="#240" id="240">240</a>
-<a href="#241" id="241">241</a>
-<a href="#242" id="242">242</a>
-<a href="#243" id="243">243</a>
-<a href="#244" id="244">244</a>
-<a href="#245" id="245">245</a>
-<a href="#246" id="246">246</a>
-<a href="#247" id="247">247</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -268,15 +252,11 @@
 <span class="kw">use </span>bytes::Buf;
 <span class="kw">use </span>quick_xml::de;
 <span class="kw">use </span>serde::Deserialize;
-<span class="kw">use </span>time::format_description::well_known::Rfc3339;
-<span class="kw">use </span>time::OffsetDateTime;
 
 <span class="kw">use </span><span class="kw">super</span>::core::S3Core;
 <span class="kw">use </span><span class="kw">super</span>::error::parse_error;
 <span class="kw">use </span><span class="kw">crate</span>::raw::<span class="kw-2">*</span>;
 <span class="kw">use </span><span class="kw">crate</span>::EntryMode;
-<span class="kw">use </span><span class="kw">crate</span>::Error;
-<span class="kw">use </span><span class="kw">crate</span>::ErrorKind;
 <span class="kw">use </span><span class="kw">crate</span>::Metadata;
 <span class="kw">use </span><span class="kw">crate</span>::Result;
 
@@ -367,19 +347,7 @@
 
             <span class="comment">// object.last_modified provides more precious time that contains
             // nanosecond, let&#39;s trim them.
-            </span><span class="kw">let </span>dt = OffsetDateTime::parse(object.last_modified.as_str(), <span class="kw-2">&amp;</span>Rfc3339)
-                .map(|v| {
-                    v.replace_nanosecond(<span class="number">0</span>)
-                        .expect(<span class="string">&quot;replace nanosecond of last modified must succeed&quot;</span>)
-                })
-                .map_err(|e| {
-                    Error::new(
-                        ErrorKind::Unexpected,
-                        <span class="string">&quot;parse last modified RFC3339 datetime&quot;</span>,
-                    )
-                    .set_source(e)
-                })<span class="question-mark">?</span>;
-            meta.set_last_modified(dt);
+            </span>meta.set_last_modified(parse_datetime_from_rfc3339(object.last_modified.as_str())<span class="question-mark">?</span>);
 
             <span class="kw">let </span>de = oio::Entry::new(<span class="kw-2">&amp;</span>build_rel_path(<span class="kw-2">&amp;</span><span class="self">self</span>.core.root, <span class="kw-2">&amp;</span>object.key), meta);
 

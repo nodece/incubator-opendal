@@ -203,6 +203,7 @@
 
 </span><span class="kw">use </span>serde::Deserialize;
 
+<span class="kw">use </span><span class="kw">crate</span>::raw::<span class="kw-2">*</span>;
 <span class="kw">use crate</span>::<span class="kw-2">*</span>;
 
 <span class="attr">#[derive(Debug, Deserialize)]
@@ -246,12 +247,11 @@
             FileStatusType::Directory =&gt; Metadata::new(EntryMode::DIR),
             FileStatusType::File =&gt; Metadata::new(EntryMode::FILE),
         };
-        <span class="kw">let </span>till_now = time::Duration::milliseconds(value.modification_time);
-        <span class="kw">let </span>last_modified = time::OffsetDateTime::UNIX_EPOCH
-            .checked_add(till_now)
-            .ok_or_else(|| Error::new(ErrorKind::Unexpected, <span class="string">&quot;last modification overflowed!&quot;</span>))<span class="question-mark">?</span>;
-        meta.set_last_modified(last_modified)
-            .set_content_length(value.length);
+
+        meta.set_last_modified(parse_datetime_from_from_timestamp_millis(
+            value.modification_time,
+        )<span class="question-mark">?</span>)
+        .set_content_length(value.length);
         <span class="prelude-val">Ok</span>(meta)
     }
 }
