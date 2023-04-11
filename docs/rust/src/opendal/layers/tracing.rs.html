@@ -581,9 +581,9 @@
     </span>}
 
     <span class="attr">#[tracing::instrument(level = <span class="string">&quot;debug&quot;</span>, skip(<span class="self">self</span>))]
-    </span><span class="kw">fn </span>presign(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpPresign) -&gt; <span class="prelude-ty">Result</span>&lt;RpPresign&gt; {
-        <span class="self">self</span>.inner.presign(path, args)
-    }
+    </span><span class="kw">async fn </span>presign(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpPresign) -&gt; <span class="prelude-ty">Result</span>&lt;RpPresign&gt; {
+        <span class="self">self</span>.inner.presign(path, args).<span class="kw">await
+    </span>}
 
     <span class="attr">#[tracing::instrument(level = <span class="string">&quot;debug&quot;</span>, skip(<span class="self">self</span>))]
     </span><span class="kw">async fn </span>batch(<span class="kw-2">&amp;</span><span class="self">self</span>, args: OpBatch) -&gt; <span class="prelude-ty">Result</span>&lt;RpBatch&gt; {

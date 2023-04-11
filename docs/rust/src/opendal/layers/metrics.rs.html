@@ -1607,11 +1607,11 @@
         })
     }
 
-    <span class="kw">fn </span>presign(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpPresign) -&gt; <span class="prelude-ty">Result</span>&lt;RpPresign&gt; {
+    <span class="kw">async fn </span>presign(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpPresign) -&gt; <span class="prelude-ty">Result</span>&lt;RpPresign&gt; {
         <span class="self">self</span>.handle.requests_total_presign.increment(<span class="number">1</span>);
 
         <span class="kw">let </span>start = Instant::now();
-        <span class="kw">let </span>result = <span class="self">self</span>.inner.presign(path, args);
+        <span class="kw">let </span>result = <span class="self">self</span>.inner.presign(path, args).<span class="kw">await</span>;
         <span class="kw">let </span>dur = start.elapsed().as_secs_f64();
 
         <span class="self">self</span>.handle.requests_duration_seconds_presign.record(dur);
