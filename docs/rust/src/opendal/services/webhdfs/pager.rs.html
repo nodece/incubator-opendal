@@ -58,6 +58,10 @@
 <a href="#58" id="58">58</a>
 <a href="#59" id="59">59</a>
 <a href="#60" id="60">60</a>
+<a href="#61" id="61">61</a>
+<a href="#62" id="62">62</a>
+<a href="#63" id="63">63</a>
+<a href="#64" id="64">64</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -105,7 +109,11 @@
         <span class="kw">let </span><span class="kw-2">mut </span>entries = Vec::with_capacity(<span class="self">self</span>.statuses.len());
 
         <span class="kw">while let </span><span class="prelude-val">Some</span>(status) = <span class="self">self</span>.statuses.pop() {
-            <span class="kw">let </span><span class="kw-2">mut </span>path = <span class="macro">format!</span>(<span class="string">&quot;{}/{}&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.path, status.path_suffix);
+            <span class="kw">let </span><span class="kw-2">mut </span>path = <span class="kw">if </span><span class="self">self</span>.path.is_empty() {
+                status.path_suffix.to_string()
+            } <span class="kw">else </span>{
+                <span class="macro">format!</span>(<span class="string">&quot;{}/{}&quot;</span>, <span class="self">self</span>.path, status.path_suffix)
+            };
 
             <span class="kw">let </span>meta: Metadata = status.try_into()<span class="question-mark">?</span>;
             <span class="kw">if </span>meta.mode().is_dir() {
