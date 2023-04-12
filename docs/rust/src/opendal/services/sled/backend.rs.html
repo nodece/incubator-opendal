@@ -187,8 +187,6 @@
 <a href="#187" id="187">187</a>
 <a href="#188" id="188">188</a>
 <a href="#189" id="189">189</a>
-<a href="#190" id="190">190</a>
-<a href="#191" id="191">191</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -246,7 +244,6 @@
 /// ```no_run
 /// use anyhow::Result;
 /// use opendal::services::Sled;
-/// use opendal::Object;
 /// use opendal::Operator;
 ///
 /// #[tokio::main]
@@ -255,7 +252,6 @@
 ///     builder.datadir(&quot;/tmp/opendal/sled&quot;);
 ///
 ///     let op: Operator = Operator::new(builder)?.finish();
-///     let _: Object = op.object(&quot;test_file&quot;);
 ///     Ok(())
 /// }
 /// ```
