@@ -1222,6 +1222,13 @@
 <a href="#1222" id="1222">1222</a>
 <a href="#1223" id="1223">1223</a>
 <a href="#1224" id="1224">1224</a>
+<a href="#1225" id="1225">1225</a>
+<a href="#1226" id="1226">1226</a>
+<a href="#1227" id="1227">1227</a>
+<a href="#1228" id="1228">1228</a>
+<a href="#1229" id="1229">1229</a>
+<a href="#1230" id="1230">1230</a>
+<a href="#1231" id="1231">1231</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -2168,6 +2175,9 @@
                 .<span class="kw">await</span><span class="question-mark">?</span>;
         }
 
+        <span class="comment">// Remove the directory itself.
+        </span><span class="self">self</span>.delete(path).<span class="kw">await</span><span class="question-mark">?</span>;
+
         <span class="prelude-val">Ok</span>(())
     }
 
@@ -2224,9 +2234,13 @@
 
     <span class="doccomment">/// List dir in flat way.
     ///
-    /// This function will create a new handle to list entries.
+    /// Also, this function can be used to list a prefix.
     ///
     /// An error will be returned if given path doesn&#39;t end with `/`.
+    ///
+    /// # Notes
+    ///
+    /// - `scan` will not return the prefix itself.
     ///
     /// # Examples
     ///

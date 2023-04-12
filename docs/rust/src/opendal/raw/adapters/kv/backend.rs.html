@@ -313,16 +313,6 @@
 <a href="#313" id="313">313</a>
 <a href="#314" id="314">314</a>
 <a href="#315" id="315">315</a>
-<a href="#316" id="316">316</a>
-<a href="#317" id="317">317</a>
-<a href="#318" id="318">318</a>
-<a href="#319" id="319">319</a>
-<a href="#320" id="320">320</a>
-<a href="#321" id="321">321</a>
-<a href="#322" id="322">322</a>
-<a href="#323" id="323">323</a>
-<a href="#324" id="324">324</a>
-<a href="#325" id="325">325</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -534,14 +524,8 @@
 
 <span class="kw">impl </span>KvPager {
     <span class="kw">fn </span>new(root: <span class="kw-2">&amp;</span>str, inner: Vec&lt;String&gt;) -&gt; <span class="self">Self </span>{
-        <span class="kw">let </span>root = <span class="kw">if </span>root == <span class="string">&quot;/&quot; </span>{
-            <span class="string">&quot;&quot;</span>.to_string()
-        } <span class="kw">else </span>{
-            root.to_string()
-        };
-
         <span class="self">Self </span>{
-            root,
+            root: root.to_string(),
             inner: <span class="prelude-val">Some</span>(inner),
         }
     }
@@ -558,11 +542,7 @@
                     EntryMode::FILE
                 };
 
-                oio::Entry::new(
-                    v.strip_prefix(<span class="kw-2">&amp;</span><span class="self">self</span>.root)
-                        .expect(<span class="string">&quot;key must start with root&quot;</span>),
-                    Metadata::new(mode),
-                )
+                oio::Entry::new(<span class="kw-2">&amp;</span>build_rel_path(<span class="kw-2">&amp;</span><span class="self">self</span>.root, <span class="kw-2">&amp;</span>v), Metadata::new(mode))
             })
             .collect();
 
