@@ -121,7 +121,7 @@
     <span class="kw">async fn </span>write(<span class="kw-2">&amp;mut </span><span class="self">self</span>, bs: Bytes) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         <span class="kw">let </span>req = <span class="self">self
             </span>.backend
-            .webhdfs_create_object_req(
+            .webhdfs_create_object_request(
                 <span class="kw-2">&amp;</span><span class="self">self</span>.path,
                 <span class="prelude-val">Some</span>(bs.len()),
                 <span class="self">self</span>.op.content_type(),
