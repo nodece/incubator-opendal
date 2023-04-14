@@ -567,6 +567,7 @@
 <a href="#567" id="567">567</a>
 <a href="#568" id="568">568</a>
 <a href="#569" id="569">569</a>
+<a href="#570" id="570">570</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -943,7 +944,7 @@
     <span class="kw">async fn </span>create(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, <span class="kw">_</span>: OpCreate) -&gt; <span class="prelude-ty">Result</span>&lt;RpCreate&gt; {
         <span class="kw">let </span>resp = <span class="self">self
             </span>.core
-            .oss_put_object(path, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, AsyncBody::Empty)
+            .oss_put_object(path, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, AsyncBody::Empty)
             .<span class="kw">await</span><span class="question-mark">?</span>;
         <span class="kw">let </span>status = resp.status();
 
@@ -972,7 +973,7 @@
 
     <span class="kw">async fn </span>write(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpWrite) -&gt; <span class="prelude-ty">Result</span>&lt;(RpWrite, <span class="self">Self</span>::Writer)&gt; {
         <span class="kw">let </span>upload_id = <span class="kw">if </span>args.append() {
-            <span class="kw">let </span>resp = <span class="self">self</span>.core.oss_initiate_upload(path).<span class="kw">await</span><span class="question-mark">?</span>;
+            <span class="kw">let </span>resp = <span class="self">self</span>.core.oss_initiate_upload(path, <span class="kw-2">&amp;</span>args).<span class="kw">await</span><span class="question-mark">?</span>;
             <span class="kw">match </span>resp.status() {
                 StatusCode::OK =&gt; {
                     <span class="kw">let </span>bs = resp.into_body().bytes().<span class="kw">await</span><span class="question-mark">?</span>;
@@ -1063,6 +1064,7 @@
                 <span class="prelude-val">None</span>,
                 v.content_type(),
                 v.content_disposition(),
+                v.cache_control(),
                 AsyncBody::Empty,
                 <span class="bool-val">true</span>,
             )<span class="question-mark">?</span>,

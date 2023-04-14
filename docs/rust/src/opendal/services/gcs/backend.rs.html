@@ -518,6 +518,31 @@
 <a href="#518" id="518">518</a>
 <a href="#519" id="519">519</a>
 <a href="#520" id="520">520</a>
+<a href="#521" id="521">521</a>
+<a href="#522" id="522">522</a>
+<a href="#523" id="523">523</a>
+<a href="#524" id="524">524</a>
+<a href="#525" id="525">525</a>
+<a href="#526" id="526">526</a>
+<a href="#527" id="527">527</a>
+<a href="#528" id="528">528</a>
+<a href="#529" id="529">529</a>
+<a href="#530" id="530">530</a>
+<a href="#531" id="531">531</a>
+<a href="#532" id="532">532</a>
+<a href="#533" id="533">533</a>
+<a href="#534" id="534">534</a>
+<a href="#535" id="535">535</a>
+<a href="#536" id="536">536</a>
+<a href="#537" id="537">537</a>
+<a href="#538" id="538">538</a>
+<a href="#539" id="539">539</a>
+<a href="#540" id="540">540</a>
+<a href="#541" id="541">541</a>
+<a href="#542" id="542">542</a>
+<a href="#543" id="543">543</a>
+<a href="#544" id="544">544</a>
+<a href="#545" id="545">545</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -581,6 +606,7 @@
 /// - `bucket`: Set the container name for backend
 /// - `endpoint`: Customizable endpoint setting
 /// - `credentials`: Credential string for GCS OAuth2
+/// - `predefined_acl`: Predefined ACL for GCS
 ///
 /// You can refer to [`GcsBuilder`]&#39;s docs for more information
 ///
@@ -605,6 +631,8 @@
 ///     builder.root(&quot;/path/to/dir&quot;);
 ///     // set the credentials for GCS OAUTH2 authentication
 ///     builder.credential(&quot;authentication token&quot;);
+///     // set the predefined ACL for GCS
+///     builder.predefined_acl(&quot;publicRead&quot;);
 ///
 ///     let op: Operator = Operator::new(builder)?.finish();
 ///     Ok(())
@@ -631,6 +659,7 @@
 
     http_client: <span class="prelude-ty">Option</span>&lt;HttpClient&gt;,
     customed_token_loader: <span class="prelude-ty">Option</span>&lt;Box&lt;<span class="kw">dyn </span>GoogleTokenLoad&gt;&gt;,
+    predefined_acl: <span class="prelude-ty">Option</span>&lt;String&gt;,
 }
 
 <span class="kw">impl </span>GcsBuilder {
@@ -718,6 +747,22 @@
         <span class="self">self</span>.customed_token_loader = <span class="prelude-val">Some</span>(token_load);
         <span class="self">self
     </span>}
+
+    <span class="doccomment">/// Set the predefined acl for GCS.
+    ///
+    /// Available values are:
+    /// - `authenticatedRead`
+    /// - `bucketOwnerFullControl`
+    /// - `bucketOwnerRead`
+    /// - `private`
+    /// - `projectPrivate`
+    /// - `publicRead`
+    </span><span class="kw">pub fn </span>predefined_acl(<span class="kw-2">&amp;mut </span><span class="self">self</span>, acl: <span class="kw-2">&amp;</span>str) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self </span>{
+        <span class="kw">if </span>!acl.is_empty() {
+            <span class="self">self</span>.predefined_acl = <span class="prelude-val">Some</span>(acl.to_string())
+        };
+        <span class="self">self
+    </span>}
 }
 
 <span class="kw">impl </span>Debug <span class="kw">for </span>GcsBuilder {
@@ -729,6 +774,9 @@
             .field(<span class="string">&quot;endpoint&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.endpoint);
         <span class="kw">if </span><span class="self">self</span>.credential.is_some() {
             ds.field(<span class="string">&quot;credentials&quot;</span>, <span class="kw-2">&amp;</span><span class="string">&quot;&lt;redacted&gt;&quot;</span>);
+        }
+        <span class="kw">if </span><span class="self">self</span>.predefined_acl.is_some() {
+            ds.field(<span class="string">&quot;predefined_acl&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.predefined_acl);
         }
         ds.finish()
     }
@@ -746,6 +794,7 @@
         map.get(<span class="string">&quot;endpoint&quot;</span>).map(|v| builder.endpoint(v));
         map.get(<span class="string">&quot;credential&quot;</span>).map(|v| builder.credential(v));
         map.get(<span class="string">&quot;scope&quot;</span>).map(|v| builder.scope(v));
+        map.get(<span class="string">&quot;predefined_acl&quot;</span>).map(|v| builder.predefined_acl(v));
 
         builder
     }
@@ -819,6 +868,7 @@
                 signer,
                 token_loader,
                 credential_loader: cred_loader,
+                predefined_acl: <span class="self">self</span>.predefined_acl.clone(),
             }),
         };
 

@@ -665,6 +665,25 @@
 <a href="#665" id="665">665</a>
 <a href="#666" id="666">666</a>
 <a href="#667" id="667">667</a>
+<a href="#668" id="668">668</a>
+<a href="#669" id="669">669</a>
+<a href="#670" id="670">670</a>
+<a href="#671" id="671">671</a>
+<a href="#672" id="672">672</a>
+<a href="#673" id="673">673</a>
+<a href="#674" id="674">674</a>
+<a href="#675" id="675">675</a>
+<a href="#676" id="676">676</a>
+<a href="#677" id="677">677</a>
+<a href="#678" id="678">678</a>
+<a href="#679" id="679">679</a>
+<a href="#680" id="680">680</a>
+<a href="#681" id="681">681</a>
+<a href="#682" id="682">682</a>
+<a href="#683" id="683">683</a>
+<a href="#684" id="684">684</a>
+<a href="#685" id="685">685</a>
+<a href="#686" id="686">686</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -687,6 +706,7 @@
 <span class="kw">use </span>std::time::Duration;
 
 <span class="kw">use </span>bytes::Bytes;
+<span class="kw">use </span>http::header::CACHE_CONTROL;
 <span class="kw">use </span>http::header::CONTENT_DISPOSITION;
 <span class="kw">use </span>http::header::CONTENT_LENGTH;
 <span class="kw">use </span>http::header::CONTENT_TYPE;
@@ -699,6 +719,7 @@
 <span class="kw">use </span>serde::Deserialize;
 <span class="kw">use </span>serde::Serialize;
 
+<span class="kw">use </span><span class="kw">crate</span>::ops::OpWrite;
 <span class="kw">use </span><span class="kw">crate</span>::raw::<span class="kw-2">*</span>;
 <span class="kw">use crate</span>::<span class="kw-2">*</span>;
 
@@ -772,12 +793,14 @@
 }
 
 <span class="kw">impl </span>OssCore {
-    <span class="kw">pub fn </span>oss_put_object_request(
+    <span class="attr">#[allow(clippy::too_many_arguments)]
+    </span><span class="kw">pub fn </span>oss_put_object_request(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         path: <span class="kw-2">&amp;</span>str,
         size: <span class="prelude-ty">Option</span>&lt;usize&gt;,
         content_type: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;,
         content_disposition: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;,
+        cache_control: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;,
         body: AsyncBody,
         is_presign: bool,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Request&lt;AsyncBody&gt;&gt; {
@@ -795,6 +818,10 @@
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>(pos) = content_disposition {
             req = req.header(CONTENT_DISPOSITION, pos);
+        }
+
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(cache_control) = cache_control {
+            req = req.header(CACHE_CONTROL, cache_control)
         }
 
         <span class="kw">let </span>req = req.body(body).map_err(new_request_build_error)<span class="question-mark">?</span>;
@@ -908,6 +935,7 @@
         size: <span class="prelude-ty">Option</span>&lt;usize&gt;,
         content_type: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;,
         content_disposition: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;,
+        cache_control: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;,
         body: AsyncBody,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Response&lt;IncomingAsyncBody&gt;&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>req = <span class="self">self</span>.oss_put_object_request(
@@ -915,6 +943,7 @@
             size,
             content_type,
             content_disposition,
+            cache_control,
             body,
             <span class="bool-val">false</span>,
         )<span class="question-mark">?</span>;
@@ -1008,9 +1037,14 @@
         }
     }
 
-    <span class="kw">pub async fn </span>oss_initiate_upload(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;Response&lt;IncomingAsyncBody&gt;&gt; {
+    <span class="kw">pub async fn </span>oss_initiate_upload(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        path: <span class="kw-2">&amp;</span>str,
+        args: <span class="kw-2">&amp;</span>OpWrite,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Response&lt;IncomingAsyncBody&gt;&gt; {
+        <span class="kw">let </span>cache_control = args.cache_control();
         <span class="kw">let </span>req = <span class="self">self
-            </span>.oss_initiate_upload_request(path, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, AsyncBody::Empty, <span class="bool-val">false</span>)
+            </span>.oss_initiate_upload_request(path, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, cache_control, AsyncBody::Empty, <span class="bool-val">false</span>)
             .<span class="kw">await</span><span class="question-mark">?</span>;
         <span class="self">self</span>.send(req).<span class="kw">await
     </span>}
@@ -1021,6 +1055,7 @@
         path: <span class="kw-2">&amp;</span>str,
         content_type: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;,
         content_disposition: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;,
+        cache_control: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;,
         body: AsyncBody,
         is_presign: bool,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Request&lt;AsyncBody&gt;&gt; {
@@ -1033,6 +1068,9 @@
         }
         <span class="kw">if let </span><span class="prelude-val">Some</span>(disposition) = content_disposition {
             req = req.header(CONTENT_DISPOSITION, disposition);
+        }
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(cache_control) = cache_control {
+            req = req.header(CACHE_CONTROL, cache_control);
         }
 
         <span class="kw">let </span><span class="kw-2">mut </span>req = req.body(body).map_err(new_request_build_error)<span class="question-mark">?</span>;

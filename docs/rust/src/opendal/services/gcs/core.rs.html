@@ -265,6 +265,12 @@
 <a href="#265" id="265">265</a>
 <a href="#266" id="266">266</a>
 <a href="#267" id="267">267</a>
+<a href="#268" id="268">268</a>
+<a href="#269" id="269">269</a>
+<a href="#270" id="270">270</a>
+<a href="#271" id="271">271</a>
+<a href="#272" id="272">272</a>
+<a href="#273" id="273">273</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -311,6 +317,8 @@
     <span class="kw">pub </span>signer: GoogleSigner,
     <span class="kw">pub </span>token_loader: GoogleTokenLoader,
     <span class="kw">pub </span>credential_loader: GoogleCredentialLoader,
+
+    <span class="kw">pub </span>predefined_acl: <span class="prelude-ty">Option</span>&lt;String&gt;,
 }
 
 <span class="kw">impl </span>Debug <span class="kw">for </span>GcsCore {
@@ -403,12 +411,16 @@
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Request&lt;AsyncBody&gt;&gt; {
         <span class="kw">let </span>p = build_abs_path(<span class="kw-2">&amp;</span><span class="self">self</span>.root, path);
 
-        <span class="kw">let </span>url = <span class="macro">format!</span>(
+        <span class="kw">let </span><span class="kw-2">mut </span>url = <span class="macro">format!</span>(
             <span class="string">&quot;{}/upload/storage/v1/b/{}/o?uploadType=media&amp;name={}&quot;</span>,
             <span class="self">self</span>.endpoint,
             <span class="self">self</span>.bucket,
             percent_encode_path(<span class="kw-2">&amp;</span>p)
         );
+
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(acl) = <span class="kw-2">&amp;</span><span class="self">self</span>.predefined_acl {
+            <span class="macro">write!</span>(<span class="kw-2">&amp;mut </span>url, <span class="string">&quot;&amp;predefinedAcl={}&quot;</span>, acl).unwrap();
+        }
 
         <span class="kw">let </span><span class="kw-2">mut </span>req = Request::post(<span class="kw-2">&amp;</span>url);
 
