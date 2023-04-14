@@ -271,6 +271,37 @@
 <a href="#271" id="271">271</a>
 <a href="#272" id="272">272</a>
 <a href="#273" id="273">273</a>
+<a href="#274" id="274">274</a>
+<a href="#275" id="275">275</a>
+<a href="#276" id="276">276</a>
+<a href="#277" id="277">277</a>
+<a href="#278" id="278">278</a>
+<a href="#279" id="279">279</a>
+<a href="#280" id="280">280</a>
+<a href="#281" id="281">281</a>
+<a href="#282" id="282">282</a>
+<a href="#283" id="283">283</a>
+<a href="#284" id="284">284</a>
+<a href="#285" id="285">285</a>
+<a href="#286" id="286">286</a>
+<a href="#287" id="287">287</a>
+<a href="#288" id="288">288</a>
+<a href="#289" id="289">289</a>
+<a href="#290" id="290">290</a>
+<a href="#291" id="291">291</a>
+<a href="#292" id="292">292</a>
+<a href="#293" id="293">293</a>
+<a href="#294" id="294">294</a>
+<a href="#295" id="295">295</a>
+<a href="#296" id="296">296</a>
+<a href="#297" id="297">297</a>
+<a href="#298" id="298">298</a>
+<a href="#299" id="299">299</a>
+<a href="#300" id="300">300</a>
+<a href="#301" id="301">301</a>
+<a href="#302" id="302">302</a>
+<a href="#303" id="303">303</a>
+<a href="#304" id="304">304</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -294,6 +325,7 @@
 
 <span class="kw">use </span>backon::ExponentialBuilder;
 <span class="kw">use </span>backon::Retryable;
+<span class="kw">use </span>bytes::BytesMut;
 <span class="kw">use </span>http::header::CONTENT_LENGTH;
 <span class="kw">use </span>http::header::CONTENT_TYPE;
 <span class="kw">use </span>http::Request;
@@ -319,6 +351,7 @@
     <span class="kw">pub </span>credential_loader: GoogleCredentialLoader,
 
     <span class="kw">pub </span>predefined_acl: <span class="prelude-ty">Option</span>&lt;String&gt;,
+    <span class="kw">pub </span>default_storage_class: <span class="prelude-ty">Option</span>&lt;String&gt;,
 }
 
 <span class="kw">impl </span>Debug <span class="kw">for </span>GcsCore {
@@ -412,9 +445,14 @@
         <span class="kw">let </span>p = build_abs_path(<span class="kw-2">&amp;</span><span class="self">self</span>.root, path);
 
         <span class="kw">let </span><span class="kw-2">mut </span>url = <span class="macro">format!</span>(
-            <span class="string">&quot;{}/upload/storage/v1/b/{}/o?uploadType=media&amp;name={}&quot;</span>,
+            <span class="string">&quot;{}/upload/storage/v1/b/{}/o?uploadType={}&amp;name={}&quot;</span>,
             <span class="self">self</span>.endpoint,
             <span class="self">self</span>.bucket,
+            <span class="kw">if </span><span class="self">self</span>.default_storage_class.is_some() {
+                <span class="string">&quot;multipart&quot;
+            </span>} <span class="kw">else </span>{
+                <span class="string">&quot;media&quot;
+            </span>},
             percent_encode_path(<span class="kw-2">&amp;</span>p)
         );
 
@@ -428,14 +466,38 @@
             req = req.header(CONTENT_LENGTH, size)
         }
 
-        <span class="kw">if let </span><span class="prelude-val">Some</span>(mime) = content_type {
-            req = req.header(CONTENT_TYPE, mime)
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(storage_class) = <span class="kw-2">&amp;</span><span class="self">self</span>.default_storage_class {
+            req = req.header(CONTENT_TYPE, <span class="string">&quot;multipart/related; boundary=my-boundary&quot;</span>);
+
+            <span class="kw">let </span><span class="kw-2">mut </span>req_body = BytesMut::with_capacity(<span class="number">100</span>);
+            <span class="macro">write!</span>(
+                <span class="kw-2">&amp;mut </span>req_body,
+                <span class="string">&quot;--my-boundary\nContent-Type: application/json; charset=UTF-8\n\n{{\&quot;storageClass\&quot;: \&quot;{}\&quot;}}\n\n--my-boundary\n&quot;</span>,
+                storage_class
+            ).unwrap();
+
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(mime) = content_type {
+                <span class="macro">write!</span>(<span class="kw-2">&amp;mut </span>req_body, <span class="string">&quot;Content-Type: {}\n\n&quot;</span>, mime).unwrap();
+            } <span class="kw">else </span>{
+                <span class="macro">write!</span>(<span class="kw-2">&amp;mut </span>req_body, <span class="string">&quot;Content-Type: application/octet-stream\n\n&quot;</span>).unwrap();
+            }
+
+            <span class="kw">if let </span>AsyncBody::Bytes(bytes) = body {
+                req_body.extend_from_slice(<span class="kw-2">&amp;</span>bytes);
+            }
+            <span class="macro">write!</span>(<span class="kw-2">&amp;mut </span>req_body, <span class="string">&quot;\n--my-boundary&quot;</span>).unwrap();
+
+            <span class="kw">let </span>req_body = AsyncBody::Bytes(req_body.freeze());
+            <span class="kw">let </span>req = req.body(req_body).map_err(new_request_build_error)<span class="question-mark">?</span>;
+            <span class="prelude-val">Ok</span>(req)
+        } <span class="kw">else </span>{
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(content_type) = content_type {
+                req = req.header(CONTENT_TYPE, content_type);
+            }
+
+            <span class="kw">let </span>req = req.body(body).map_err(new_request_build_error)<span class="question-mark">?</span>;
+            <span class="prelude-val">Ok</span>(req)
         }
-
-        <span class="comment">// Set body
-        </span><span class="kw">let </span>req = req.body(body).map_err(new_request_build_error)<span class="question-mark">?</span>;
-
-        <span class="prelude-val">Ok</span>(req)
     }
 
     <span class="kw">pub async fn </span>gcs_get_object_metadata(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;Response&lt;IncomingAsyncBody&gt;&gt; {

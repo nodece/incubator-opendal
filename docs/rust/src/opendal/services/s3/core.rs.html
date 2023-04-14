@@ -895,11 +895,11 @@
 <span class="kw">use </span>backon::ExponentialBuilder;
 <span class="kw">use </span>backon::Retryable;
 <span class="kw">use </span>bytes::Bytes;
-<span class="kw">use </span>http::header::HeaderName;
 <span class="kw">use </span>http::header::CACHE_CONTROL;
 <span class="kw">use </span>http::header::CONTENT_DISPOSITION;
 <span class="kw">use </span>http::header::CONTENT_LENGTH;
 <span class="kw">use </span>http::header::CONTENT_TYPE;
+<span class="kw">use </span>http::header::{HeaderName, IF_NONE_MATCH};
 <span class="kw">use </span>http::HeaderValue;
 <span class="kw">use </span>http::Request;
 <span class="kw">use </span>http::Response;
@@ -1086,7 +1086,7 @@
         req = <span class="self">self</span>.insert_sse_headers(req, <span class="bool-val">false</span>);
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>(if_none_match) = if_none_match {
-            req = req.header(http::header::IF_NONE_MATCH, if_none_match);
+            req = req.header(IF_NONE_MATCH, if_none_match);
         }
 
         <span class="kw">let </span>req = req
@@ -1136,7 +1136,7 @@
         }
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>(if_none_match) = if_none_match {
-            req = req.header(http::header::IF_NONE_MATCH, if_none_match);
+            req = req.header(IF_NONE_MATCH, if_none_match);
         }
 
         <span class="comment">// Set SSE headers.
@@ -1223,7 +1223,7 @@
         </span>req = <span class="self">self</span>.insert_sse_headers(req, <span class="bool-val">false</span>);
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>(if_none_match) = if_none_match {
-            req = req.header(http::header::IF_NONE_MATCH, if_none_match);
+            req = req.header(IF_NONE_MATCH, if_none_match);
         }
 
         <span class="kw">let </span><span class="kw-2">mut </span>req = req

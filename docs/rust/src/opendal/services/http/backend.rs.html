@@ -536,6 +536,7 @@
 <a href="#536" id="536">536</a>
 <a href="#537" id="537">537</a>
 <a href="#538" id="538">538</a>
+<a href="#539" id="539">539</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -559,6 +560,7 @@
 
 <span class="kw">use </span>async_trait::async_trait;
 <span class="kw">use </span>http::header;
+<span class="kw">use </span>http::header::IF_NONE_MATCH;
 <span class="kw">use </span>http::Request;
 <span class="kw">use </span>http::Response;
 <span class="kw">use </span>http::StatusCode;
@@ -852,7 +854,7 @@
         <span class="kw">let </span><span class="kw-2">mut </span>req = Request::get(<span class="kw-2">&amp;</span>url);
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>(if_none_match) = if_none_match {
-            req = req.header(http::header::IF_NONE_MATCH, if_none_match);
+            req = req.header(IF_NONE_MATCH, if_none_match);
         }
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>(auth) = <span class="kw-2">&amp;</span><span class="self">self</span>.authorization {
@@ -882,7 +884,7 @@
         <span class="kw">let </span><span class="kw-2">mut </span>req = Request::head(<span class="kw-2">&amp;</span>url);
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>(if_none_match) = if_none_match {
-            req = req.header(http::header::IF_NONE_MATCH, if_none_match);
+            req = req.header(IF_NONE_MATCH, if_none_match);
         }
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>(auth) = <span class="kw-2">&amp;</span><span class="self">self</span>.authorization {
