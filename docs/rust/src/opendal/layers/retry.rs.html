@@ -1266,15 +1266,15 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>.inner
     }
 
-    <span class="kw">async fn </span>create(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpCreate) -&gt; <span class="prelude-ty">Result</span>&lt;RpCreate&gt; {
-        { || <span class="self">self</span>.inner.create(path, args.clone()) }
+    <span class="kw">async fn </span>create_dir(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpCreate) -&gt; <span class="prelude-ty">Result</span>&lt;RpCreate&gt; {
+        { || <span class="self">self</span>.inner.create_dir(path, args.clone()) }
             .retry(<span class="kw-2">&amp;</span><span class="self">self</span>.builder)
             .when(|e| e.is_temporary())
             .notify(|err, dur| {
                 <span class="macro">warn!</span>(
                     target: <span class="string">&quot;opendal::service&quot;</span>,
                     <span class="string">&quot;operation={} -&gt; retry after {}s: error={:?}&quot;</span>,
-                    Operation::Create, dur.as_secs_f64(), err)
+                    Operation::CreateDir, dur.as_secs_f64(), err)
             })
             .map(|v| v.map_err(|e| e.set_persistent()))
             .<span class="kw">await
@@ -1420,15 +1420,15 @@
             .<span class="kw">await
     </span>}
 
-    <span class="kw">fn </span>blocking_create(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpCreate) -&gt; <span class="prelude-ty">Result</span>&lt;RpCreate&gt; {
-        { || <span class="self">self</span>.inner.blocking_create(path, args.clone()) }
+    <span class="kw">fn </span>blocking_create_dir(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpCreate) -&gt; <span class="prelude-ty">Result</span>&lt;RpCreate&gt; {
+        { || <span class="self">self</span>.inner.blocking_create_dir(path, args.clone()) }
             .retry(<span class="kw-2">&amp;</span><span class="self">self</span>.builder)
             .when(|e| e.is_temporary())
             .notify(|err, dur| {
                 <span class="macro">warn!</span>(
                     target: <span class="string">&quot;opendal::service&quot;</span>,
                     <span class="string">&quot;operation={} -&gt; retry after {}s: error={:?}&quot;</span>,
-                    Operation::BlockingCreate, dur.as_secs_f64(), err)
+                    Operation::BlockingCreateDir, dur.as_secs_f64(), err)
             })
             .call()
             .map_err(|e| e.set_persistent())

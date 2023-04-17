@@ -1197,12 +1197,12 @@
             requests_total_create: <span class="macro">register_counter!</span>(
                 METRIC_REQUESTS_TOTAL,
                 LABEL_SERVICE =&gt; service,
-                LABEL_OPERATION =&gt; Operation::Create.into_static(),
+                LABEL_OPERATION =&gt; Operation::CreateDir.into_static(),
             ),
             requests_duration_seconds_create: <span class="macro">register_histogram!</span>(
                 METRIC_REQUESTS_DURATION_SECONDS,
                 LABEL_SERVICE =&gt; service,
-                LABEL_OPERATION =&gt; Operation::Create.into_static(),
+                LABEL_OPERATION =&gt; Operation::CreateDir.into_static(),
             ),
 
             requests_total_read: <span class="macro">register_counter!</span>(
@@ -1306,12 +1306,12 @@
             requests_total_blocking_create: <span class="macro">register_counter!</span>(
                 METRIC_REQUESTS_TOTAL,
                 LABEL_SERVICE =&gt; service,
-                LABEL_OPERATION =&gt; Operation::BlockingCreate.into_static(),
+                LABEL_OPERATION =&gt; Operation::BlockingCreateDir.into_static(),
             ),
             requests_duration_seconds_blocking_create: <span class="macro">register_histogram!</span>(
                 METRIC_REQUESTS_DURATION_SECONDS,
                 LABEL_SERVICE =&gt; service,
-                LABEL_OPERATION =&gt; Operation::BlockingCreate.into_static(),
+                LABEL_OPERATION =&gt; Operation::BlockingCreateDir.into_static(),
             ),
 
             requests_total_blocking_read: <span class="macro">register_counter!</span>(
@@ -1444,13 +1444,13 @@
         result
     }
 
-    <span class="kw">async fn </span>create(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpCreate) -&gt; <span class="prelude-ty">Result</span>&lt;RpCreate&gt; {
+    <span class="kw">async fn </span>create_dir(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpCreate) -&gt; <span class="prelude-ty">Result</span>&lt;RpCreate&gt; {
         <span class="self">self</span>.handle.requests_total_create.increment(<span class="number">1</span>);
 
         <span class="kw">let </span>start = Instant::now();
 
         <span class="self">self</span>.inner
-            .create(path, args)
+            .create_dir(path, args)
             .map(|v| {
                 <span class="kw">let </span>dur = start.elapsed().as_secs_f64();
 
@@ -1458,7 +1458,7 @@
 
                 v.map_err(|e| {
                     <span class="self">self</span>.handle
-                        .increment_errors_total(Operation::Create, e.kind());
+                        .increment_errors_total(Operation::CreateDir, e.kind());
                     e
                 })
             })
@@ -1630,11 +1630,11 @@
         })
     }
 
-    <span class="kw">fn </span>blocking_create(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpCreate) -&gt; <span class="prelude-ty">Result</span>&lt;RpCreate&gt; {
+    <span class="kw">fn </span>blocking_create_dir(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpCreate) -&gt; <span class="prelude-ty">Result</span>&lt;RpCreate&gt; {
         <span class="self">self</span>.handle.requests_total_blocking_create.increment(<span class="number">1</span>);
 
         <span class="kw">let </span>start = Instant::now();
-        <span class="kw">let </span>result = <span class="self">self</span>.inner.blocking_create(path, args);
+        <span class="kw">let </span>result = <span class="self">self</span>.inner.blocking_create_dir(path, args);
         <span class="kw">let </span>dur = start.elapsed().as_secs_f64();
 
         <span class="self">self</span>.handle
@@ -1643,7 +1643,7 @@
 
         result.map_err(|e| {
             <span class="self">self</span>.handle
-                .increment_errors_total(Operation::BlockingCreate, e.kind());
+                .increment_errors_total(Operation::BlockingCreateDir, e.kind());
             e
         })
     }

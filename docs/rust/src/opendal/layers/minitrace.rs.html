@@ -533,8 +533,8 @@
     }
 
     <span class="attr">#[trace(<span class="string">&quot;create&quot;</span>, enter_on_poll = <span class="bool-val">true</span>)]
-    </span><span class="kw">async fn </span>create(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpCreate) -&gt; <span class="prelude-ty">Result</span>&lt;RpCreate&gt; {
-        <span class="self">self</span>.inner.create(path, args).<span class="kw">await
+    </span><span class="kw">async fn </span>create_dir(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpCreate) -&gt; <span class="prelude-ty">Result</span>&lt;RpCreate&gt; {
+        <span class="self">self</span>.inner.create_dir(path, args).<span class="kw">await
     </span>}
 
     <span class="kw">async fn </span>read(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpRead) -&gt; <span class="prelude-ty">Result</span>&lt;(RpRead, <span class="self">Self</span>::Reader)&gt; {
@@ -590,8 +590,8 @@
     </span>}
 
     <span class="attr">#[trace(<span class="string">&quot;blocking_create&quot;</span>)]
-    </span><span class="kw">fn </span>blocking_create(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpCreate) -&gt; <span class="prelude-ty">Result</span>&lt;RpCreate&gt; {
-        <span class="self">self</span>.inner.blocking_create(path, args)
+    </span><span class="kw">fn </span>blocking_create_dir(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpCreate) -&gt; <span class="prelude-ty">Result</span>&lt;RpCreate&gt; {
+        <span class="self">self</span>.inner.blocking_create_dir(path, args)
     }
 
     <span class="kw">fn </span>blocking_read(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpRead) -&gt; <span class="prelude-ty">Result</span>&lt;(RpRead, <span class="self">Self</span>::BlockingReader)&gt; {

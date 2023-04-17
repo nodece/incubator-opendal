@@ -218,6 +218,19 @@
 <a href="#218" id="218">218</a>
 <a href="#219" id="219">219</a>
 <a href="#220" id="220">220</a>
+<a href="#221" id="221">221</a>
+<a href="#222" id="222">222</a>
+<a href="#223" id="223">223</a>
+<a href="#224" id="224">224</a>
+<a href="#225" id="225">225</a>
+<a href="#226" id="226">226</a>
+<a href="#227" id="227">227</a>
+<a href="#228" id="228">228</a>
+<a href="#229" id="229">229</a>
+<a href="#230" id="230">230</a>
+<a href="#231" id="231">231</a>
+<a href="#232" id="232">232</a>
+<a href="#233" id="233">233</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -248,6 +261,7 @@
 <span class="kw">use </span>futures::FutureExt;
 
 <span class="kw">use </span><span class="kw">crate</span>::ops::OpWrite;
+<span class="kw">use </span><span class="kw">crate</span>::raw::oio::Write;
 <span class="kw">use </span><span class="kw">crate</span>::raw::<span class="kw-2">*</span>;
 <span class="kw">use crate</span>::<span class="kw-2">*</span>;
 
@@ -271,7 +285,7 @@
     ///
     /// We don&#39;t want to expose those details to users so keep this function
     /// in crate only.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">async fn </span>create(acc: FusedAccessor, path: <span class="kw-2">&amp;</span>str, op: OpWrite) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>&gt; {
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">async fn </span>create_dir(acc: FusedAccessor, path: <span class="kw-2">&amp;</span>str, op: OpWrite) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>&gt; {
         <span class="kw">let </span>(<span class="kw">_</span>, w) = acc.write(path, op).<span class="kw">await</span><span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(Writer {
@@ -290,6 +304,18 @@
         </span>} <span class="kw">else </span>{
             <span class="macro">unreachable!</span>(
                 <span class="string">&quot;writer state invalid while append, expect Idle, actual {}&quot;</span>,
+                <span class="self">self</span>.state
+            );
+        }
+    }
+
+    <span class="doccomment">/// Abort inner writer.
+    </span><span class="kw">pub async fn </span>abort(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        <span class="kw">if let </span>State::Idle(<span class="prelude-val">Some</span>(w)) = <span class="kw-2">&amp;mut </span><span class="self">self</span>.state {
+            w.abort().<span class="kw">await
+        </span>} <span class="kw">else </span>{
+            <span class="macro">unreachable!</span>(
+                <span class="string">&quot;writer state invalid while abort, expect Idle, actual {}&quot;</span>,
                 <span class="self">self</span>.state
             );
         }
@@ -405,7 +431,7 @@
     ///
     /// We don&#39;t want to expose those details to users so keep this function
     /// in crate only.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>create(acc: FusedAccessor, path: <span class="kw-2">&amp;</span>str, op: OpWrite) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>&gt; {
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>create_dir(acc: FusedAccessor, path: <span class="kw-2">&amp;</span>str, op: OpWrite) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>&gt; {
         <span class="kw">let </span>(<span class="kw">_</span>, w) = acc.blocking_write(path, op)<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(BlockingWriter { inner: w })

@@ -451,14 +451,14 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>.inner
     }
 
-    <span class="kw">async fn </span>create(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpCreate) -&gt; <span class="prelude-ty">Result</span>&lt;RpCreate&gt; {
+    <span class="kw">async fn </span>create_dir(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpCreate) -&gt; <span class="prelude-ty">Result</span>&lt;RpCreate&gt; {
         <span class="kw">let </span>_permit = <span class="self">self
             </span>.semaphore
             .acquire()
             .<span class="kw">await
             </span>.expect(<span class="string">&quot;semaphore must be valid&quot;</span>);
 
-        <span class="self">self</span>.inner.create(path, args).<span class="kw">await
+        <span class="self">self</span>.inner.create_dir(path, args).<span class="kw">await
     </span>}
 
     <span class="kw">async fn </span>read(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpRead) -&gt; <span class="prelude-ty">Result</span>&lt;(RpRead, <span class="self">Self</span>::Reader)&gt; {
@@ -547,13 +547,13 @@
         <span class="self">self</span>.inner.batch(args).<span class="kw">await
     </span>}
 
-    <span class="kw">fn </span>blocking_create(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpCreate) -&gt; <span class="prelude-ty">Result</span>&lt;RpCreate&gt; {
+    <span class="kw">fn </span>blocking_create_dir(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpCreate) -&gt; <span class="prelude-ty">Result</span>&lt;RpCreate&gt; {
         <span class="kw">let </span>_permit = <span class="self">self
             </span>.semaphore
             .try_acquire()
             .expect(<span class="string">&quot;semaphore must be valid&quot;</span>);
 
-        <span class="self">self</span>.inner.blocking_create(path, args)
+        <span class="self">self</span>.inner.blocking_create_dir(path, args)
     }
 
     <span class="kw">fn </span>blocking_read(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpRead) -&gt; <span class="prelude-ty">Result</span>&lt;(RpRead, <span class="self">Self</span>::BlockingReader)&gt; {

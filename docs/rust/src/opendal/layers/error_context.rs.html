@@ -566,11 +566,11 @@
         <span class="self">self</span>.meta.clone()
     }
 
-    <span class="kw">async fn </span>create(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpCreate) -&gt; <span class="prelude-ty">Result</span>&lt;RpCreate&gt; {
+    <span class="kw">async fn </span>create_dir(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpCreate) -&gt; <span class="prelude-ty">Result</span>&lt;RpCreate&gt; {
         <span class="self">self</span>.inner
-            .create(path, args)
+            .create_dir(path, args)
             .map_err(|err| {
-                err.with_operation(Operation::Create)
+                err.with_operation(Operation::CreateDir)
                     .with_context(<span class="string">&quot;service&quot;</span>, <span class="self">self</span>.meta.scheme())
                     .with_context(<span class="string">&quot;path&quot;</span>, path)
             })
@@ -720,9 +720,9 @@
             .<span class="kw">await
     </span>}
 
-    <span class="kw">fn </span>blocking_create(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpCreate) -&gt; <span class="prelude-ty">Result</span>&lt;RpCreate&gt; {
-        <span class="self">self</span>.inner.blocking_create(path, args).map_err(|err| {
-            err.with_operation(Operation::BlockingCreate)
+    <span class="kw">fn </span>blocking_create_dir(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpCreate) -&gt; <span class="prelude-ty">Result</span>&lt;RpCreate&gt; {
+        <span class="self">self</span>.inner.blocking_create_dir(path, args).map_err(|err| {
+            err.with_operation(Operation::BlockingCreateDir)
                 .with_context(<span class="string">&quot;service&quot;</span>, <span class="self">self</span>.meta.scheme())
                 .with_context(<span class="string">&quot;path&quot;</span>, path)
         })

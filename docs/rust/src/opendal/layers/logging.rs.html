@@ -1914,24 +1914,24 @@
         result
     }
 
-    <span class="kw">async fn </span>create(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpCreate) -&gt; <span class="prelude-ty">Result</span>&lt;RpCreate&gt; {
+    <span class="kw">async fn </span>create_dir(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpCreate) -&gt; <span class="prelude-ty">Result</span>&lt;RpCreate&gt; {
         <span class="macro">debug!</span>(
             target: LOGGING_TARGET,
             <span class="string">&quot;service={} operation={} path={} -&gt; started&quot;</span>,
             <span class="self">self</span>.scheme,
-            Operation::Create,
+            Operation::CreateDir,
             path
         );
 
         <span class="self">self</span>.inner
-            .create(path, args)
+            .create_dir(path, args)
             .<span class="kw">await
             </span>.map(|v| {
                 <span class="macro">debug!</span>(
                     target: LOGGING_TARGET,
                     <span class="string">&quot;service={} operation={} path={} -&gt; finished&quot;</span>,
                     <span class="self">self</span>.scheme,
-                    Operation::Create,
+                    Operation::CreateDir,
                     path
                 );
                 v
@@ -1943,7 +1943,7 @@
                         lvl,
                         <span class="string">&quot;service={} operation={} path={} -&gt; {}: {err:?}&quot;</span>,
                         <span class="self">self</span>.scheme,
-                        Operation::Create,
+                        Operation::CreateDir,
                         path,
                         <span class="self">self</span>.err_status(<span class="kw-2">&amp;</span>err)
                     )
@@ -2370,23 +2370,23 @@
             .<span class="kw">await
     </span>}
 
-    <span class="kw">fn </span>blocking_create(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpCreate) -&gt; <span class="prelude-ty">Result</span>&lt;RpCreate&gt; {
+    <span class="kw">fn </span>blocking_create_dir(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpCreate) -&gt; <span class="prelude-ty">Result</span>&lt;RpCreate&gt; {
         <span class="macro">debug!</span>(
             target: LOGGING_TARGET,
             <span class="string">&quot;service={} operation={} path={} -&gt; started&quot;</span>,
             <span class="self">self</span>.scheme,
-            Operation::BlockingCreate,
+            Operation::BlockingCreateDir,
             path
         );
 
         <span class="self">self</span>.inner
-            .blocking_create(path, args)
+            .blocking_create_dir(path, args)
             .map(|v| {
                 <span class="macro">debug!</span>(
                     target: LOGGING_TARGET,
                     <span class="string">&quot;service={} operation={} path={} -&gt; finished&quot;</span>,
                     <span class="self">self</span>.scheme,
-                    Operation::BlockingCreate,
+                    Operation::BlockingCreateDir,
                     path
                 );
                 v
@@ -2398,7 +2398,7 @@
                         lvl,
                         <span class="string">&quot;service={} operation={} path={} -&gt; {}: {err:?}&quot;</span>,
                         <span class="self">self</span>.scheme,
-                        Operation::BlockingCreate,
+                        Operation::BlockingCreateDir,
                         path,
                         <span class="self">self</span>.err_status(<span class="kw-2">&amp;</span>err)
                     );

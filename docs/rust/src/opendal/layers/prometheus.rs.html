@@ -996,7 +996,7 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>.inner
     }
 
-    <span class="kw">async fn </span>create(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpCreate) -&gt; <span class="prelude-ty">Result</span>&lt;RpCreate&gt; {
+    <span class="kw">async fn </span>create_dir(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpCreate) -&gt; <span class="prelude-ty">Result</span>&lt;RpCreate&gt; {
         <span class="self">self</span>.stats
             .requests_total
             .with_label_values(<span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="self">self</span>.scheme])
@@ -1005,14 +1005,14 @@
         <span class="kw">let </span>timer = <span class="self">self
             </span>.stats
             .requests_duration_seconds
-            .with_label_values(<span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="self">self</span>.scheme, Operation::Create.into_static()])
+            .with_label_values(<span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="self">self</span>.scheme, Operation::CreateDir.into_static()])
             .start_timer();
-        <span class="kw">let </span>create_res = <span class="self">self</span>.inner.create(path, args).<span class="kw">await</span>;
+        <span class="kw">let </span>create_res = <span class="self">self</span>.inner.create_dir(path, args).<span class="kw">await</span>;
 
         timer.observe_duration();
         create_res.map_err(|e| {
             <span class="self">self</span>.stats
-                .increment_errors_total(Operation::Create, e.kind());
+                .increment_errors_total(Operation::CreateDir, e.kind());
             e
         })
     }
@@ -1223,24 +1223,24 @@
         })
     }
 
-    <span class="kw">fn </span>blocking_create(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpCreate) -&gt; <span class="prelude-ty">Result</span>&lt;RpCreate&gt; {
+    <span class="kw">fn </span>blocking_create_dir(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpCreate) -&gt; <span class="prelude-ty">Result</span>&lt;RpCreate&gt; {
         <span class="self">self</span>.stats
             .requests_total
-            .with_label_values(<span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="self">self</span>.scheme, Operation::BlockingCreate.into_static()])
+            .with_label_values(<span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="self">self</span>.scheme, Operation::BlockingCreateDir.into_static()])
             .inc();
 
         <span class="kw">let </span>timer = <span class="self">self
             </span>.stats
             .requests_duration_seconds
-            .with_label_values(<span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="self">self</span>.scheme, Operation::BlockingCreate.into_static()])
+            .with_label_values(<span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="self">self</span>.scheme, Operation::BlockingCreateDir.into_static()])
             .start_timer();
-        <span class="kw">let </span>result = <span class="self">self</span>.inner.blocking_create(path, args);
+        <span class="kw">let </span>result = <span class="self">self</span>.inner.blocking_create_dir(path, args);
 
         timer.observe_duration();
 
         result.map_err(|e| {
             <span class="self">self</span>.stats
-                .increment_errors_total(Operation::BlockingCreate, e.kind());
+                .increment_errors_total(Operation::BlockingCreateDir, e.kind());
             e
         })
     }
