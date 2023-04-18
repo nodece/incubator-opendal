@@ -1190,6 +1190,12 @@
 <a href="#1190" id="1190">1190</a>
 <a href="#1191" id="1191">1191</a>
 <a href="#1192" id="1192">1192</a>
+<a href="#1193" id="1193">1193</a>
+<a href="#1194" id="1194">1194</a>
+<a href="#1195" id="1195">1195</a>
+<a href="#1196" id="1196">1196</a>
+<a href="#1197" id="1197">1197</a>
+<a href="#1198" id="1198">1198</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -2136,7 +2142,7 @@
     <span class="kw">async fn </span>read(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpRead) -&gt; <span class="prelude-ty">Result</span>&lt;(RpRead, <span class="self">Self</span>::Reader)&gt; {
         <span class="kw">let </span>resp = <span class="self">self
             </span>.core
-            .s3_get_object(path, args.range(), args.if_none_match())
+            .s3_get_object(path, args.range(), args.if_none_match(), args.if_match())
             .<span class="kw">await</span><span class="question-mark">?</span>;
 
         <span class="kw">let </span>status = resp.status();
@@ -2159,6 +2165,7 @@
                     args.content_type(),
                     args.content_disposition(),
                     args.cache_control(),
+                    args.if_match(),
                 )
                 .<span class="kw">await</span><span class="question-mark">?</span>;
 
@@ -2209,7 +2216,10 @@
             <span class="kw">return </span><span class="prelude-val">Ok</span>(RpStat::new(Metadata::new(EntryMode::DIR)));
         }
 
-        <span class="kw">let </span>resp = <span class="self">self</span>.core.s3_head_object(path, args.if_none_match()).<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="kw">let </span>resp = <span class="self">self
+            </span>.core
+            .s3_head_object(path, args.if_none_match(), args.if_match())
+            .<span class="kw">await</span><span class="question-mark">?</span>;
 
         <span class="kw">let </span>status = resp.status();
 
@@ -2251,7 +2261,8 @@
         <span class="comment">// We will not send this request out, just for signing.
         </span><span class="kw">let </span><span class="kw-2">mut </span>req = <span class="kw">match </span>args.operation() {
             PresignOperation::Stat(v) =&gt; {
-                <span class="self">self</span>.core.s3_head_object_request(path, v.if_none_match())<span class="question-mark">?
+                <span class="self">self</span>.core
+                    .s3_head_object_request(path, v.if_none_match(), v.if_match())<span class="question-mark">?
             </span>}
             PresignOperation::Read(v) =&gt; <span class="self">self</span>.core.s3_get_object_request(
                 path,
@@ -2259,6 +2270,7 @@
                 v.override_content_disposition(),
                 v.override_cache_control(),
                 v.if_none_match(),
+                v.if_match(),
             )<span class="question-mark">?</span>,
             PresignOperation::Write(<span class="kw">_</span>) =&gt; {
                 <span class="self">self</span>.core
