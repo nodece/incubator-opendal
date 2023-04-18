@@ -1315,6 +1315,8 @@
 <a href="#1315" id="1315">1315</a>
 <a href="#1316" id="1316">1316</a>
 <a href="#1317" id="1317">1317</a>
+<a href="#1318" id="1318">1318</a>
+<a href="#1319" id="1319">1319</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -1799,7 +1801,9 @@
     /// # use futures::TryStreamExt;
     /// # #[tokio::main]
     /// # async fn test(op: Operator) -&gt; Result&lt;()&gt; {
-    /// let bs = op.range_read_with(&quot;path/to/file&quot;, 1024..2048, OpRead::new()).await?;
+    /// let bs = op
+    ///     .range_read_with(&quot;path/to/file&quot;, 1024..2048, OpRead::new())
+    ///     .await?;
     /// # Ok(())
     /// # }
     /// ```

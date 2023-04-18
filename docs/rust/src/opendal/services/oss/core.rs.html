@@ -698,6 +698,7 @@
 <a href="#698" id="698">698</a>
 <a href="#699" id="699">699</a>
 <a href="#700" id="700">700</a>
+<a href="#701" id="701">701</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -720,11 +721,12 @@
 <span class="kw">use </span>std::time::Duration;
 
 <span class="kw">use </span>bytes::Bytes;
+<span class="kw">use </span>http::header::CACHE_CONTROL;
 <span class="kw">use </span>http::header::CONTENT_DISPOSITION;
 <span class="kw">use </span>http::header::CONTENT_LENGTH;
 <span class="kw">use </span>http::header::CONTENT_TYPE;
+<span class="kw">use </span>http::header::IF_NONE_MATCH;
 <span class="kw">use </span>http::header::RANGE;
-<span class="kw">use </span>http::header::{CACHE_CONTROL, IF_NONE_MATCH};
 <span class="kw">use </span>http::Request;
 <span class="kw">use </span>http::Response;
 <span class="kw">use </span>reqsign::AliyunCredential;

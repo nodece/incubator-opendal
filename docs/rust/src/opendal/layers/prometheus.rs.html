@@ -792,7 +792,6 @@
 <a href="#792" id="792">792</a>
 <a href="#793" id="793">793</a>
 <a href="#794" id="794">794</a>
-<a href="#795" id="795">795</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -822,14 +821,14 @@
 <span class="kw">use </span>futures::FutureExt;
 <span class="kw">use </span>futures::TryFutureExt;
 <span class="kw">use </span>log::debug;
-
+<span class="kw">use </span>prometheus::core::AtomicU64;
 <span class="kw">use </span>prometheus::core::GenericCounterVec;
 <span class="kw">use </span>prometheus::exponential_buckets;
 <span class="kw">use </span>prometheus::histogram_opts;
 <span class="kw">use </span>prometheus::register_histogram_vec_with_registry;
 <span class="kw">use </span>prometheus::register_int_counter_vec_with_registry;
+<span class="kw">use </span>prometheus::HistogramVec;
 <span class="kw">use </span>prometheus::Registry;
-<span class="kw">use </span>prometheus::{core::AtomicU64, HistogramVec};
 
 <span class="kw">use </span><span class="kw">crate</span>::ops::<span class="kw-2">*</span>;
 <span class="kw">use </span><span class="kw">crate</span>::raw::Accessor;
@@ -842,11 +841,10 @@
 /// ```
 /// use log::debug;
 /// use log::info;
+/// use opendal::layers::PrometheusLayer;
 /// use opendal::services;
 /// use opendal::Operator;
 /// use opendal::Result;
-///
-/// use opendal::layers::PrometheusLayer;
 /// use prometheus::Encoder;
 ///
 /// /// Visit [`opendal::services`] for more service related config.
