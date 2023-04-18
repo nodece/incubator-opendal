@@ -716,19 +716,19 @@
 <span class="attr">#[async_trait]
 </span><span class="kw">impl</span>&lt;R: oio::Write&gt; oio::Write <span class="kw">for </span>OtelTraceWrapper&lt;R&gt; {
     <span class="kw">async fn </span>write(<span class="kw-2">&amp;mut </span><span class="self">self</span>, bs: Bytes) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="self">self</span>.inner.write(bs).with_context(cx).<span class="kw">await
+        <span class="self">self</span>.inner.write(bs).<span class="kw">await
     </span>}
 
     <span class="kw">async fn </span>append(<span class="kw-2">&amp;mut </span><span class="self">self</span>, bs: Bytes) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="self">self</span>.inner.append(bs).with_context(cx).<span class="kw">await
+        <span class="self">self</span>.inner.append(bs).<span class="kw">await
     </span>}
 
     <span class="kw">async fn </span>abort(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="self">self</span>.inner.abort().with_context(cx).<span class="kw">await
+        <span class="self">self</span>.inner.abort().<span class="kw">await
     </span>}
 
     <span class="kw">async fn </span>close(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="self">self</span>.inner.close().with_context(cx).<span class="kw">await
+        <span class="self">self</span>.inner.close().<span class="kw">await
     </span>}
 }
 
