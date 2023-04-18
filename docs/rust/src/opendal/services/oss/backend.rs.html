@@ -577,6 +577,8 @@
 <a href="#577" id="577">577</a>
 <a href="#578" id="578">578</a>
 <a href="#579" id="579">579</a>
+<a href="#580" id="580">580</a>
+<a href="#581" id="581">581</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -890,6 +892,8 @@
         <span class="macro">debug!</span>(<span class="string">&quot;backend use presign_endpoint: {}&quot;</span>, <span class="kw-2">&amp;</span>presign_endpoint);
 
         <span class="kw">let </span><span class="kw-2">mut </span>cfg = AliyunConfig::default();
+        <span class="comment">// Load cfg from env first.
+        </span>cfg = cfg.from_env();
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>(v) = <span class="self">self</span>.access_key_id.take() {
             cfg.access_key_id = <span class="prelude-val">Some</span>(v);
