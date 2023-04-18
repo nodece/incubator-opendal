@@ -855,6 +855,9 @@
 <a href="#855" id="855">855</a>
 <a href="#856" id="856">856</a>
 <a href="#857" id="857">857</a>
+<a href="#858" id="858">858</a>
+<a href="#859" id="859">859</a>
+<a href="#860" id="860">860</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -1295,10 +1298,13 @@
         <span class="kw">let </span>p = build_abs_path(<span class="kw-2">&amp;</span><span class="self">self</span>.root, path);
 
         <span class="kw">let </span><span class="kw-2">mut </span>url = <span class="macro">format!</span>(
-            <span class="string">&quot;{}?list-type=2&amp;delimiter={delimiter}&amp;prefix={}&quot;</span>,
+            <span class="string">&quot;{}?list-type=2&amp;prefix={}&quot;</span>,
             <span class="self">self</span>.endpoint,
             percent_encode_path(<span class="kw-2">&amp;</span>p)
         );
+        <span class="kw">if </span>!delimiter.is_empty() {
+            <span class="macro">write!</span>(url, <span class="string">&quot;&amp;delimiter={delimiter}&quot;</span>).expect(<span class="string">&quot;write into string must succeed&quot;</span>);
+        }
         <span class="kw">if let </span><span class="prelude-val">Some</span>(limit) = limit {
             <span class="macro">write!</span>(url, <span class="string">&quot;&amp;max-keys={limit}&quot;</span>).expect(<span class="string">&quot;write into string must succeed&quot;</span>);
         }
