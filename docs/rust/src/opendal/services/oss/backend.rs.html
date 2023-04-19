@@ -563,6 +563,8 @@
 <a href="#563" id="563">563</a>
 <a href="#564" id="564">564</a>
 <a href="#565" id="565">565</a>
+<a href="#566" id="566">566</a>
+<a href="#567" id="567">567</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -957,7 +959,7 @@
     <span class="kw">async fn </span>read(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpRead) -&gt; <span class="prelude-ty">Result</span>&lt;(RpRead, <span class="self">Self</span>::Reader)&gt; {
         <span class="kw">let </span>resp = <span class="self">self
             </span>.core
-            .oss_get_object(path, args.range(), args.if_none_match())
+            .oss_get_object(path, args.range(), args.if_match(), args.if_none_match())
             .<span class="kw">await</span><span class="question-mark">?</span>;
 
         <span class="kw">let </span>status = resp.status();
@@ -999,7 +1001,7 @@
 
         <span class="kw">let </span>resp = <span class="self">self
             </span>.core
-            .oss_head_object(path, args.if_none_match())
+            .oss_head_object(path, args.if_match(), args.if_none_match())
             .<span class="kw">await</span><span class="question-mark">?</span>;
 
         <span class="kw">let </span>status = resp.status();
@@ -1044,10 +1046,12 @@
     <span class="kw">async fn </span>presign(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpPresign) -&gt; <span class="prelude-ty">Result</span>&lt;RpPresign&gt; {
         <span class="comment">// We will not send this request out, just for signing.
         </span><span class="kw">let </span><span class="kw-2">mut </span>req = <span class="kw">match </span>args.operation() {
-            PresignOperation::Stat(<span class="kw">_</span>) =&gt; <span class="self">self</span>.core.oss_head_object_request(path, <span class="bool-val">true</span>, <span class="prelude-val">None</span>)<span class="question-mark">?</span>,
+            PresignOperation::Stat(<span class="kw">_</span>) =&gt; {
+                <span class="self">self</span>.core.oss_head_object_request(path, <span class="bool-val">true</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>)<span class="question-mark">?
+            </span>}
             PresignOperation::Read(v) =&gt; {
                 <span class="self">self</span>.core
-                    .oss_get_object_request(path, v.range(), <span class="bool-val">true</span>, <span class="prelude-val">None</span>)<span class="question-mark">?
+                    .oss_get_object_request(path, v.range(), <span class="bool-val">true</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>)<span class="question-mark">?
             </span>}
             PresignOperation::Write(v) =&gt; <span class="self">self</span>.core.oss_put_object_request(
                 path,
