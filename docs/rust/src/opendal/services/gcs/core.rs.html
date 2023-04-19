@@ -699,7 +699,7 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         location: <span class="kw-2">&amp;</span>str,
         size: u64,
-        written_bytes: u64,
+        written: u64,
         is_last_part: bool,
         body: AsyncBody,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Request&lt;AsyncBody&gt;&gt; {
@@ -708,12 +708,12 @@
         <span class="kw">let </span>range_header = <span class="kw">if </span>is_last_part {
             <span class="macro">format!</span>(
                 <span class="string">&quot;bytes {}-{}/{}&quot;</span>,
-                written_bytes,
-                written_bytes + size - <span class="number">1</span>,
-                written_bytes + size
+                written,
+                written + size - <span class="number">1</span>,
+                written + size
             )
         } <span class="kw">else </span>{
-            <span class="macro">format!</span>(<span class="string">&quot;bytes {}-{}/*&quot;</span>, written_bytes, written_bytes + size - <span class="number">1</span>)
+            <span class="macro">format!</span>(<span class="string">&quot;bytes {}-{}/*&quot;</span>, written, written + size - <span class="number">1</span>)
         };
 
         req = req

@@ -1317,6 +1317,16 @@
 <a href="#1317" id="1317">1317</a>
 <a href="#1318" id="1318">1318</a>
 <a href="#1319" id="1319">1319</a>
+<a href="#1320" id="1320">1320</a>
+<a href="#1321" id="1321">1321</a>
+<a href="#1322" id="1322">1322</a>
+<a href="#1323" id="1323">1323</a>
+<a href="#1324" id="1324">1324</a>
+<a href="#1325" id="1325">1325</a>
+<a href="#1326" id="1326">1326</a>
+<a href="#1327" id="1327">1327</a>
+<a href="#1328" id="1328">1328</a>
+<a href="#1329" id="1329">1329</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -1950,7 +1960,13 @@
     /// # }
     /// ```
     </span><span class="kw">pub async fn </span>write(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, bs: <span class="kw">impl </span>Into&lt;Bytes&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="self">self</span>.write_with(path, OpWrite::new(), bs).<span class="kw">await
+        <span class="kw">let </span>bs = bs.into();
+        <span class="self">self</span>.write_with(
+            path,
+            OpWrite::new().with_content_length(bs.len() <span class="kw">as </span>u64),
+            bs,
+        )
+        .<span class="kw">await
     </span>}
 
     <span class="doccomment">/// Copy a file from `from` to `to`.
@@ -2088,8 +2104,8 @@
     /// # #[tokio::main]
     /// # async fn test(op: Operator) -&gt; Result&lt;()&gt; {
     /// let mut w = op.writer(&quot;path/to/file&quot;).await?;
-    /// w.append(vec![0; 4096]).await?;
-    /// w.append(vec![1; 4096]).await?;
+    /// w.write(vec![0; 4096]).await?;
+    /// w.write(vec![1; 4096]).await?;
     /// w.close().await?;
     /// # Ok(())
     /// # }
@@ -2118,8 +2134,8 @@
     /// # async fn test(op: Operator) -&gt; Result&lt;()&gt; {
     /// let args = OpWrite::new().with_content_type(&quot;application/octet-stream&quot;);
     /// let mut w = op.writer_with(&quot;path/to/file&quot;, args).await?;
-    /// w.append(vec![0; 4096]).await?;
-    /// w.append(vec![1; 4096]).await?;
+    /// w.write(vec![0; 4096]).await?;
+    /// w.write(vec![1; 4096]).await?;
     /// w.close().await?;
     /// # Ok(())
     /// # }
@@ -2136,7 +2152,7 @@
             );
         }
 
-        Writer::create_dir(<span class="self">self</span>.inner().clone(), <span class="kw-2">&amp;</span>path, args.with_append()).<span class="kw">await
+        Writer::create(<span class="self">self</span>.inner().clone(), <span class="kw-2">&amp;</span>path, args).<span class="kw">await
     </span>}
 
     <span class="doccomment">/// Write data with extra options.
@@ -2173,8 +2189,12 @@
             );
         }
 
-        <span class="kw">let </span>(<span class="kw">_</span>, <span class="kw-2">mut </span>w) = <span class="self">self</span>.inner().write(<span class="kw-2">&amp;</span>path, args).<span class="kw">await</span><span class="question-mark">?</span>;
-        w.write(bs.into()).<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="kw">let </span>bs = bs.into();
+        <span class="kw">let </span>(<span class="kw">_</span>, <span class="kw-2">mut </span>w) = <span class="self">self
+            </span>.inner()
+            .write(<span class="kw-2">&amp;</span>path, args.with_content_length(bs.len() <span class="kw">as </span>u64))
+            .<span class="kw">await</span><span class="question-mark">?</span>;
+        w.write(bs).<span class="kw">await</span><span class="question-mark">?</span>;
         w.close().<span class="kw">await</span><span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(())

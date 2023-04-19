@@ -162,6 +162,48 @@
 <a href="#162" id="162">162</a>
 <a href="#163" id="163">163</a>
 <a href="#164" id="164">164</a>
+<a href="#165" id="165">165</a>
+<a href="#166" id="166">166</a>
+<a href="#167" id="167">167</a>
+<a href="#168" id="168">168</a>
+<a href="#169" id="169">169</a>
+<a href="#170" id="170">170</a>
+<a href="#171" id="171">171</a>
+<a href="#172" id="172">172</a>
+<a href="#173" id="173">173</a>
+<a href="#174" id="174">174</a>
+<a href="#175" id="175">175</a>
+<a href="#176" id="176">176</a>
+<a href="#177" id="177">177</a>
+<a href="#178" id="178">178</a>
+<a href="#179" id="179">179</a>
+<a href="#180" id="180">180</a>
+<a href="#181" id="181">181</a>
+<a href="#182" id="182">182</a>
+<a href="#183" id="183">183</a>
+<a href="#184" id="184">184</a>
+<a href="#185" id="185">185</a>
+<a href="#186" id="186">186</a>
+<a href="#187" id="187">187</a>
+<a href="#188" id="188">188</a>
+<a href="#189" id="189">189</a>
+<a href="#190" id="190">190</a>
+<a href="#191" id="191">191</a>
+<a href="#192" id="192">192</a>
+<a href="#193" id="193">193</a>
+<a href="#194" id="194">194</a>
+<a href="#195" id="195">195</a>
+<a href="#196" id="196">196</a>
+<a href="#197" id="197">197</a>
+<a href="#198" id="198">198</a>
+<a href="#199" id="199">199</a>
+<a href="#200" id="200">200</a>
+<a href="#201" id="201">201</a>
+<a href="#202" id="202">202</a>
+<a href="#203" id="203">203</a>
+<a href="#204" id="204">204</a>
+<a href="#205" id="205">205</a>
+<a href="#206" id="206">206</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -193,37 +235,40 @@
 
 <span class="kw">pub struct </span>GcsWriter {
     core: Arc&lt;GcsCore&gt;,
-
-    op: OpWrite,
     path: String,
+    op: OpWrite,
+
     location: <span class="prelude-ty">Option</span>&lt;String&gt;,
-    written_bytes: u64,
-    is_last_part_written: bool,
-    last: <span class="prelude-ty">Option</span>&lt;Bytes&gt;,
+    written: u64,
+    buffer: oio::VectorCursor,
+    buffer_size: usize,
 }
 
 <span class="kw">impl </span>GcsWriter {
-    <span class="kw">pub fn </span>new(
-        core: Arc&lt;GcsCore&gt;,
-        op: OpWrite,
-        path: String,
-        upload_location: <span class="prelude-ty">Option</span>&lt;String&gt;,
-    ) -&gt; <span class="self">Self </span>{
+    <span class="kw">pub fn </span>new(core: Arc&lt;GcsCore&gt;, path: <span class="kw-2">&amp;</span>str, op: OpWrite) -&gt; <span class="self">Self </span>{
         GcsWriter {
             core,
+            path: path.to_string(),
             op,
-            path,
-            location: upload_location,
-            written_bytes: <span class="number">0</span>,
-            is_last_part_written: <span class="bool-val">false</span>,
-            last: <span class="prelude-val">None</span>,
+
+            location: <span class="prelude-val">None</span>,
+            written: <span class="number">0</span>,
+            buffer: oio::VectorCursor::new(),
+            <span class="comment">// The chunk size should be a multiple of 256 KiB
+            // (256 x 1024 bytes), unless it&#39;s the last chunk
+            // that completes the upload.
+            //
+            // Larger chunk sizes typically make uploads faster,
+            // but note that there&#39;s a tradeoff between speed and
+            // memory usage. It&#39;s recommended that you use at least
+            // 8 MiB for the chunk size.
+            //
+            // TODO: allow this value to be configured.
+            </span>buffer_size: <span class="number">8 </span>* <span class="number">1024 </span>* <span class="number">1024</span>,
         }
     }
-}
 
-<span class="attr">#[async_trait]
-</span><span class="kw">impl </span>oio::Write <span class="kw">for </span>GcsWriter {
-    <span class="kw">async fn </span>write(<span class="kw-2">&amp;mut </span><span class="self">self</span>, bs: Bytes) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+    <span class="kw">async fn </span>write_oneshot(<span class="kw-2">&amp;</span><span class="self">self</span>, bs: Bytes) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>req = <span class="self">self</span>.core.gcs_insert_object_request(
             <span class="kw-2">&amp;</span>percent_encode_path(<span class="kw-2">&amp;</span><span class="self">self</span>.path),
             <span class="prelude-val">Some</span>(bs.len()),
@@ -246,80 +291,119 @@
         }
     }
 
-    <span class="kw">async fn </span>append(<span class="kw-2">&amp;mut </span><span class="self">self</span>, bs: Bytes) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="kw">let </span>location = <span class="kw">if let </span><span class="prelude-val">Some</span>(location) = <span class="kw-2">&amp;</span><span class="self">self</span>.location {
-            location
-        } <span class="kw">else </span>{
-            <span class="kw">return </span><span class="prelude-val">Ok</span>(());
-        };
-
-        <span class="kw">let </span>result = <span class="kw">if let </span><span class="prelude-val">Some</span>(last) = <span class="kw-2">&amp;</span><span class="self">self</span>.last {
-            <span class="kw">let </span>bytes_to_upload = last.slice(<span class="number">0</span>..last.len());
-            <span class="kw">let </span>part_size = bytes_to_upload.len() <span class="kw">as </span>u64;
-            <span class="kw">let </span>is_last_part = part_size % (<span class="number">256 </span>* <span class="number">1024</span>) != <span class="number">0</span>;
-            <span class="kw">let </span><span class="kw-2">mut </span>req = <span class="self">self</span>.core.gcs_upload_in_resumable_upload(
-                location,
-                part_size,
-                <span class="self">self</span>.written_bytes,
-                is_last_part,
-                AsyncBody::Bytes(bytes_to_upload),
-            )<span class="question-mark">?</span>;
-
-            <span class="self">self</span>.core.sign(<span class="kw-2">&amp;mut </span>req).<span class="kw">await</span><span class="question-mark">?</span>;
-
-            <span class="kw">let </span>resp = <span class="self">self</span>.core.send(req).<span class="kw">await</span><span class="question-mark">?</span>;
-
-            <span class="kw">let </span>status = resp.status();
-
-            <span class="kw">match </span>status {
-                StatusCode::OK | StatusCode::PERMANENT_REDIRECT =&gt; {
-                    <span class="kw">if </span>is_last_part {
-                        <span class="self">self</span>.is_last_part_written = <span class="bool-val">true
-                    </span>} <span class="kw">else </span>{
-                        <span class="self">self</span>.written_bytes += part_size;
-                    }
-                    <span class="prelude-val">Ok</span>(())
-                }
-                <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(parse_error(resp).<span class="kw">await</span><span class="question-mark">?</span>),
-            }
-        } <span class="kw">else </span>{
-            <span class="prelude-val">Ok</span>(())
-        };
-
-        <span class="self">self</span>.last = <span class="prelude-val">Some</span>(bs.slice(<span class="number">0</span>..bs.len()));
-        <span class="kw">return </span>result;
-    }
-
-    <span class="kw">async fn </span>abort(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="prelude-val">Ok</span>(())
-    }
-
-    <span class="kw">async fn </span>close(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="kw">if </span><span class="self">self</span>.is_last_part_written {
-            <span class="kw">return </span><span class="prelude-val">Ok</span>(());
-        }
-
-        <span class="kw">let </span>location = <span class="kw">if let </span><span class="prelude-val">Some</span>(location) = <span class="kw-2">&amp;</span><span class="self">self</span>.location {
-            location
-        } <span class="kw">else </span>{
-            <span class="kw">return </span><span class="prelude-val">Ok</span>(());
-        };
-
-        <span class="kw">let </span>bs = <span class="self">self
-            </span>.last
-            .as_ref()
-            .expect(<span class="string">&quot;failed to get the previously uploaded part&quot;</span>);
-
-        <span class="kw">let </span>resp = <span class="self">self
-            </span>.core
-            .gcs_complete_resumable_upload(location, <span class="self">self</span>.written_bytes, bs.slice(<span class="number">0</span>..bs.len()))
-            .<span class="kw">await</span><span class="question-mark">?</span>;
-
+    <span class="kw">async fn </span>initiate_upload(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;String&gt; {
+        <span class="kw">let </span>resp = <span class="self">self</span>.core.gcs_initiate_resumable_upload(<span class="kw-2">&amp;</span><span class="self">self</span>.path).<span class="kw">await</span><span class="question-mark">?</span>;
         <span class="kw">let </span>status = resp.status();
 
         <span class="kw">match </span>status {
             StatusCode::OK =&gt; {
+                <span class="kw">let </span>bs = parse_location(resp.headers())<span class="question-mark">?</span>;
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(location) = bs {
+                    <span class="prelude-val">Ok</span>(location.to_string())
+                } <span class="kw">else </span>{
+                    <span class="prelude-val">Err</span>(Error::new(
+                        ErrorKind::Unexpected,
+                        <span class="string">&quot;location is not in the response header&quot;</span>,
+                    ))
+                }
+            }
+            <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(parse_error(resp).<span class="kw">await</span><span class="question-mark">?</span>),
+        }
+    }
+
+    <span class="kw">async fn </span>write_part(<span class="kw-2">&amp;</span><span class="self">self</span>, location: <span class="kw-2">&amp;</span>str, bs: Bytes) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>req = <span class="self">self</span>.core.gcs_upload_in_resumable_upload(
+            location,
+            bs.len() <span class="kw">as </span>u64,
+            <span class="self">self</span>.written,
+            <span class="bool-val">false</span>,
+            AsyncBody::Bytes(bs),
+        )<span class="question-mark">?</span>;
+
+        <span class="self">self</span>.core.sign(<span class="kw-2">&amp;mut </span>req).<span class="kw">await</span><span class="question-mark">?</span>;
+
+        <span class="kw">let </span>resp = <span class="self">self</span>.core.send(req).<span class="kw">await</span><span class="question-mark">?</span>;
+
+        <span class="kw">let </span>status = resp.status();
+        <span class="kw">match </span>status {
+            StatusCode::OK | StatusCode::PERMANENT_REDIRECT =&gt; <span class="prelude-val">Ok</span>(()),
+            <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(parse_error(resp).<span class="kw">await</span><span class="question-mark">?</span>),
+        }
+    }
+}
+
+<span class="attr">#[async_trait]
+</span><span class="kw">impl </span>oio::Write <span class="kw">for </span>GcsWriter {
+    <span class="kw">async fn </span>write(<span class="kw-2">&amp;mut </span><span class="self">self</span>, bs: Bytes) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        <span class="kw">let </span>location = <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.location {
+            <span class="prelude-val">Some</span>(location) =&gt; location,
+            <span class="prelude-val">None </span>=&gt; {
+                <span class="kw">if </span><span class="self">self</span>.op.content_length().unwrap_or_default() == bs.len() <span class="kw">as </span>u64
+                    &amp;&amp; <span class="self">self</span>.written == <span class="number">0
+                </span>{
+                    <span class="kw">return </span><span class="self">self</span>.write_oneshot(bs).<span class="kw">await</span>;
+                } <span class="kw">else </span>{
+                    <span class="kw">let </span>location = <span class="self">self</span>.initiate_upload().<span class="kw">await</span><span class="question-mark">?</span>;
+                    <span class="self">self</span>.location = <span class="prelude-val">Some</span>(location);
+                    <span class="self">self</span>.location.as_deref().unwrap()
+                }
+            }
+        };
+
+        <span class="comment">// Ignore empty bytes
+        </span><span class="kw">if </span>bs.is_empty() {
+            <span class="kw">return </span><span class="prelude-val">Ok</span>(());
+        }
+
+        <span class="self">self</span>.buffer.push(bs);
+        <span class="comment">// Return directly if the buffer is not full
+        </span><span class="kw">if </span><span class="self">self</span>.buffer.len() &lt;= <span class="self">self</span>.buffer_size {
+            <span class="kw">return </span><span class="prelude-val">Ok</span>(());
+        }
+
+        <span class="kw">let </span>bs = <span class="self">self</span>.buffer.peak_exact(<span class="self">self</span>.buffer_size);
+
+        <span class="kw">match </span><span class="self">self</span>.write_part(location, bs).<span class="kw">await </span>{
+            <span class="prelude-val">Ok</span>(<span class="kw">_</span>) =&gt; {
+                <span class="self">self</span>.buffer.take(<span class="self">self</span>.buffer_size);
+                <span class="self">self</span>.written += <span class="self">self</span>.buffer_size <span class="kw">as </span>u64;
+                <span class="prelude-val">Ok</span>(())
+            }
+            <span class="prelude-val">Err</span>(e) =&gt; {
+                <span class="comment">// If the upload fails, we should pop the given bs to make sure
+                // write is re-enter safe.
+                </span><span class="self">self</span>.buffer.pop();
+                <span class="prelude-val">Err</span>(e)
+            }
+        }
+    }
+
+    <span class="comment">// TODO: we can cancel the upload by sending a DELETE request to the location
+    </span><span class="kw">async fn </span>abort(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        <span class="prelude-val">Ok</span>(())
+    }
+
+    <span class="kw">async fn </span>close(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        <span class="kw">let </span>location = <span class="kw">if let </span><span class="prelude-val">Some</span>(location) = <span class="kw-2">&amp;</span><span class="self">self</span>.location {
+            location
+        } <span class="kw">else </span>{
+            <span class="kw">return </span><span class="prelude-val">Ok</span>(());
+        };
+
+        <span class="kw">let </span>bs = <span class="self">self</span>.buffer.peak_exact(<span class="self">self</span>.buffer.len());
+
+        <span class="kw">let </span>resp = <span class="self">self
+            </span>.core
+            .gcs_complete_resumable_upload(location, <span class="self">self</span>.written, bs)
+            .<span class="kw">await</span><span class="question-mark">?</span>;
+
+        <span class="kw">let </span>status = resp.status();
+        <span class="kw">match </span>status {
+            StatusCode::OK =&gt; {
                 resp.into_body().consume().<span class="kw">await</span><span class="question-mark">?</span>;
+
+                <span class="self">self</span>.location = <span class="prelude-val">None</span>;
+                <span class="self">self</span>.buffer.clear();
                 <span class="prelude-val">Ok</span>(())
             }
             <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(parse_error(resp).<span class="kw">await</span><span class="question-mark">?</span>),
