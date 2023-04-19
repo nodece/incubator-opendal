@@ -2477,7 +2477,7 @@
             target: LOGGING_TARGET,
             <span class="string">&quot;service={} operation={} from={} to={} -&gt; started&quot;</span>,
             <span class="self">self</span>.scheme,
-            Operation::BlockingMove,
+            Operation::BlockingRename,
             from,
             to,
         );
@@ -2489,7 +2489,7 @@
                     target: LOGGING_TARGET,
                     <span class="string">&quot;service={} operation={} from={} to={} -&gt; finished&quot;</span>,
                     <span class="self">self</span>.scheme,
-                    Operation::BlockingMove,
+                    Operation::BlockingRename,
                     from,
                     to,
                 );
@@ -2502,7 +2502,7 @@
                         lvl,
                         <span class="string">&quot;service={} operation={} from={} to={} -&gt; {}: {err:?}&quot;</span>,
                         <span class="self">self</span>.scheme,
-                        Operation::BlockingMove,
+                        Operation::BlockingRename,
                         from,
                         to,
                         <span class="self">self</span>.err_status(<span class="kw-2">&amp;</span>err)

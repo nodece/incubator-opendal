@@ -1292,7 +1292,7 @@
     <span class="kw">async fn </span>read(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpRead) -&gt; <span class="prelude-ty">Result</span>&lt;(RpRead, <span class="self">Self</span>::Reader)&gt; {
         <span class="kw">let </span>resp = <span class="self">self
             </span>.core
-            .azblob_get_blob(path, args.range(), args.if_none_match())
+            .azblob_get_blob(path, args.range(), args.if_none_match(), args.if_match())
             .<span class="kw">await</span><span class="question-mark">?</span>;
 
         <span class="kw">let </span>status = resp.status();
@@ -1343,7 +1343,7 @@
 
         <span class="kw">let </span>resp = <span class="self">self
             </span>.core
-            .azblob_get_blob_properties(path, args.if_none_match())
+            .azblob_get_blob_properties(path, args.if_none_match(), args.if_match())
             .<span class="kw">await</span><span class="question-mark">?</span>;
 
         <span class="kw">let </span>status = resp.status();

@@ -290,6 +290,15 @@
 <a href="#290" id="290">290</a>
 <a href="#291" id="291">291</a>
 <a href="#292" id="292">292</a>
+<a href="#293" id="293">293</a>
+<a href="#294" id="294">294</a>
+<a href="#295" id="295">295</a>
+<a href="#296" id="296">296</a>
+<a href="#297" id="297">297</a>
+<a href="#298" id="298">298</a>
+<a href="#299" id="299">299</a>
+<a href="#300" id="300">300</a>
+<a href="#301" id="301">301</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -327,11 +336,20 @@
 <span class="doccomment">/// Writer is designed to write data into given path in an asynchronous
 /// manner.
 ///
-/// # Notes
+/// ## Notes
 ///
-/// Writer is designed for appending multiple blocks which could
-/// lead to much requests. If only want to send all data in single chunk,
-/// please use [`Operator::write`] instead.
+/// Writer can be used in two ways:
+///
+/// - Sized: write data with a known size by specify the content length.
+/// - Unsized: write data with an unknown size, also known as streaming.
+///
+/// All services will support `sized` writer and provide special optimization if
+/// the given data size is the same as the content length, allowing them to
+/// be written in one request.
+///
+/// Some services also supports `unsized` writer. They MAY buffer part of the data
+/// and flush them into storage at needs. And finally, the file will be available
+/// after `close` has been called.
 </span><span class="kw">pub struct </span>Writer {
     state: State,
 }

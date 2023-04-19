@@ -375,6 +375,17 @@
 <a href="#375" id="375">375</a>
 <a href="#376" id="376">376</a>
 <a href="#377" id="377">377</a>
+<a href="#378" id="378">378</a>
+<a href="#379" id="379">379</a>
+<a href="#380" id="380">380</a>
+<a href="#381" id="381">381</a>
+<a href="#382" id="382">382</a>
+<a href="#383" id="383">383</a>
+<a href="#384" id="384">384</a>
+<a href="#385" id="385">385</a>
+<a href="#386" id="386">386</a>
+<a href="#387" id="387">387</a>
+<a href="#388" id="388">388</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -392,14 +403,12 @@
 // specific language governing permissions and limitations
 // under the License.
 
-</span><span class="kw">use </span>std::fmt::Debug;
-<span class="kw">use </span>std::fmt::Formatter;
-<span class="kw">use </span>std::fmt::Write;
-
-<span class="kw">use </span>backon::ExponentialBuilder;
+</span><span class="kw">use </span>backon::ExponentialBuilder;
 <span class="kw">use </span>backon::Retryable;
 <span class="kw">use </span>bytes::{Bytes, BytesMut};
 <span class="kw">use </span>http::header::CONTENT_TYPE;
+<span class="kw">use </span>http::header::IF_MATCH;
+<span class="kw">use </span>http::header::IF_NONE_MATCH;
 <span class="kw">use </span>http::header::{CONTENT_LENGTH, CONTENT_RANGE};
 <span class="kw">use </span>http::Request;
 <span class="kw">use </span>http::Response;
@@ -408,6 +417,9 @@
 <span class="kw">use </span>reqsign::GoogleSigner;
 <span class="kw">use </span>reqsign::GoogleToken;
 <span class="kw">use </span>reqsign::GoogleTokenLoader;
+<span class="kw">use </span>std::fmt::Debug;
+<span class="kw">use </span>std::fmt::Formatter;
+<span class="kw">use </span>std::fmt::Write;
 
 <span class="kw">use </span><span class="kw">super</span>::uri::percent_encode_path;
 <span class="kw">use </span><span class="kw">crate</span>::raw::<span class="kw-2">*</span>;
@@ -474,6 +486,8 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         path: <span class="kw-2">&amp;</span>str,
         range: BytesRange,
+        if_match: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;,
+        if_none_match: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Request&lt;AsyncBody&gt;&gt; {
         <span class="kw">let </span>p = build_abs_path(<span class="kw-2">&amp;</span><span class="self">self</span>.root, path);
 
@@ -486,6 +500,12 @@
 
         <span class="kw">let </span><span class="kw-2">mut </span>req = Request::get(<span class="kw-2">&amp;</span>url);
 
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(if_match) = if_match {
+            req = req.header(IF_MATCH, if_match);
+        }
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(if_none_match) = if_none_match {
+            req = req.header(IF_NONE_MATCH, if_none_match);
+        }
         <span class="kw">if </span>!range.is_full() {
             req = req.header(http::header::RANGE, range.to_header());
         }
@@ -501,8 +521,10 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         path: <span class="kw-2">&amp;</span>str,
         range: BytesRange,
+        if_match: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;,
+        if_none_match: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Response&lt;IncomingAsyncBody&gt;&gt; {
-        <span class="kw">let </span><span class="kw-2">mut </span>req = <span class="self">self</span>.gcs_get_object_request(path, range)<span class="question-mark">?</span>;
+        <span class="kw">let </span><span class="kw-2">mut </span>req = <span class="self">self</span>.gcs_get_object_request(path, range, if_match, if_none_match)<span class="question-mark">?</span>;
 
         <span class="self">self</span>.sign(<span class="kw-2">&amp;mut </span>req).<span class="kw">await</span><span class="question-mark">?</span>;
         <span class="self">self</span>.send(req).<span class="kw">await
