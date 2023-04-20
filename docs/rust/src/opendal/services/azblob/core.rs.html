@@ -338,6 +338,10 @@
 <a href="#338" id="338">338</a>
 <a href="#339" id="339">339</a>
 <a href="#340" id="340">340</a>
+<a href="#341" id="341">341</a>
+<a href="#342" id="342">342</a>
+<a href="#343" id="343">343</a>
+<a href="#344" id="344">344</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -362,6 +366,7 @@
 <span class="kw">use </span>std::str::FromStr;
 
 <span class="kw">use </span>http::header::HeaderName;
+<span class="kw">use </span>http::header::CACHE_CONTROL;
 <span class="kw">use </span>http::header::CONTENT_LENGTH;
 <span class="kw">use </span>http::header::CONTENT_TYPE;
 <span class="kw">use </span>http::header::IF_MATCH;
@@ -492,6 +497,7 @@
         path: <span class="kw-2">&amp;</span>str,
         size: <span class="prelude-ty">Option</span>&lt;usize&gt;,
         content_type: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;,
+        cache_control: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;,
         body: AsyncBody,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Request&lt;AsyncBody&gt;&gt; {
         <span class="kw">let </span>p = build_abs_path(<span class="kw-2">&amp;</span><span class="self">self</span>.root, path);
@@ -504,7 +510,9 @@
         );
 
         <span class="kw">let </span><span class="kw-2">mut </span>req = Request::put(<span class="kw-2">&amp;</span>url);
-
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(cache_control) = cache_control {
+            req = req.header(CACHE_CONTROL, cache_control);
+        }
         <span class="kw">if let </span><span class="prelude-val">Some</span>(size) = size {
             req = req.header(CONTENT_LENGTH, size)
         }

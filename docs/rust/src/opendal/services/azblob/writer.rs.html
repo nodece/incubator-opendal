@@ -73,6 +73,7 @@
 <a href="#73" id="73">73</a>
 <a href="#74" id="74">74</a>
 <a href="#75" id="75">75</a>
+<a href="#76" id="76">76</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -122,6 +123,7 @@
             <span class="kw-2">&amp;</span><span class="self">self</span>.path,
             <span class="prelude-val">Some</span>(bs.len()),
             <span class="self">self</span>.op.content_type(),
+            <span class="self">self</span>.op.cache_control(),
             AsyncBody::Bytes(bs),
         )<span class="question-mark">?</span>;
 
