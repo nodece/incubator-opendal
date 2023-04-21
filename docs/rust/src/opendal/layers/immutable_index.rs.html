@@ -616,10 +616,10 @@
     <span class="doccomment">/// Add list capabilities for underlying storage services.
     </span><span class="kw">fn </span>metadata(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; AccessorInfo {
         <span class="kw">let </span><span class="kw-2">mut </span>meta = <span class="self">self</span>.inner.info();
-        meta.set_capabilities(
-            meta.capabilities() | AccessorCapability::List | AccessorCapability::Scan,
-        );
-        meta.set_hints(meta.hints());
+
+        <span class="kw">let </span>cap = meta.capability_mut();
+        cap.list = <span class="bool-val">true</span>;
+        cap.scan = <span class="bool-val">true</span>;
 
         meta
     }

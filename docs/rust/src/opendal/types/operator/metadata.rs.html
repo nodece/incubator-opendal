@@ -143,47 +143,47 @@
 
     <span class="doccomment">/// Check if current backend supports [`Accessor::read`] or not.
     </span><span class="kw">pub fn </span>can_read(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
-        <span class="self">self</span>.<span class="number">0</span>.capabilities().contains(AccessorCapability::Read)
+        <span class="self">self</span>.<span class="number">0</span>.capability().read
     }
 
     <span class="doccomment">/// Check if current backend supports [`Accessor::write`] or not.
     </span><span class="kw">pub fn </span>can_write(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
-        <span class="self">self</span>.<span class="number">0</span>.capabilities().contains(AccessorCapability::Write)
+        <span class="self">self</span>.<span class="number">0</span>.capability().write
     }
 
     <span class="doccomment">/// Check if current backend supports [`Accessor::copy`] or not.
     </span><span class="kw">pub fn </span>can_copy(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
-        <span class="self">self</span>.<span class="number">0</span>.capabilities().contains(AccessorCapability::Copy)
+        <span class="self">self</span>.<span class="number">0</span>.capability().copy
     }
 
     <span class="doccomment">/// Check if current backend supports [`Accessor::rename`] or not.
     </span><span class="kw">pub fn </span>can_rename(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
-        <span class="self">self</span>.<span class="number">0</span>.capabilities().contains(AccessorCapability::Rename)
+        <span class="self">self</span>.<span class="number">0</span>.capability().rename
     }
 
     <span class="doccomment">/// Check if current backend supports [`Accessor::list`] or not.
     </span><span class="kw">pub fn </span>can_list(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
-        <span class="self">self</span>.<span class="number">0</span>.capabilities().contains(AccessorCapability::List)
+        <span class="self">self</span>.<span class="number">0</span>.capability().list
     }
 
     <span class="doccomment">/// Check if current backend supports [`Accessor::scan`] or not.
     </span><span class="kw">pub fn </span>can_scan(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
-        <span class="self">self</span>.<span class="number">0</span>.capabilities().contains(AccessorCapability::Scan)
+        <span class="self">self</span>.<span class="number">0</span>.capability().scan
     }
 
     <span class="doccomment">/// Check if current backend supports [`Accessor::presign`] or not.
     </span><span class="kw">pub fn </span>can_presign(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
-        <span class="self">self</span>.<span class="number">0</span>.capabilities().contains(AccessorCapability::Presign)
+        <span class="self">self</span>.<span class="number">0</span>.capability().presign
     }
 
     <span class="doccomment">/// Check if current backend supports batch operations or not.
     </span><span class="kw">pub fn </span>can_batch(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
-        <span class="self">self</span>.<span class="number">0</span>.capabilities().contains(AccessorCapability::Batch)
+        <span class="self">self</span>.<span class="number">0</span>.capability().batch
     }
 
     <span class="doccomment">/// Check if current backend supports blocking operations or not.
     </span><span class="kw">pub fn </span>can_blocking(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
-        <span class="self">self</span>.<span class="number">0</span>.capabilities().contains(AccessorCapability::Blocking)
+        <span class="self">self</span>.<span class="number">0</span>.capability().blocking
     }
 }
 </code></pre></div>

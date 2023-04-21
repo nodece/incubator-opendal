@@ -1166,6 +1166,13 @@
 <a href="#1166" id="1166">1166</a>
 <a href="#1167" id="1167">1167</a>
 <a href="#1168" id="1168">1168</a>
+<a href="#1169" id="1169">1169</a>
+<a href="#1170" id="1170">1170</a>
+<a href="#1171" id="1171">1171</a>
+<a href="#1172" id="1172">1172</a>
+<a href="#1173" id="1173">1173</a>
+<a href="#1174" id="1174">1174</a>
+<a href="#1175" id="1175">1175</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -2075,16 +2082,23 @@
     <span class="kw">type </span>BlockingPager = ();
 
     <span class="kw">fn </span>info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; AccessorInfo {
-        <span class="kw">use </span>AccessorCapability::<span class="kw-2">*</span>;
-        <span class="kw">use </span>AccessorHint::<span class="kw-2">*</span>;
-
         <span class="kw">let </span><span class="kw-2">mut </span>am = AccessorInfo::default();
         am.set_scheme(Scheme::S3)
             .set_root(<span class="kw-2">&amp;</span><span class="self">self</span>.core.root)
             .set_name(<span class="kw-2">&amp;</span><span class="self">self</span>.core.bucket)
-            .set_max_batch_operations(<span class="number">1000</span>)
-            .set_capabilities(Read | Write | List | Scan | Presign | Batch | Copy)
-            .set_hints(ReadStreamable);
+            .set_capability(Capability {
+                read: <span class="bool-val">true</span>,
+                read_can_next: <span class="bool-val">true</span>,
+                write: <span class="bool-val">true</span>,
+                list: <span class="bool-val">true</span>,
+                scan: <span class="bool-val">true</span>,
+                copy: <span class="bool-val">true</span>,
+                presign: <span class="bool-val">true</span>,
+                batch: <span class="bool-val">true</span>,
+                batch_max_operations: <span class="prelude-val">Some</span>(<span class="number">1000</span>),
+
+                ..Default::default()
+            });
 
         am
     }

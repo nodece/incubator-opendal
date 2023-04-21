@@ -1061,6 +1061,9 @@
 <a href="#1061" id="1061">1061</a>
 <a href="#1062" id="1062">1062</a>
 <a href="#1063" id="1063">1063</a>
+<a href="#1064" id="1064">1064</a>
+<a href="#1065" id="1065">1065</a>
+<a href="#1066" id="1066">1066</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -1726,7 +1729,7 @@
                     <span class="prelude-val">Some</span>(dur) =&gt; {
                         <span class="macro">warn!</span>(target: <span class="string">&quot;opendal::service&quot;</span>,
                               <span class="string">&quot;operation={} path={} -&gt; pager retry after {}s: error={:?}&quot;</span>,
-                              WriteOperation::Append, <span class="self">self</span>.path, dur.as_secs_f64(), e);
+                              WriteOperation::Abort, <span class="self">self</span>.path, dur.as_secs_f64(), e);
                         tokio::time::sleep(dur).<span class="kw">await</span>;
                         <span class="kw">continue</span>;
                     }
@@ -1879,8 +1882,11 @@
 
         <span class="kw">fn </span>info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; AccessorInfo {
             <span class="kw">let </span><span class="kw-2">mut </span>am = AccessorInfo::default();
-            am.set_capabilities(AccessorCapability::List | AccessorCapability::Batch);
-            am.set_hints(AccessorHint::ReadStreamable);
+            am.set_capability(Capability {
+                list: <span class="bool-val">true</span>,
+                batch: <span class="bool-val">true</span>,
+                ..Default::default()
+            });
 
             am
         }

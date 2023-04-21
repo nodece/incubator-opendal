@@ -716,6 +716,8 @@
 <a href="#716" id="716">716</a>
 <a href="#717" id="717">717</a>
 <a href="#718" id="718">718</a>
+<a href="#719" id="719">719</a>
+<a href="#720" id="720">720</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -1018,15 +1020,17 @@
         <span class="kw">let </span><span class="kw-2">mut </span>am = AccessorInfo::default();
         am.set_scheme(Scheme::Fs)
             .set_root(<span class="kw-2">&amp;</span><span class="self">self</span>.root.to_string_lossy())
-            .set_capabilities(
-                AccessorCapability::Read
-                    | AccessorCapability::Write
-                    | AccessorCapability::Copy
-                    | AccessorCapability::Rename
-                    | AccessorCapability::List
-                    | AccessorCapability::Blocking,
-            )
-            .set_hints(AccessorHint::ReadSeekable);
+            .set_capability(Capability {
+                read: <span class="bool-val">true</span>,
+                read_can_seek: <span class="bool-val">true</span>,
+                write: <span class="bool-val">true</span>,
+                create_dir: <span class="bool-val">true</span>,
+                list: <span class="bool-val">true</span>,
+                copy: <span class="bool-val">true</span>,
+                rename: <span class="bool-val">true</span>,
+                blocking: <span class="bool-val">true</span>,
+                ..Default::default()
+            });
 
         am
     }

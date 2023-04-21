@@ -521,10 +521,10 @@
     ///
     /// We don&#39;t want to expose those details to users so keep this function
     /// in crate only.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>create_dir(acc: FusedAccessor, path: <span class="kw-2">&amp;</span>str, op: OpRead) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>&gt; {
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>create(acc: FusedAccessor, path: <span class="kw-2">&amp;</span>str, op: OpRead) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>&gt; {
         <span class="kw">let </span>acc_meta = acc.info();
 
-        <span class="kw">let </span>r = <span class="kw">if </span>acc_meta.hints().contains(AccessorHint::ReadSeekable) {
+        <span class="kw">let </span>r = <span class="kw">if </span>acc_meta.capability().read_can_seek {
             <span class="kw">let </span>(<span class="kw">_</span>, r) = acc.blocking_read(path, op)<span class="question-mark">?</span>;
             r
         } <span class="kw">else </span>{
@@ -534,7 +534,7 @@
             ));
         };
 
-        <span class="kw">let </span>r = <span class="kw">if </span>acc_meta.hints().contains(AccessorHint::ReadStreamable) {
+        <span class="kw">let </span>r = <span class="kw">if </span>acc_meta.capability().read_can_next {
             r
         } <span class="kw">else </span>{
             <span class="comment">// Make this capacity configurable.

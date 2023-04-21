@@ -806,6 +806,20 @@
 <a href="#806" id="806">806</a>
 <a href="#807" id="807">807</a>
 <a href="#808" id="808">808</a>
+<a href="#809" id="809">809</a>
+<a href="#810" id="810">810</a>
+<a href="#811" id="811">811</a>
+<a href="#812" id="812">812</a>
+<a href="#813" id="813">813</a>
+<a href="#814" id="814">814</a>
+<a href="#815" id="815">815</a>
+<a href="#816" id="816">816</a>
+<a href="#817" id="817">817</a>
+<a href="#818" id="818">818</a>
+<a href="#819" id="819">819</a>
+<a href="#820" id="820">820</a>
+<a href="#821" id="821">821</a>
+<a href="#822" id="822">822</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -1255,16 +1269,30 @@
     <span class="kw">type </span>BlockingPager = ();
 
     <span class="kw">fn </span>info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; AccessorInfo {
-        <span class="kw">use </span>AccessorCapability::<span class="kw-2">*</span>;
-        <span class="kw">use </span>AccessorHint::<span class="kw-2">*</span>;
-
         <span class="kw">let </span><span class="kw-2">mut </span>am = AccessorInfo::default();
         am.set_scheme(Scheme::Azblob)
             .set_root(<span class="kw-2">&amp;</span><span class="self">self</span>.core.root)
             .set_name(<span class="kw-2">&amp;</span><span class="self">self</span>.core.container)
-            .set_max_batch_operations(AZBLOB_BATCH_LIMIT)
-            .set_capabilities(Read | Write | List | Scan | Batch | Copy)
-            .set_hints(ReadStreamable);
+            .set_capability(Capability {
+                read: <span class="bool-val">true</span>,
+                read_can_next: <span class="bool-val">true</span>,
+                read_with_if_match: <span class="bool-val">true</span>,
+                read_with_if_none_match: <span class="bool-val">true</span>,
+                stat: <span class="bool-val">true</span>,
+                stat_with_if_match: <span class="bool-val">true</span>,
+                stat_with_if_none_match: <span class="bool-val">true</span>,
+                write: <span class="bool-val">true</span>,
+                write_with_content_type: <span class="bool-val">true</span>,
+                write_with_cache_control: <span class="bool-val">true</span>,
+                delete: <span class="bool-val">true</span>,
+                create_dir: <span class="bool-val">true</span>,
+                list: <span class="bool-val">true</span>,
+                scan: <span class="bool-val">true</span>,
+                copy: <span class="bool-val">true</span>,
+                batch: <span class="bool-val">true</span>,
+                batch_max_operations: <span class="prelude-val">Some</span>(AZBLOB_BATCH_LIMIT),
+                ..Default::default()
+            });
 
         am
     }

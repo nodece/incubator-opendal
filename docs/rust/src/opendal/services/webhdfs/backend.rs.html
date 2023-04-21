@@ -600,6 +600,9 @@
 <a href="#600" id="600">600</a>
 <a href="#601" id="601">601</a>
 <a href="#602" id="602">602</a>
+<a href="#603" id="603">603</a>
+<a href="#604" id="604">604</a>
+<a href="#605" id="605">605</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -1067,10 +1070,13 @@
         <span class="kw">let </span><span class="kw-2">mut </span>am = AccessorInfo::default();
         am.set_scheme(Scheme::Webhdfs)
             .set_root(<span class="kw-2">&amp;</span><span class="self">self</span>.root)
-            .set_capabilities(
-                AccessorCapability::Read | AccessorCapability::Write | AccessorCapability::List,
-            )
-            .set_hints(AccessorHint::ReadStreamable);
+            .set_capability(Capability {
+                read: <span class="bool-val">true</span>,
+                read_can_next: <span class="bool-val">true</span>,
+                write: <span class="bool-val">true</span>,
+                list: <span class="bool-val">true</span>,
+                ..Default::default()
+            });
         am
     }
 

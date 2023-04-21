@@ -644,6 +644,11 @@
 <a href="#644" id="644">644</a>
 <a href="#645" id="645">645</a>
 <a href="#646" id="646">646</a>
+<a href="#647" id="647">647</a>
+<a href="#648" id="648">648</a>
+<a href="#649" id="649">649</a>
+<a href="#650" id="650">650</a>
+<a href="#651" id="651">651</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -946,8 +951,13 @@
         am.set_scheme(Scheme::Ghac)
             .set_root(<span class="kw-2">&amp;</span><span class="self">self</span>.root)
             .set_name(<span class="kw-2">&amp;</span><span class="self">self</span>.version)
-            .set_capabilities(AccessorCapability::Read | AccessorCapability::Write)
-            .set_hints(AccessorHint::ReadStreamable);
+            .set_capability(Capability {
+                read: <span class="bool-val">true</span>,
+                read_can_next: <span class="bool-val">true</span>,
+                write: <span class="bool-val">true</span>,
+
+                ..Default::default()
+            });
         am
     }
 

@@ -174,10 +174,6 @@
 <a href="#174" id="174">174</a>
 <a href="#175" id="175">175</a>
 <a href="#176" id="176">176</a>
-<a href="#177" id="177">177</a>
-<a href="#178" id="178">178</a>
-<a href="#179" id="179">179</a>
-<a href="#180" id="180">180</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -198,9 +194,9 @@
 </span><span class="kw">use </span>std::fmt::Debug;
 
 <span class="kw">use </span>async_trait::async_trait;
-<span class="kw">use </span>flagset::FlagSet;
 
 <span class="kw">use </span><span class="kw">crate</span>::raw::<span class="kw-2">*</span>;
+<span class="kw">use </span><span class="kw">crate</span>::Capability;
 <span class="kw">use </span><span class="kw">crate</span>::Error;
 <span class="kw">use </span><span class="kw">crate</span>::ErrorKind;
 <span class="kw">use </span><span class="kw">crate</span>::Result;
@@ -315,20 +311,16 @@
 </span><span class="kw">pub struct </span>Metadata {
     scheme: Scheme,
     name: String,
-    capabilities: FlagSet&lt;AccessorCapability&gt;,
+    capabilities: Capability,
 }
 
 <span class="kw">impl </span>Metadata {
     <span class="doccomment">/// Create a new KeyValueAccessorInfo.
-    </span><span class="kw">pub fn </span>new(
-        scheme: Scheme,
-        name: <span class="kw-2">&amp;</span>str,
-        capabilities: <span class="kw">impl </span>Into&lt;FlagSet&lt;AccessorCapability&gt;&gt;,
-    ) -&gt; <span class="self">Self </span>{
+    </span><span class="kw">pub fn </span>new(scheme: Scheme, name: <span class="kw-2">&amp;</span>str, capabilities: Capability) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
             scheme,
             name: name.to_string(),
-            capabilities: capabilities.into(),
+            capabilities,
         }
     }
 
@@ -343,7 +335,7 @@
     }
 
     <span class="doccomment">/// Get the capabilities.
-    </span><span class="kw">pub fn </span>capabilities(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; FlagSet&lt;AccessorCapability&gt; {
+    </span><span class="kw">pub fn </span>capabilities(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Capability {
         <span class="self">self</span>.capabilities
     }
 }
@@ -353,7 +345,7 @@
         <span class="kw">let </span><span class="kw-2">mut </span>am = AccessorInfo::default();
         am.set_name(m.name());
         am.set_scheme(m.scheme());
-        am.set_capabilities(m.capabilities());
+        am.set_capability(m.capabilities());
 
         am
     }

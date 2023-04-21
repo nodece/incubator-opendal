@@ -426,6 +426,10 @@
 <a href="#426" id="426">426</a>
 <a href="#427" id="427">427</a>
 <a href="#428" id="428">428</a>
+<a href="#429" id="429">429</a>
+<a href="#430" id="430">430</a>
+<a href="#431" id="431">431</a>
+<a href="#432" id="432">432</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -729,15 +733,19 @@
     <span class="kw">type </span>BlockingPager = ();
 
     <span class="kw">fn </span>info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; AccessorInfo {
-        <span class="kw">use </span>AccessorCapability::<span class="kw-2">*</span>;
-        <span class="kw">use </span>AccessorHint::<span class="kw-2">*</span>;
-
         <span class="kw">let </span><span class="kw-2">mut </span>am = AccessorInfo::default();
         am.set_scheme(Scheme::Obs)
             .set_root(<span class="kw-2">&amp;</span><span class="self">self</span>.core.root)
             .set_name(<span class="kw-2">&amp;</span><span class="self">self</span>.core.bucket)
-            .set_capabilities(Read | Write | Copy | List | Scan)
-            .set_hints(ReadStreamable);
+            .set_capability(Capability {
+                read: <span class="bool-val">true</span>,
+                read_can_next: <span class="bool-val">true</span>,
+                write: <span class="bool-val">true</span>,
+                list: <span class="bool-val">true</span>,
+                scan: <span class="bool-val">true</span>,
+                copy: <span class="bool-val">true</span>,
+                ..Default::default()
+            });
 
         am
     }

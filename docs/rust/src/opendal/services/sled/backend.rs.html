@@ -197,6 +197,14 @@
 <a href="#197" id="197">197</a>
 <a href="#198" id="198">198</a>
 <a href="#199" id="199">199</a>
+<a href="#200" id="200">200</a>
+<a href="#201" id="201">201</a>
+<a href="#202" id="202">202</a>
+<a href="#203" id="203">203</a>
+<a href="#204" id="204">204</a>
+<a href="#205" id="205">205</a>
+<a href="#206" id="206">206</a>
+<a href="#207" id="207">207</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -221,7 +229,6 @@
 <span class="kw">use </span>async_trait::async_trait;
 
 <span class="kw">use </span><span class="kw">crate</span>::raw::adapters::kv;
-<span class="kw">use </span><span class="kw">crate</span>::raw::<span class="kw-2">*</span>;
 <span class="kw">use </span><span class="kw">crate</span>::Builder;
 <span class="kw">use </span><span class="kw">crate</span>::Error;
 <span class="kw">use </span><span class="kw">crate</span>::ErrorKind;
@@ -340,8 +347,17 @@
 <span class="attr">#[async_trait]
 </span><span class="kw">impl </span>kv::Adapter <span class="kw">for </span>Adapter {
     <span class="kw">fn </span>metadata(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; kv::Metadata {
-        <span class="kw">use </span>AccessorCapability::<span class="kw-2">*</span>;
-        kv::Metadata::new(Scheme::Sled, <span class="kw-2">&amp;</span><span class="self">self</span>.datadir, Read | Write | Scan | Blocking)
+        kv::Metadata::new(
+            Scheme::Sled,
+            <span class="kw-2">&amp;</span><span class="self">self</span>.datadir,
+            Capability {
+                read: <span class="bool-val">true</span>,
+                write: <span class="bool-val">true</span>,
+                scan: <span class="bool-val">true</span>,
+                blocking: <span class="bool-val">true</span>,
+                ..Default::default()
+            },
+        )
     }
 
     <span class="kw">async fn </span>get(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;Vec&lt;u8&gt;&gt;&gt; {

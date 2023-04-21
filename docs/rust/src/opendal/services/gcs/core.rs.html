@@ -386,6 +386,9 @@
 <a href="#386" id="386">386</a>
 <a href="#387" id="387">387</a>
 <a href="#388" id="388">388</a>
+<a href="#389" id="389">389</a>
+<a href="#390" id="390">390</a>
+<a href="#391" id="391">391</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -403,13 +406,19 @@
 // specific language governing permissions and limitations
 // under the License.
 
-</span><span class="kw">use </span>backon::ExponentialBuilder;
+</span><span class="kw">use </span>std::fmt::Debug;
+<span class="kw">use </span>std::fmt::Formatter;
+<span class="kw">use </span>std::fmt::Write;
+
+<span class="kw">use </span>backon::ExponentialBuilder;
 <span class="kw">use </span>backon::Retryable;
-<span class="kw">use </span>bytes::{Bytes, BytesMut};
+<span class="kw">use </span>bytes::Bytes;
+<span class="kw">use </span>bytes::BytesMut;
+<span class="kw">use </span>http::header::CONTENT_LENGTH;
+<span class="kw">use </span>http::header::CONTENT_RANGE;
 <span class="kw">use </span>http::header::CONTENT_TYPE;
 <span class="kw">use </span>http::header::IF_MATCH;
 <span class="kw">use </span>http::header::IF_NONE_MATCH;
-<span class="kw">use </span>http::header::{CONTENT_LENGTH, CONTENT_RANGE};
 <span class="kw">use </span>http::Request;
 <span class="kw">use </span>http::Response;
 <span class="kw">use </span>once_cell::sync::Lazy;
@@ -417,9 +426,6 @@
 <span class="kw">use </span>reqsign::GoogleSigner;
 <span class="kw">use </span>reqsign::GoogleToken;
 <span class="kw">use </span>reqsign::GoogleTokenLoader;
-<span class="kw">use </span>std::fmt::Debug;
-<span class="kw">use </span>std::fmt::Formatter;
-<span class="kw">use </span>std::fmt::Write;
 
 <span class="kw">use </span><span class="kw">super</span>::uri::percent_encode_path;
 <span class="kw">use </span><span class="kw">crate</span>::raw::<span class="kw-2">*</span>;

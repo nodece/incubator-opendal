@@ -665,6 +665,7 @@
 <a href="#665" id="665">665</a>
 <a href="#666" id="666">666</a>
 <a href="#667" id="667">667</a>
+<a href="#668" id="668">668</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -933,14 +934,15 @@
         <span class="kw">let </span><span class="kw-2">mut </span>ma = AccessorInfo::default();
         ma.set_scheme(Scheme::Webdav)
             .set_root(<span class="kw-2">&amp;</span><span class="self">self</span>.root)
-            .set_capabilities(
-                AccessorCapability::Read
-                    | AccessorCapability::Write
-                    | AccessorCapability::Copy
-                    | AccessorCapability::Rename
-                    | AccessorCapability::List,
-            )
-            .set_hints(AccessorHint::ReadStreamable);
+            .set_capability(Capability {
+                read: <span class="bool-val">true</span>,
+                read_can_next: <span class="bool-val">true</span>,
+                write: <span class="bool-val">true</span>,
+                list: <span class="bool-val">true</span>,
+                copy: <span class="bool-val">true</span>,
+                rename: <span class="bool-val">true</span>,
+                ..Default::default()
+            });
 
         ma
     }

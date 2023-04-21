@@ -619,10 +619,10 @@
 </span><span class="attr">#[derive(Debug, Clone, Default)]
 </span><span class="kw">pub struct </span>OpRead {
     br: BytesRange,
-    override_content_disposition: <span class="prelude-ty">Option</span>&lt;String&gt;,
-    override_cache_control: <span class="prelude-ty">Option</span>&lt;String&gt;,
     if_match: <span class="prelude-ty">Option</span>&lt;String&gt;,
     if_none_match: <span class="prelude-ty">Option</span>&lt;String&gt;,
+    override_cache_control: <span class="prelude-ty">Option</span>&lt;String&gt;,
+    override_content_disposition: <span class="prelude-ty">Option</span>&lt;String&gt;,
 }
 
 <span class="kw">impl </span>OpRead {

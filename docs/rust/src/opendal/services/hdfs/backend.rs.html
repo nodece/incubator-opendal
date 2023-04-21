@@ -517,6 +517,7 @@
 <a href="#517" id="517">517</a>
 <a href="#518" id="518">518</a>
 <a href="#519" id="519">519</a>
+<a href="#520" id="520">520</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -751,13 +752,14 @@
         <span class="kw">let </span><span class="kw-2">mut </span>am = AccessorInfo::default();
         am.set_scheme(Scheme::Hdfs)
             .set_root(<span class="kw-2">&amp;</span><span class="self">self</span>.root)
-            .set_capabilities(
-                AccessorCapability::Read
-                    | AccessorCapability::Write
-                    | AccessorCapability::List
-                    | AccessorCapability::Blocking,
-            )
-            .set_hints(AccessorHint::ReadSeekable);
+            .set_capability(Capability {
+                read: <span class="bool-val">true</span>,
+                read_can_seek: <span class="bool-val">true</span>,
+                write: <span class="bool-val">true</span>,
+                list: <span class="bool-val">true</span>,
+                blocking: <span class="bool-val">true</span>,
+                ..Default::default()
+            });
 
         am
     }
