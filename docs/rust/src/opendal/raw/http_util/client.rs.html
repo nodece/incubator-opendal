@@ -155,6 +155,10 @@
 <a href="#155" id="155">155</a>
 <a href="#156" id="156">156</a>
 <a href="#157" id="157">157</a>
+<a href="#158" id="158">158</a>
+<a href="#159" id="159">159</a>
+<a href="#160" id="160">160</a>
+<a href="#161" id="161">161</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -174,6 +178,7 @@
 
 </span><span class="kw">use </span>std::fmt::Debug;
 <span class="kw">use </span>std::fmt::Formatter;
+<span class="kw">use </span>std::mem;
 <span class="kw">use </span>std::str::FromStr;
 
 <span class="kw">use </span>futures::TryStreamExt;
@@ -236,14 +241,16 @@
 
     <span class="doccomment">/// Send a request in async way.
     </span><span class="kw">pub async fn </span>send(<span class="kw-2">&amp;</span><span class="self">self</span>, req: Request&lt;AsyncBody&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;Response&lt;IncomingAsyncBody&gt;&gt; {
+        <span class="kw">let </span>url = req.uri().to_string();
         <span class="kw">let </span>is_head = req.method() == http::Method::HEAD;
+
         <span class="kw">let </span>(parts, body) = req.into_parts();
 
         <span class="kw">let </span><span class="kw-2">mut </span>req_builder = <span class="self">self
             </span>.client
             .request(
                 parts.method,
-                Url::from_str(<span class="kw-2">&amp;</span>parts.uri.to_string()).expect(<span class="string">&quot;input request url must be valid&quot;</span>),
+                Url::from_str(<span class="kw-2">&amp;</span>url).expect(<span class="string">&quot;input request url must be valid&quot;</span>),
             )
             .version(parts.version)
             .headers(parts.headers);
@@ -258,7 +265,7 @@
             req_builder.body(body)
         };
 
-        <span class="kw">let </span>resp = req_builder.send().<span class="kw">await</span>.map_err(|err| {
+        <span class="kw">let </span><span class="kw-2">mut </span>resp = req_builder.send().<span class="kw">await</span>.map_err(|err| {
             <span class="kw">let </span>is_temporary = !(
                 <span class="comment">// Builder related error should not be retried.
                 </span>err.is_builder() ||
@@ -274,6 +281,7 @@
 
             <span class="kw">let </span><span class="kw-2">mut </span>oerr = Error::new(ErrorKind::Unexpected, <span class="string">&quot;send async request&quot;</span>)
                 .with_operation(<span class="string">&quot;http_util::Client::send_async&quot;</span>)
+                .with_context(<span class="string">&quot;url&quot;</span>, <span class="kw-2">&amp;</span>url)
                 .set_source(err);
             <span class="kw">if </span>is_temporary {
                 oerr = oerr.set_temporary();
@@ -293,15 +301,15 @@
         <span class="kw">let </span><span class="kw-2">mut </span>hr = Response::builder()
             .version(resp.version())
             .status(resp.status());
-        <span class="kw">for </span>(k, v) <span class="kw">in </span>resp.headers().iter() {
-            hr = hr.header(k, v);
-        }
+        <span class="comment">// Swap headers directly instead of copy the entire map.
+        </span>mem::swap(hr.headers_mut().unwrap(), resp.headers_mut());
 
-        <span class="kw">let </span>stream = resp.bytes_stream().map_err(|err| {
+        <span class="kw">let </span>stream = resp.bytes_stream().map_err(<span class="kw">move </span>|err| {
             <span class="comment">// If stream returns a body related error, we can convert
             // it to interrupt so we can retry it.
             </span>Error::new(ErrorKind::Unexpected, <span class="string">&quot;read data from http stream&quot;</span>)
                 .map(|v| <span class="kw">if </span>err.is_body() { v.set_temporary() } <span class="kw">else </span>{ v })
+                .with_context(<span class="string">&quot;url&quot;</span>, <span class="kw-2">&amp;</span>url)
                 .set_source(err)
         });
 
