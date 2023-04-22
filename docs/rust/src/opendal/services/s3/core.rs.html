@@ -1323,11 +1323,11 @@
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Response&lt;IncomingAsyncBody&gt;&gt; {
         <span class="kw">let </span>p = build_abs_path(<span class="kw-2">&amp;</span><span class="self">self</span>.root, path);
 
-        <span class="kw">let </span><span class="kw-2">mut </span>url = <span class="macro">format!</span>(
-            <span class="string">&quot;{}?list-type=2&amp;prefix={}&quot;</span>,
-            <span class="self">self</span>.endpoint,
-            percent_encode_path(<span class="kw-2">&amp;</span>p)
-        );
+        <span class="kw">let </span><span class="kw-2">mut </span>url = <span class="macro">format!</span>(<span class="string">&quot;{}?list-type=2&quot;</span>, <span class="self">self</span>.endpoint);
+        <span class="kw">if </span>!p.is_empty() {
+            <span class="macro">write!</span>(url, <span class="string">&quot;&amp;prefix={}&quot;</span>, percent_encode_path(<span class="kw-2">&amp;</span>p))
+                .expect(<span class="string">&quot;write into string must succeed&quot;</span>);
+        }
         <span class="kw">if </span>!delimiter.is_empty() {
             <span class="macro">write!</span>(url, <span class="string">&quot;&amp;delimiter={delimiter}&quot;</span>).expect(<span class="string">&quot;write into string must succeed&quot;</span>);
         }
