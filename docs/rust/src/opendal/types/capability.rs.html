@@ -171,6 +171,13 @@
 /// - Operation with limtations should be named like `batch_max_operations`.
 </span><span class="attr">#[derive(Copy, Clone, Debug, Default)]
 </span><span class="kw">pub struct </span>Capability {
+    <span class="doccomment">/// If operator supports stat natively, it will be true.
+    </span><span class="kw">pub </span>stat: bool,
+    <span class="doccomment">/// If operator supports stat with if match natively, it will be true.
+    </span><span class="kw">pub </span>stat_with_if_match: bool,
+    <span class="doccomment">/// If operator supports stat with if none match natively, it will be true.
+    </span><span class="kw">pub </span>stat_with_if_none_match: bool,
+
     <span class="doccomment">/// If operator supports read natively, it will be true.
     </span><span class="kw">pub </span>read: bool,
     <span class="doccomment">/// If operator supports seek on returning reader natively, it will
@@ -189,13 +196,6 @@
     </span><span class="kw">pub </span>read_with_override_cache_control: bool,
     <span class="doccomment">/// if operator supports read with override content disposition natively, it will be true.
     </span><span class="kw">pub </span>read_with_override_content_disposition: bool,
-
-    <span class="doccomment">/// If operator supports stat natively, it will be true.
-    </span><span class="kw">pub </span>stat: bool,
-    <span class="doccomment">/// If operator supports stat with if match natively, it will be true.
-    </span><span class="kw">pub </span>stat_with_if_match: bool,
-    <span class="doccomment">/// If operator supports stat with if none match natively, it will be true.
-    </span><span class="kw">pub </span>stat_with_if_none_match: bool,
 
     <span class="doccomment">/// If operator supports write natively, it will be true.
     </span><span class="kw">pub </span>write: bool,
