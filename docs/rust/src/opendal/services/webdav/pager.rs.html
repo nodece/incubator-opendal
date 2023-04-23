@@ -80,6 +80,7 @@
 <a href="#80" id="80">80</a>
 <a href="#81" id="81">81</a>
 <a href="#82" id="82">82</a>
+<a href="#83" id="83">83</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -136,12 +137,13 @@
             .into_iter()
             .filter_map(|de| {
                 <span class="kw">let </span>path = de.href;
-                <span class="kw">let </span>normalized_path = <span class="kw">if </span><span class="self">self</span>.root != path {
-                    build_rel_path(<span class="kw-2">&amp;</span><span class="self">self</span>.root, <span class="kw-2">&amp;</span>path)
-                } <span class="kw">else </span>{
-                    path
-                };
 
+                <span class="comment">// Ignore the root path itself.
+                </span><span class="kw">if </span><span class="self">self</span>.root == path {
+                    <span class="kw">return </span><span class="prelude-val">None</span>;
+                }
+
+                <span class="kw">let </span>normalized_path = build_rel_path(<span class="kw-2">&amp;</span><span class="self">self</span>.root, <span class="kw-2">&amp;</span>path);
                 <span class="kw">if </span>normalized_path == <span class="self">self</span>.path {
                     <span class="comment">// WebDav server may return the current path as an entry.
                     </span><span class="kw">return </span><span class="prelude-val">None</span>;
