@@ -1190,6 +1190,15 @@
 <a href="#1190" id="1190">1190</a>
 <a href="#1191" id="1191">1191</a>
 <a href="#1192" id="1192">1192</a>
+<a href="#1193" id="1193">1193</a>
+<a href="#1194" id="1194">1194</a>
+<a href="#1195" id="1195">1195</a>
+<a href="#1196" id="1196">1196</a>
+<a href="#1197" id="1197">1197</a>
+<a href="#1198" id="1198">1198</a>
+<a href="#1199" id="1199">1199</a>
+<a href="#1200" id="1200">1200</a>
+<a href="#1201" id="1201">1201</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -2119,6 +2128,9 @@
                 write_without_content_length: <span class="bool-val">true</span>,
 
                 list: <span class="bool-val">true</span>,
+                list_with_limit: <span class="bool-val">true</span>,
+                list_with_start_after: <span class="bool-val">true</span>,
+
                 scan: <span class="bool-val">true</span>,
                 copy: <span class="bool-val">true</span>,
                 presign: <span class="bool-val">true</span>,
@@ -2234,14 +2246,20 @@
     <span class="kw">async fn </span>list(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpList) -&gt; <span class="prelude-ty">Result</span>&lt;(RpList, <span class="self">Self</span>::Pager)&gt; {
         <span class="prelude-val">Ok</span>((
             RpList::default(),
-            S3Pager::new(<span class="self">self</span>.core.clone(), path, <span class="string">&quot;/&quot;</span>, args.limit()),
+            S3Pager::new(
+                <span class="self">self</span>.core.clone(),
+                path,
+                <span class="string">&quot;/&quot;</span>,
+                args.limit(),
+                args.start_after(),
+            ),
         ))
     }
 
     <span class="kw">async fn </span>scan(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpScan) -&gt; <span class="prelude-ty">Result</span>&lt;(RpScan, <span class="self">Self</span>::Pager)&gt; {
         <span class="prelude-val">Ok</span>((
             RpScan::default(),
-            S3Pager::new(<span class="self">self</span>.core.clone(), path, <span class="string">&quot;&quot;</span>, args.limit()),
+            S3Pager::new(<span class="self">self</span>.core.clone(), path, <span class="string">&quot;&quot;</span>, args.limit(), <span class="prelude-val">None</span>),
         ))
     }
 
