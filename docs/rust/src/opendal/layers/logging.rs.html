@@ -1650,6 +1650,13 @@
 <a href="#1650" id="1650">1650</a>
 <a href="#1651" id="1651">1651</a>
 <a href="#1652" id="1652">1652</a>
+<a href="#1653" id="1653">1653</a>
+<a href="#1654" id="1654">1654</a>
+<a href="#1655" id="1655">1655</a>
+<a href="#1656" id="1656">1656</a>
+<a href="#1657" id="1657">1657</a>
+<a href="#1658" id="1658">1658</a>
+<a href="#1659" id="1659">1659</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -2992,19 +2999,6 @@
     }
 }
 
-<span class="kw">impl</span>&lt;W&gt; Drop <span class="kw">for </span>LoggingWriter&lt;W&gt; {
-    <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-        <span class="macro">debug!</span>(
-            target: LOGGING_TARGET,
-            <span class="string">&quot;service={} operation={} path={} written={} -&gt; data written finished&quot;</span>,
-            <span class="self">self</span>.scheme,
-            <span class="self">self</span>.op,
-            <span class="self">self</span>.path,
-            <span class="self">self</span>.written
-        );
-    }
-}
-
 <span class="attr">#[async_trait]
 </span><span class="kw">impl</span>&lt;W: oio::Write&gt; oio::Write <span class="kw">for </span>LoggingWriter&lt;W&gt; {
     <span class="kw">async fn </span>write(<span class="kw-2">&amp;mut </span><span class="self">self</span>, bs: Bytes) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
@@ -3072,7 +3066,17 @@
 
     <span class="kw">async fn </span>close(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         <span class="kw">match </span><span class="self">self</span>.inner.close().<span class="kw">await </span>{
-            <span class="prelude-val">Ok</span>(<span class="kw">_</span>) =&gt; <span class="prelude-val">Ok</span>(()),
+            <span class="prelude-val">Ok</span>(<span class="kw">_</span>) =&gt; {
+                <span class="macro">debug!</span>(
+                    target: LOGGING_TARGET,
+                    <span class="string">&quot;service={} operation={} path={} written={} -&gt; data written finished&quot;</span>,
+                    <span class="self">self</span>.scheme,
+                    <span class="self">self</span>.op,
+                    <span class="self">self</span>.path,
+                    <span class="self">self</span>.written
+                );
+                <span class="prelude-val">Ok</span>(())
+            }
             <span class="prelude-val">Err</span>(err) =&gt; {
                 <span class="kw">if let </span><span class="prelude-val">Some</span>(lvl) = <span class="self">self</span>.failure_level {
                     <span class="macro">log!</span>(
@@ -3127,7 +3131,17 @@
 
     <span class="kw">fn </span>close(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         <span class="kw">match </span><span class="self">self</span>.inner.close() {
-            <span class="prelude-val">Ok</span>(<span class="kw">_</span>) =&gt; <span class="prelude-val">Ok</span>(()),
+            <span class="prelude-val">Ok</span>(<span class="kw">_</span>) =&gt; {
+                <span class="macro">debug!</span>(
+                    target: LOGGING_TARGET,
+                    <span class="string">&quot;service={} operation={} path={} written={} -&gt; data written finished&quot;</span>,
+                    <span class="self">self</span>.scheme,
+                    <span class="self">self</span>.op,
+                    <span class="self">self</span>.path,
+                    <span class="self">self</span>.written
+                );
+                <span class="prelude-val">Ok</span>(())
+            }
             <span class="prelude-val">Err</span>(err) =&gt; {
                 <span class="kw">if let </span><span class="prelude-val">Some</span>(lvl) = <span class="self">self</span>.failure_level {
                     <span class="macro">log!</span>(
