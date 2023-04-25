@@ -389,6 +389,7 @@
 <a href="#389" id="389">389</a>
 <a href="#390" id="390">390</a>
 <a href="#391" id="391">391</a>
+<a href="#392" id="392">392</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -563,9 +564,7 @@
 
         <span class="kw">let </span><span class="kw-2">mut </span>req = Request::post(<span class="kw-2">&amp;</span>url);
 
-        <span class="kw">if let </span><span class="prelude-val">Some</span>(size) = size {
-            req = req.header(CONTENT_LENGTH, size)
-        }
+        req = req.header(CONTENT_LENGTH, size.unwrap_or_default());
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>(storage_class) = <span class="kw-2">&amp;</span><span class="self">self</span>.default_storage_class {
             req = req.header(CONTENT_TYPE, <span class="string">&quot;multipart/related; boundary=my-boundary&quot;</span>);
@@ -716,9 +715,12 @@
             <span class="string">&quot;{}/upload/storage/v1/b/{}/o?uploadType=resumable&amp;name={}&quot;</span>,
             <span class="self">self</span>.endpoint, <span class="self">self</span>.bucket, p
         );
+
         <span class="kw">let </span><span class="kw-2">mut </span>req = Request::post(<span class="kw-2">&amp;</span>url)
+            .header(CONTENT_LENGTH, <span class="number">0</span>)
             .body(AsyncBody::Empty)
             .map_err(new_request_build_error)<span class="question-mark">?</span>;
+
         <span class="self">self</span>.sign(<span class="kw-2">&amp;mut </span>req).<span class="kw">await</span><span class="question-mark">?</span>;
         <span class="self">self</span>.send(req).<span class="kw">await
     </span>}
