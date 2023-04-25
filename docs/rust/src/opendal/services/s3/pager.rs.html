@@ -243,6 +243,8 @@
 <a href="#243" id="243">243</a>
 <a href="#244" id="244">244</a>
 <a href="#245" id="245">245</a>
+<a href="#246" id="246">246</a>
+<a href="#247" id="247">247</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -280,7 +282,9 @@
     path: String,
     delimiter: String,
     limit: <span class="prelude-ty">Option</span>&lt;usize&gt;,
-    start_after: <span class="prelude-ty">Option</span>&lt;String&gt;,
+
+    <span class="doccomment">/// Amazon S3 starts listing **after** this specified key
+    </span>start_after: <span class="prelude-ty">Option</span>&lt;String&gt;,
 
     token: String,
     done: bool,
