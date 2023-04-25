@@ -390,6 +390,12 @@
 <a href="#390" id="390">390</a>
 <a href="#391" id="391">391</a>
 <a href="#392" id="392">392</a>
+<a href="#393" id="393">393</a>
+<a href="#394" id="394">394</a>
+<a href="#395" id="395">395</a>
+<a href="#396" id="396">396</a>
+<a href="#397" id="397">397</a>
+<a href="#398" id="398">398</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -415,6 +421,7 @@
 <span class="kw">use </span>backon::Retryable;
 <span class="kw">use </span>bytes::Bytes;
 <span class="kw">use </span>bytes::BytesMut;
+<span class="kw">use </span>http::header::CACHE_CONTROL;
 <span class="kw">use </span>http::header::CONTENT_LENGTH;
 <span class="kw">use </span>http::header::CONTENT_RANGE;
 <span class="kw">use </span>http::header::CONTENT_TYPE;
@@ -542,6 +549,7 @@
         path: <span class="kw-2">&amp;</span>str,
         size: <span class="prelude-ty">Option</span>&lt;usize&gt;,
         content_type: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;,
+        cache_control: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;,
         body: AsyncBody,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Request&lt;AsyncBody&gt;&gt; {
         <span class="kw">let </span>p = build_abs_path(<span class="kw-2">&amp;</span><span class="self">self</span>.root, path);
@@ -565,6 +573,10 @@
         <span class="kw">let </span><span class="kw-2">mut </span>req = Request::post(<span class="kw-2">&amp;</span>url);
 
         req = req.header(CONTENT_LENGTH, size.unwrap_or_default());
+
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(cache_control) = cache_control {
+            req = req.header(CACHE_CONTROL, cache_control)
+        }
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>(storage_class) = <span class="kw-2">&amp;</span><span class="self">self</span>.default_storage_class {
             req = req.header(CONTENT_TYPE, <span class="string">&quot;multipart/related; boundary=my-boundary&quot;</span>);
