@@ -616,6 +616,14 @@
 <a href="#616" id="616">616</a>
 <a href="#617" id="617">617</a>
 <a href="#618" id="618">618</a>
+<a href="#619" id="619">619</a>
+<a href="#620" id="620">620</a>
+<a href="#621" id="621">621</a>
+<a href="#622" id="622">622</a>
+<a href="#623" id="623">623</a>
+<a href="#624" id="624">624</a>
+<a href="#625" id="625">625</a>
+<a href="#626" id="626">626</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -639,6 +647,7 @@
 <span class="kw">use </span>std::sync::Arc;
 
 <span class="kw">use </span>async_trait::async_trait;
+<span class="kw">use </span>http::header::HOST;
 <span class="kw">use </span>http::StatusCode;
 <span class="kw">use </span>log::debug;
 <span class="kw">use </span>reqsign::GoogleCredentialLoader;
@@ -1162,7 +1171,14 @@
         <span class="self">self</span>.core.sign_query(<span class="kw-2">&amp;mut </span>req, args.expire()).<span class="kw">await</span><span class="question-mark">?</span>;
 
         <span class="comment">// We don&#39;t need this request anymore, consume it directly.
-        </span><span class="kw">let </span>(parts, <span class="kw">_</span>) = req.into_parts();
+        </span><span class="kw">let </span>(<span class="kw-2">mut </span>parts, <span class="kw">_</span>) = req.into_parts();
+        <span class="comment">// Always remove host header, let users&#39; client to set it based on HTTP
+        // version.
+        //
+        // As discussed in &lt;https://github.com/seanmonstar/reqwest/issues/1809&gt;,
+        // google server could send RST_STREAM of PROTOCOL_ERROR if our request
+        // contains host header.
+        </span>parts.headers.remove(HOST);
 
         <span class="prelude-val">Ok</span>(RpPresign::new(PresignedRequest::new(
             parts.method,
