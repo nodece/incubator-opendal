@@ -538,16 +538,6 @@
 <a href="#538" id="538">538</a>
 <a href="#539" id="539">539</a>
 <a href="#540" id="540">540</a>
-<a href="#541" id="541">541</a>
-<a href="#542" id="542">542</a>
-<a href="#543" id="543">543</a>
-<a href="#544" id="544">544</a>
-<a href="#545" id="545">545</a>
-<a href="#546" id="546">546</a>
-<a href="#547" id="547">547</a>
-<a href="#548" id="548">548</a>
-<a href="#549" id="549">549</a>
-<a href="#550" id="550">550</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -574,7 +564,7 @@
 <span class="kw">use </span>backon::Retryable;
 <span class="kw">use </span>bytes::Bytes;
 <span class="kw">use </span>bytes::BytesMut;
-<span class="kw">use </span>http::header::CACHE_CONTROL;
+
 <span class="kw">use </span>http::header::CONTENT_LENGTH;
 <span class="kw">use </span>http::header::CONTENT_RANGE;
 <span class="kw">use </span>http::header::CONTENT_TYPE;
@@ -758,7 +748,6 @@
         path: <span class="kw-2">&amp;</span>str,
         size: <span class="prelude-ty">Option</span>&lt;usize&gt;,
         content_type: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;,
-        cache_control: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;,
         body: AsyncBody,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Request&lt;AsyncBody&gt;&gt; {
         <span class="kw">let </span>p = build_abs_path(<span class="kw-2">&amp;</span><span class="self">self</span>.root, path);
@@ -782,10 +771,6 @@
         <span class="kw">let </span><span class="kw-2">mut </span>req = Request::post(<span class="kw-2">&amp;</span>url);
 
         req = req.header(CONTENT_LENGTH, size.unwrap_or_default());
-
-        <span class="kw">if let </span><span class="prelude-val">Some</span>(cache_control) = cache_control {
-            req = req.header(CACHE_CONTROL, cache_control)
-        }
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>(storage_class) = <span class="kw-2">&amp;</span><span class="self">self</span>.default_storage_class {
             req = req.header(CONTENT_TYPE, <span class="string">&quot;multipart/related; boundary=my-boundary&quot;</span>);
@@ -826,7 +811,6 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         path: <span class="kw-2">&amp;</span>str,
         content_type: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;,
-        cache_control: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;,
         body: AsyncBody,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Request&lt;AsyncBody&gt;&gt; {
         <span class="kw">let </span>p = build_abs_path(<span class="kw-2">&amp;</span><span class="self">self</span>.root, path);
@@ -837,10 +821,6 @@
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>(content_type) = content_type {
             req = req.header(CONTENT_TYPE, content_type);
-        }
-
-        <span class="kw">if let </span><span class="prelude-val">Some</span>(cache_control) = cache_control {
-            req = req.header(CACHE_CONTROL, cache_control)
         }
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>(acl) = <span class="kw-2">&amp;</span><span class="self">self</span>.predefined_acl {

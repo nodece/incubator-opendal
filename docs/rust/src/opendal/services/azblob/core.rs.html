@@ -422,7 +422,6 @@
 <span class="kw">use </span>std::str::FromStr;
 
 <span class="kw">use </span>http::header::HeaderName;
-<span class="kw">use </span>http::header::CACHE_CONTROL;
 <span class="kw">use </span>http::header::CONTENT_LENGTH;
 <span class="kw">use </span>http::header::CONTENT_TYPE;
 <span class="kw">use </span>http::header::IF_MATCH;
@@ -441,6 +440,7 @@
 <span class="kw">mod </span>constants {
     <span class="kw">pub const </span>X_MS_BLOB_TYPE: <span class="kw-2">&amp;</span>str = <span class="string">&quot;x-ms-blob-type&quot;</span>;
     <span class="kw">pub const </span>X_MS_COPY_SOURCE: <span class="kw-2">&amp;</span>str = <span class="string">&quot;x-ms-copy-source&quot;</span>;
+    <span class="kw">pub const </span>X_MS_BLOB_CACHE_CONTROL: <span class="kw-2">&amp;</span>str = <span class="string">&quot;x-ms-blob-cache-control&quot;</span>;
 }
 
 <span class="kw">pub struct </span>AzblobCore {
@@ -609,7 +609,7 @@
 
         <span class="kw">let </span><span class="kw-2">mut </span>req = Request::put(<span class="kw-2">&amp;</span>url);
         <span class="kw">if let </span><span class="prelude-val">Some</span>(cache_control) = cache_control {
-            req = req.header(CACHE_CONTROL, cache_control);
+            req = req.header(constants::X_MS_BLOB_CACHE_CONTROL, cache_control);
         }
         <span class="kw">if let </span><span class="prelude-val">Some</span>(size) = size {
             req = req.header(CONTENT_LENGTH, size)

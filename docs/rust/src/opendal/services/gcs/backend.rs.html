@@ -624,6 +624,7 @@
 <a href="#624" id="624">624</a>
 <a href="#625" id="625">625</a>
 <a href="#626" id="626">626</a>
+<a href="#627" id="627">627</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -1024,9 +1025,9 @@
     }
 
     <span class="kw">async fn </span>create_dir(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, <span class="kw">_</span>: OpCreate) -&gt; <span class="prelude-ty">Result</span>&lt;RpCreate&gt; {
-        <span class="kw">let </span><span class="kw-2">mut </span>req =
-            <span class="self">self</span>.core
-                .gcs_insert_object_request(path, <span class="prelude-val">Some</span>(<span class="number">0</span>), <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, AsyncBody::Empty)<span class="question-mark">?</span>;
+        <span class="kw">let </span><span class="kw-2">mut </span>req = <span class="self">self
+            </span>.core
+            .gcs_insert_object_request(path, <span class="prelude-val">Some</span>(<span class="number">0</span>), <span class="prelude-val">None</span>, AsyncBody::Empty)<span class="question-mark">?</span>;
 
         <span class="self">self</span>.core.sign(<span class="kw-2">&amp;mut </span>req).<span class="kw">await</span><span class="question-mark">?</span>;
 
@@ -1086,6 +1087,7 @@
         <span class="kw">if </span>resp.status().is_success() {
             <span class="comment">// read http response body
             </span><span class="kw">let </span>slc = resp.into_body().bytes().<span class="kw">await</span><span class="question-mark">?</span>;
+
             <span class="kw">let </span>meta: GetObjectJsonResponse =
                 serde_json::from_slice(<span class="kw-2">&amp;</span>slc).map_err(new_json_deserialize_error)<span class="question-mark">?</span>;
 
@@ -1164,7 +1166,7 @@
             )<span class="question-mark">?</span>,
             PresignOperation::Write(<span class="kw">_</span>) =&gt; {
                 <span class="self">self</span>.core
-                    .gcs_insert_object_xml_request(path, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, AsyncBody::Empty)<span class="question-mark">?
+                    .gcs_insert_object_xml_request(path, <span class="prelude-val">None</span>, AsyncBody::Empty)<span class="question-mark">?
             </span>}
         };
 
