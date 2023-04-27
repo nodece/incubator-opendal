@@ -175,6 +175,10 @@
 <a href="#175" id="175">175</a>
 <a href="#176" id="176">176</a>
 <a href="#177" id="177">177</a>
+<a href="#178" id="178">178</a>
+<a href="#179" id="179">179</a>
+<a href="#180" id="180">180</a>
+<a href="#181" id="181">181</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -248,6 +252,8 @@
     </span>S3,
     <span class="doccomment">/// [sled][crate::services::Sled]: Sled services
     </span>Sled,
+    <span class="doccomment">/// [Supabase][crate::services::Supabase]: Supabase storage service
+    </span>Supabase,
     <span class="doccomment">/// [wasabi][crate::services::Wasabi]: Wasabi service
     </span>Wasabi,
     <span class="doccomment">/// [webdav][crate::services::Webdav]: WebDAV support.
@@ -307,6 +313,7 @@
             <span class="string">&quot;rocksdb&quot; </span>=&gt; <span class="prelude-val">Ok</span>(Scheme::Rocksdb),
             <span class="string">&quot;s3&quot; </span>=&gt; <span class="prelude-val">Ok</span>(Scheme::S3),
             <span class="string">&quot;sled&quot; </span>=&gt; <span class="prelude-val">Ok</span>(Scheme::Sled),
+            <span class="string">&quot;supabase&quot; </span>=&gt; <span class="prelude-val">Ok</span>(Scheme::Supabase),
             <span class="string">&quot;oss&quot; </span>=&gt; <span class="prelude-val">Ok</span>(Scheme::Oss),
             <span class="string">&quot;wasabi&quot; </span>=&gt; <span class="prelude-val">Ok</span>(Scheme::Wasabi),
             <span class="string">&quot;webdav&quot; </span>=&gt; <span class="prelude-val">Ok</span>(Scheme::Webdav),
@@ -338,6 +345,7 @@
             Scheme::Rocksdb =&gt; <span class="string">&quot;rocksdb&quot;</span>,
             Scheme::S3 =&gt; <span class="string">&quot;s3&quot;</span>,
             Scheme::Sled =&gt; <span class="string">&quot;sled&quot;</span>,
+            Scheme::Supabase =&gt; <span class="string">&quot;supabase&quot;</span>,
             Scheme::Oss =&gt; <span class="string">&quot;oss&quot;</span>,
             Scheme::Wasabi =&gt; <span class="string">&quot;wasabi&quot;</span>,
             Scheme::Webdav =&gt; <span class="string">&quot;webdav&quot;</span>,

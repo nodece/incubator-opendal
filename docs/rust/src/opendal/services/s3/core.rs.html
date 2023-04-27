@@ -882,8 +882,6 @@
 <a href="#882" id="882">882</a>
 <a href="#883" id="883">883</a>
 <a href="#884" id="884">884</a>
-<a href="#885" id="885">885</a>
-<a href="#886" id="886">886</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -1332,9 +1330,7 @@
         <span class="self">self</span>.send(req).<span class="kw">await
     </span>}
 
-    <span class="doccomment">/// Make this functions as `pub(suber)` because `DirStream` depends
-    /// on this.
-    </span><span class="kw">pub async fn </span>s3_list_objects(
+    <span class="kw">pub async fn </span>s3_list_objects(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         path: <span class="kw-2">&amp;</span>str,
         continuation_token: <span class="kw-2">&amp;</span>str,

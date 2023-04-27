@@ -133,6 +133,11 @@
 <a href="#133" id="133">133</a>
 <a href="#134" id="134">134</a>
 <a href="#135" id="135">135</a>
+<a href="#136" id="136">136</a>
+<a href="#137" id="137">137</a>
+<a href="#138" id="138">138</a>
+<a href="#139" id="139">139</a>
+<a href="#140" id="140">140</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -253,6 +258,11 @@
 </span><span class="kw">mod </span>sled;
 <span class="attr">#[cfg(feature = <span class="string">&quot;services-sled&quot;</span>)]
 </span><span class="kw">pub use </span><span class="self">self</span>::sled::Sled;
+
+<span class="comment">// #[cfg(feature = &quot;services-supabase&quot;)]
+</span><span class="kw">mod </span>supabase;
+<span class="comment">// #[cfg(feature = &quot;services-supabase&quot;)]
+</span><span class="kw">pub use </span>supabase::Supabase;
 
 <span class="attr">#[cfg(feature = <span class="string">&quot;services-wasabi&quot;</span>)]
 </span><span class="kw">mod </span>wasabi;

@@ -2238,7 +2238,7 @@
         <span class="kw">if </span>ops.len() &gt; <span class="number">1000 </span>{
             <span class="kw">return </span><span class="prelude-val">Err</span>(Error::new(
                 ErrorKind::Unsupported,
-                <span class="string">&quot;s3 services only allow delete up to 1000 keys at once&quot;</span>,
+                <span class="string">&quot;wasabi services only allow delete up to 1000 keys at once&quot;</span>,
             )
             .with_context(<span class="string">&quot;length&quot;</span>, ops.len().to_string()));
         }
