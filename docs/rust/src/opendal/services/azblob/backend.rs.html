@@ -863,6 +863,8 @@
 <a href="#863" id="863">863</a>
 <a href="#864" id="864">864</a>
 <a href="#865" id="865">865</a>
+<a href="#866" id="866">866</a>
+<a href="#867" id="867">867</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -1340,6 +1342,7 @@
                 copy: <span class="bool-val">true</span>,
                 presign: <span class="self">self</span>.has_sas_token,
                 batch: <span class="bool-val">true</span>,
+                batch_delete: <span class="bool-val">true</span>,
                 batch_max_operations: <span class="prelude-val">Some</span>(AZBLOB_BATCH_LIMIT),
                 ..Default::default()
             });
@@ -1513,6 +1516,7 @@
                 <span class="string">&quot;batch delete limit exceeded&quot;</span>,
             ));
         }
+
         <span class="comment">// construct and complete batch request
         </span><span class="kw">let </span>resp = <span class="self">self</span>.core.azblob_batch_delete(<span class="kw-2">&amp;</span>paths).<span class="kw">await</span><span class="question-mark">?</span>;
 

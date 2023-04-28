@@ -388,16 +388,6 @@
 <a href="#388" id="388">388</a>
 <a href="#389" id="389">389</a>
 <a href="#390" id="390">390</a>
-<a href="#391" id="391">391</a>
-<a href="#392" id="392">392</a>
-<a href="#393" id="393">393</a>
-<a href="#394" id="394">394</a>
-<a href="#395" id="395">395</a>
-<a href="#396" id="396">396</a>
-<a href="#397" id="397">397</a>
-<a href="#398" id="398">398</a>
-<a href="#399" id="399">399</a>
-<a href="#400" id="400">400</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -419,7 +409,6 @@
 <span class="kw">use </span>std::fmt::Debug;
 <span class="kw">use </span>std::fmt::Formatter;
 <span class="kw">use </span>std::fmt::Write;
-<span class="kw">use </span>std::str::FromStr;
 
 <span class="kw">use </span>http::header::HeaderName;
 <span class="kw">use </span>http::header::CONTENT_LENGTH;
@@ -428,12 +417,10 @@
 <span class="kw">use </span>http::header::IF_NONE_MATCH;
 <span class="kw">use </span>http::Request;
 <span class="kw">use </span>http::Response;
-<span class="kw">use </span>http::Uri;
 <span class="kw">use </span>reqsign::AzureStorageCredential;
 <span class="kw">use </span>reqsign::AzureStorageLoader;
 <span class="kw">use </span>reqsign::AzureStorageSigner;
 
-<span class="kw">use </span><span class="kw">super</span>::batch::BatchDeleteRequestBuilder;
 <span class="kw">use </span><span class="kw">crate</span>::raw::<span class="kw-2">*</span>;
 <span class="kw">use crate</span>::<span class="kw-2">*</span>;
 
@@ -674,7 +661,7 @@
         <span class="self">self</span>.send(req).<span class="kw">await
     </span>}
 
-    <span class="kw">pub async fn </span>azblob_delete_blob(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;Response&lt;IncomingAsyncBody&gt;&gt; {
+    <span class="kw">pub fn </span>azblob_delete_blob_request(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;Request&lt;AsyncBody&gt;&gt; {
         <span class="kw">let </span>p = build_abs_path(<span class="kw-2">&amp;</span><span class="self">self</span>.root, path);
 
         <span class="kw">let </span>url = <span class="macro">format!</span>(
@@ -686,9 +673,13 @@
 
         <span class="kw">let </span>req = Request::delete(<span class="kw-2">&amp;</span>url);
 
-        <span class="kw">let </span><span class="kw-2">mut </span>req = req
+        req.header(CONTENT_LENGTH, <span class="number">0</span>)
             .body(AsyncBody::Empty)
-            .map_err(new_request_build_error)<span class="question-mark">?</span>;
+            .map_err(new_request_build_error)
+    }
+
+    <span class="kw">pub async fn </span>azblob_delete_blob(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;Response&lt;IncomingAsyncBody&gt;&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>req = <span class="self">self</span>.azblob_delete_blob_request(path)<span class="question-mark">?</span>;
 
         <span class="self">self</span>.sign(<span class="kw-2">&amp;mut </span>req).<span class="kw">await</span><span class="question-mark">?</span>;
         <span class="self">self</span>.send(req).<span class="kw">await
@@ -764,35 +755,24 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         paths: <span class="kw-2">&amp;</span>[String],
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Response&lt;IncomingAsyncBody&gt;&gt; {
-        <span class="comment">// init batch request
-        </span><span class="kw">let </span>url = <span class="macro">format!</span>(
+        <span class="kw">let </span>url = <span class="macro">format!</span>(
             <span class="string">&quot;{}/{}?restype=container&amp;comp=batch&quot;</span>,
             <span class="self">self</span>.endpoint, <span class="self">self</span>.container
         );
-        <span class="kw">let </span><span class="kw-2">mut </span>batch_delete_req_builder = BatchDeleteRequestBuilder::new(<span class="kw-2">&amp;</span>url);
 
-        <span class="kw">for </span>path <span class="kw">in </span>paths.iter() {
-            <span class="comment">// build sub requests
-            </span><span class="kw">let </span>p = build_abs_path(<span class="kw-2">&amp;</span><span class="self">self</span>.root, path);
-            <span class="kw">let </span>encoded_path = percent_encode_path(<span class="kw-2">&amp;</span>p);
+        <span class="kw">let </span><span class="kw-2">mut </span>multipart = Multipart::new();
 
-            <span class="kw">let </span>url = Uri::from_str(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
-                <span class="string">&quot;{}/{}/{}&quot;</span>,
-                <span class="self">self</span>.endpoint, <span class="self">self</span>.container, encoded_path
-            ))
-            .unwrap();
+        <span class="kw">for </span>(idx, path) <span class="kw">in </span>paths.iter().enumerate() {
+            <span class="kw">let </span><span class="kw-2">mut </span>req = <span class="self">self</span>.azblob_delete_blob_request(path)<span class="question-mark">?</span>;
 
-            <span class="kw">let </span><span class="kw-2">mut </span>sub_req = Request::delete(<span class="kw-2">&amp;</span>url.to_string())
-                .header(CONTENT_LENGTH, <span class="number">0</span>)
-                .body(AsyncBody::Empty)
-                .map_err(new_request_build_error)<span class="question-mark">?</span>;
-
-            <span class="self">self</span>.batch_sign(<span class="kw-2">&amp;mut </span>sub_req).<span class="kw">await</span><span class="question-mark">?</span>;
-
-            batch_delete_req_builder.append(sub_req);
+            <span class="self">self</span>.batch_sign(<span class="kw-2">&amp;mut </span>req).<span class="kw">await</span><span class="question-mark">?</span>;
+            multipart = multipart.part(
+                MixedPart::from_request(req).part_header(<span class="string">&quot;content-id&quot;</span>.parse().unwrap(), idx.into()),
+            );
         }
 
-        <span class="kw">let </span><span class="kw-2">mut </span>req = batch_delete_req_builder.try_into_req()<span class="question-mark">?</span>;
+        <span class="kw">let </span>req = Request::post(url);
+        <span class="kw">let </span><span class="kw-2">mut </span>req = multipart.apply(req)<span class="question-mark">?</span>;
 
         <span class="self">self</span>.sign(<span class="kw-2">&amp;mut </span>req).<span class="kw">await</span><span class="question-mark">?</span>;
         <span class="self">self</span>.send(req).<span class="kw">await
