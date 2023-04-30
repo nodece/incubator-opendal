@@ -2,7 +2,7 @@
 Developer should manipulate the data from storage service through Operator only by right.</p>
 <p>We will usually do some general checks and data transformations in this layer,
 like normalizing path from input, checking whether the path refers to one file or one directory, and so on.
-Read <a href="docs/concepts/index.html" title="mod opendal::docs::concepts"><code>concepts</code></a> for know more about <a href="struct.Operator.html" title="struct opendal::Operator"><code>Operator</code></a>.</p>
+Read <a href="docs/concepts/index.html" title="mod opendal::docs::concepts"><code>concepts</code></a> for more about <a href="struct.Operator.html" title="struct opendal::Operator"><code>Operator</code></a>.</p>
 <h2 id="examples"><a href="#examples">Examples</a></h2>
 <p>Read more backend init examples in <a href="services/index.html" title="mod opendal::services"><code>services</code></a></p>
 
@@ -44,7 +44,7 @@ op.check().<span class="kw">await</span><span class="question-mark">?</span>;</c
 <h5 id="notes"><a href="#notes">Notes</a></h5>
 <p>Use <code>stat</code> if you:</p>
 <ul>
-<li>Want detect the outside changes of path.</li>
+<li>Want to detect the outside changes of path.</li>
 <li>Don’t want to read from cached metadata.</li>
 </ul>
 <p>You may want to use <code>metadata</code> if you are working with entries
@@ -61,7 +61,7 @@ you want has already been cached.</p>
 <h5 id="notes-1"><a href="#notes-1">Notes</a></h5>
 <p>Use <code>stat</code> if you:</p>
 <ul>
-<li>Want detect the outside changes of path.</li>
+<li>Want to detect the outside changes of path.</li>
 <li>Don’t want to read from cached metadata.</li>
 </ul>
 <p>You may want to use <code>metadata</code> if you are working with entries
@@ -87,15 +87,15 @@ first. And query from storage if not found.</p>
 has already been cached.</p>
 <p>You may want to use <code>stat</code>, if you:</p>
 <ul>
-<li>Want detect the outside changes of path.</li>
+<li>Want to detect the outside changes of path.</li>
 <li>Don’t want to read from cached metadata.</li>
 </ul>
 <h5 id="behavior"><a href="#behavior">Behavior</a></h5>
 <p>Visiting not fetched metadata will lead to panic in debug build.
 It must be a bug, please fix it instead.</p>
 <h5 id="examples-4"><a href="#examples-4">Examples</a></h5><h6 id="query-already-cached-metadata"><a href="#query-already-cached-metadata">Query already cached metadata</a></h6>
-<p>By query metadata with <code>None</code>, we can only query in-memory metadata
-cache. In this way, we can make sure that no API call will send.</p>
+<p>By querying metadata with <code>None</code>, we can only query in-memory metadata
+cache. In this way, we can make sure that no API call will be sent.</p>
 
 <div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>opendal::Entry;
 <span class="kw">let </span>meta = op.metadata(<span class="kw-2">&amp;</span>entry, <span class="prelude-val">None</span>).<span class="kw">await</span><span class="question-mark">?</span>;
@@ -115,7 +115,7 @@ cache. In this way, we can make sure that no API call will send.</p>
 <span class="comment">// etag COULD be correct.
 </span><span class="kw">let _ </span>= meta.etag();</code></pre></div>
 <h6 id="query-all-metadata"><a href="#query-all-metadata">Query all metadata</a></h6>
-<p>By query metadata with <code>Complete</code>, we can make sure that we have fetched all metadata of this entry.</p>
+<p>By querying metadata with <code>Complete</code>, we can make sure that we have fetched all metadata of this entry.</p>
 
 <div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>opendal::Entry;
 <span class="kw">use </span>opendal::Metakey;
@@ -221,7 +221,7 @@ op.write(<span class="string">&quot;path/to/file&quot;</span>, <span class="macr
 <ul>
 <li><code>from</code> and <code>to</code> must be a file.</li>
 <li><code>to</code> will be overwritten if it exists.</li>
-<li>If <code>from</code> and <code>to</code> are the same,  a <code>IsSameFile</code> error will occur.</li>
+<li>If <code>from</code> and <code>to</code> are the same,  an <code>IsSameFile</code> error will occur.</li>
 <li><code>copy</code> is idempotent. For same <code>from</code> and <code>to</code> input, the result will be the same.</li>
 </ul>
 <h5 id="examples-14"><a href="#examples-14">Examples</a></h5>
@@ -232,7 +232,7 @@ op.copy(<span class="string">&quot;path/to/file&quot;</span>, <span class="strin
 <ul>
 <li><code>from</code> and <code>to</code> must be a file.</li>
 <li><code>to</code> will be overwritten if it exists.</li>
-<li>If <code>from</code> and <code>to</code> are the same, a <code>IsSameFile</code> error will occur.</li>
+<li>If <code>from</code> and <code>to</code> are the same, an <code>IsSameFile</code> error will occur.</li>
 </ul>
 <h5 id="examples-15"><a href="#examples-15">Examples</a></h5>
 <div class="example-wrap"><pre class="rust rust-example-rendered"><code>
@@ -277,7 +277,7 @@ w.close().<span class="kw">await</span><span class="question-mark">?</span>;</co
 </div></details><details class="toggle method-toggle" open><summary><section id="method.delete" class="method"><a class="srclink rightside" href="../src/opendal/types/operator/operator.rs.html#898-904">source</a><h4 class="code-header">pub async fn <a href="#method.delete" class="fn">delete</a>(&amp;self, path: &amp;<a class="primitive" href="https://doc.rust-lang.org/1.69.0/std/primitive.str.html">str</a>) -&gt; <a class="type" href="type.Result.html" title="type opendal::Result">Result</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/1.69.0/std/primitive.unit.html">()</a>&gt;</h4></section></summary><div class="docblock"><p>Delete the given path.</p>
 <h5 id="notes-11"><a href="#notes-11">Notes</a></h5>
 <ul>
-<li>Delete not existing error won’t return errors.</li>
+<li>Deleting a file that does not exist won’t return errors.</li>
 </ul>
 <h5 id="examples-19"><a href="#examples-19">Examples</a></h5>
 <div class="example-wrap"><pre class="rust rust-example-rendered"><code>op.delete(<span class="string">&quot;test&quot;</span>).<span class="kw">await</span><span class="question-mark">?</span>;</code></pre></div>
@@ -290,8 +290,8 @@ delete instead.</p>
 </div></details><details class="toggle method-toggle" open><summary><section id="method.remove_via" class="method"><a class="srclink rightside" href="../src/opendal/types/operator/operator.rs.html#956-985">source</a><h4 class="code-header">pub async fn <a href="#method.remove_via" class="fn">remove_via</a>(
     &amp;self,
     input: impl Stream&lt;Item = <a class="struct" href="https://doc.rust-lang.org/1.69.0/alloc/string/struct.String.html" title="struct alloc::string::String">String</a>&gt; + <a class="trait" href="https://doc.rust-lang.org/1.69.0/core/marker/trait.Unpin.html" title="trait core::marker::Unpin">Unpin</a>
-) -&gt; <a class="type" href="type.Result.html" title="type opendal::Result">Result</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/1.69.0/std/primitive.unit.html">()</a>&gt;</h4></section></summary><div class="docblock"><p>remove will given paths.
-remove_via will remove files via given stream.</p>
+) -&gt; <a class="type" href="type.Result.html" title="type opendal::Result">Result</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/1.69.0/std/primitive.unit.html">()</a>&gt;</h4></section></summary><div class="docblock"><p>remove will remove files via the given paths.</p>
+<p>remove_via will remove files via the given stream.</p>
 <p>We will delete by chunks with given batch limit on the stream.</p>
 <h5 id="notes-13"><a href="#notes-13">Notes</a></h5>
 <p>If underlying services support delete in batch, we will use batch
