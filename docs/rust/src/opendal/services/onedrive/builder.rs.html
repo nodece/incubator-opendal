@@ -165,12 +165,14 @@
 // under the License.
 
 </span><span class="kw">use </span>std::collections::HashMap;
-<span class="kw">use </span>std::fmt::{Debug, Formatter};
+<span class="kw">use </span>std::fmt::Debug;
+<span class="kw">use </span>std::fmt::Formatter;
 
 <span class="kw">use </span>log::debug;
 
 <span class="kw">use </span><span class="kw">super</span>::backend::OnedriveBackend;
-<span class="kw">use </span><span class="kw">crate</span>::raw::{normalize_root, HttpClient};
+<span class="kw">use </span><span class="kw">crate</span>::raw::normalize_root;
+<span class="kw">use </span><span class="kw">crate</span>::raw::HttpClient;
 <span class="kw">use </span><span class="kw">crate</span>::Scheme;
 <span class="kw">use crate</span>::<span class="kw-2">*</span>;
 
@@ -215,9 +217,7 @@
 ///     // create backend builder
 ///     let mut builder = Onedrive::default();
 ///
-///     builder
-///         .access_token(&quot;xxx&quot;)
-///         .root(&quot;/path/to/root&quot;);
+///     builder.access_token(&quot;xxx&quot;).root(&quot;/path/to/root&quot;);
 ///
 ///     let op: Operator = Operator::new(builder)?.finish();
 ///     Ok(())

@@ -332,10 +332,10 @@ delete instead.</p>
 <p>An error will be returned if given path doesn’t end with <code>/</code>.</p>
 <h5 id="examples-24"><a href="#examples-24">Examples</a></h5>
 <div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>futures::TryStreamExt;
+<span class="kw">use </span>opendal::ops::OpList;
 <span class="kw">use </span>opendal::EntryMode;
 <span class="kw">use </span>opendal::Metakey;
 <span class="kw">use </span>opendal::Operator;
-<span class="kw">use </span>opendal::ops::OpList;
 <span class="kw">let </span>option = OpList::new().with_limit(<span class="number">10</span>).with_start_after(<span class="string">&quot;start&quot;</span>);
 <span class="kw">let </span><span class="kw-2">mut </span>ds = op.list_with(<span class="string">&quot;path/to/dir/&quot;</span>, option).<span class="kw">await</span><span class="question-mark">?</span>;
 <span class="kw">while let </span><span class="prelude-val">Some</span>(<span class="kw-2">mut </span>de) = ds.try_next().<span class="kw">await</span><span class="question-mark">? </span>{
