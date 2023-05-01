@@ -182,6 +182,9 @@
 <a href="#182" id="182">182</a>
 <a href="#183" id="183">183</a>
 <a href="#184" id="184">184</a>
+<a href="#185" id="185">185</a>
+<a href="#186" id="186">186</a>
+<a href="#187" id="187">187</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -255,6 +258,8 @@
     </span>Rocksdb,
     <span class="doccomment">/// [s3][crate::services::S3]: AWS S3 alike services.
     </span>S3,
+    <span class="doccomment">/// [sftp][crate::services::Sftp]: SFTP services
+    </span>Sftp,
     <span class="doccomment">/// [sled][crate::services::Sled]: Sled services
     </span>Sled,
     <span class="doccomment">/// [Supabase][crate::services::Supabase]: Supabase storage service
@@ -350,6 +355,7 @@
             Scheme::Redis =&gt; <span class="string">&quot;redis&quot;</span>,
             Scheme::Rocksdb =&gt; <span class="string">&quot;rocksdb&quot;</span>,
             Scheme::S3 =&gt; <span class="string">&quot;s3&quot;</span>,
+            Scheme::Sftp =&gt; <span class="string">&quot;sftp&quot;</span>,
             Scheme::Sled =&gt; <span class="string">&quot;sled&quot;</span>,
             Scheme::Supabase =&gt; <span class="string">&quot;supabase&quot;</span>,
             Scheme::Oss =&gt; <span class="string">&quot;oss&quot;</span>,
