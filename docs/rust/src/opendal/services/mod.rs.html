@@ -148,6 +148,12 @@
 <a href="#148" id="148">148</a>
 <a href="#149" id="149">149</a>
 <a href="#150" id="150">150</a>
+<a href="#151" id="151">151</a>
+<a href="#152" id="152">152</a>
+<a href="#153" id="153">153</a>
+<a href="#154" id="154">154</a>
+<a href="#155" id="155">155</a>
+<a href="#156" id="156">156</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -296,6 +302,12 @@
 </span><span class="kw">mod </span>onedrive;
 <span class="attr">#[cfg(feature = <span class="string">&quot;services-onedrive&quot;</span>)]
 </span><span class="kw">pub use </span>onedrive::Onedrive;
+
+<span class="attr">#[cfg(feature = <span class="string">&quot;services-gdrive&quot;</span>)]
+</span><span class="kw">mod </span>gdrive;
+<span class="attr">#[cfg(feature = <span class="string">&quot;services-gdrive&quot;</span>)]
+</span><span class="kw">pub use </span>gdrive::Gdrive;
+
 <span class="attr">#[cfg(feature = <span class="string">&quot;services-webhdfs&quot;</span>)]
 </span><span class="kw">pub use </span>webhdfs::Webhdfs;
 </code></pre></div>
