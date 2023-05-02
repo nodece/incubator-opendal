@@ -188,6 +188,9 @@
 <a href="#188" id="188">188</a>
 <a href="#189" id="189">189</a>
 <a href="#190" id="190">190</a>
+<a href="#191" id="191">191</a>
+<a href="#192" id="192">192</a>
+<a href="#193" id="193">193</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -269,6 +272,8 @@
     </span>Sled,
     <span class="doccomment">/// [Supabase][crate::services::Supabase]: Supabase storage service
     </span>Supabase,
+    <span class="doccomment">/// [Vercel Artifacts][crate::services::vercel_artifacts]: Vercel Artifacts service, as known as Vercel Remote Caching.
+    </span>VercelArtifacts,
     <span class="doccomment">/// [wasabi][crate::services::Wasabi]: Wasabi service
     </span>Wasabi,
     <span class="doccomment">/// [webdav][crate::services::Webdav]: WebDAV support.
@@ -364,6 +369,7 @@
             Scheme::Sftp =&gt; <span class="string">&quot;sftp&quot;</span>,
             Scheme::Sled =&gt; <span class="string">&quot;sled&quot;</span>,
             Scheme::Supabase =&gt; <span class="string">&quot;supabase&quot;</span>,
+            Scheme::VercelArtifacts =&gt; <span class="string">&quot;vercel_artifacts&quot;</span>,
             Scheme::Oss =&gt; <span class="string">&quot;oss&quot;</span>,
             Scheme::Wasabi =&gt; <span class="string">&quot;wasabi&quot;</span>,
             Scheme::Webdav =&gt; <span class="string">&quot;webdav&quot;</span>,

@@ -154,6 +154,11 @@
 <a href="#154" id="154">154</a>
 <a href="#155" id="155">155</a>
 <a href="#156" id="156">156</a>
+<a href="#157" id="157">157</a>
+<a href="#158" id="158">158</a>
+<a href="#159" id="159">159</a>
+<a href="#160" id="160">160</a>
+<a href="#161" id="161">161</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -280,9 +285,9 @@
 <span class="attr">#[cfg(feature = <span class="string">&quot;services-sled&quot;</span>)]
 </span><span class="kw">pub use </span><span class="self">self</span>::sled::Sled;
 
-<span class="comment">// #[cfg(feature = &quot;services-supabase&quot;)]
+<span class="attr">#[cfg(feature = <span class="string">&quot;services-supabase&quot;</span>)]
 </span><span class="kw">mod </span>supabase;
-<span class="comment">// #[cfg(feature = &quot;services-supabase&quot;)]
+<span class="attr">#[cfg(feature = <span class="string">&quot;services-supabase&quot;</span>)]
 </span><span class="kw">pub use </span>supabase::Supabase;
 
 <span class="attr">#[cfg(feature = <span class="string">&quot;services-wasabi&quot;</span>)]
@@ -310,5 +315,10 @@
 
 <span class="attr">#[cfg(feature = <span class="string">&quot;services-webhdfs&quot;</span>)]
 </span><span class="kw">pub use </span>webhdfs::Webhdfs;
+
+<span class="attr">#[cfg(feature = <span class="string">&quot;services-vercel-artifacts&quot;</span>)]
+</span><span class="kw">mod </span>vercel_artifacts;
+<span class="attr">#[cfg(feature = <span class="string">&quot;services-vercel-artifacts&quot;</span>)]
+</span><span class="kw">pub use </span>vercel_artifacts::VercelArtifacts;
 </code></pre></div>
 </section></main><div id="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="opendal" data-themes="" data-resource-suffix="" data-rustdoc-version="1.69.0 (84c898d65 2023-04-16)" data-search-js="search-8a59a8356673ec1f.js" data-settings-js="settings-f0c5c39777a9a2f6.js" data-settings-css="settings-0bcba95ff279c1db.css" ></div></body></html>
