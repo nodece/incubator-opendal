@@ -272,6 +272,55 @@
 <a href="#272" id="272">272</a>
 <a href="#273" id="273">273</a>
 <a href="#274" id="274">274</a>
+<a href="#275" id="275">275</a>
+<a href="#276" id="276">276</a>
+<a href="#277" id="277">277</a>
+<a href="#278" id="278">278</a>
+<a href="#279" id="279">279</a>
+<a href="#280" id="280">280</a>
+<a href="#281" id="281">281</a>
+<a href="#282" id="282">282</a>
+<a href="#283" id="283">283</a>
+<a href="#284" id="284">284</a>
+<a href="#285" id="285">285</a>
+<a href="#286" id="286">286</a>
+<a href="#287" id="287">287</a>
+<a href="#288" id="288">288</a>
+<a href="#289" id="289">289</a>
+<a href="#290" id="290">290</a>
+<a href="#291" id="291">291</a>
+<a href="#292" id="292">292</a>
+<a href="#293" id="293">293</a>
+<a href="#294" id="294">294</a>
+<a href="#295" id="295">295</a>
+<a href="#296" id="296">296</a>
+<a href="#297" id="297">297</a>
+<a href="#298" id="298">298</a>
+<a href="#299" id="299">299</a>
+<a href="#300" id="300">300</a>
+<a href="#301" id="301">301</a>
+<a href="#302" id="302">302</a>
+<a href="#303" id="303">303</a>
+<a href="#304" id="304">304</a>
+<a href="#305" id="305">305</a>
+<a href="#306" id="306">306</a>
+<a href="#307" id="307">307</a>
+<a href="#308" id="308">308</a>
+<a href="#309" id="309">309</a>
+<a href="#310" id="310">310</a>
+<a href="#311" id="311">311</a>
+<a href="#312" id="312">312</a>
+<a href="#313" id="313">313</a>
+<a href="#314" id="314">314</a>
+<a href="#315" id="315">315</a>
+<a href="#316" id="316">316</a>
+<a href="#317" id="317">317</a>
+<a href="#318" id="318">318</a>
+<a href="#319" id="319">319</a>
+<a href="#320" id="320">320</a>
+<a href="#321" id="321">321</a>
+<a href="#322" id="322">322</a>
+<a href="#323" id="323">323</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -492,6 +541,8 @@
                 stat: <span class="bool-val">true</span>,
                 read: <span class="bool-val">true</span>,
                 write: <span class="bool-val">true</span>,
+                create_dir: <span class="bool-val">true</span>,
+                delete: <span class="bool-val">true</span>,
 
                 ..Default::default()
             });
@@ -499,8 +550,33 @@
         am
     }
 
-    <span class="kw">async fn </span>read(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, _args: OpRead) -&gt; <span class="prelude-ty">Result</span>&lt;(RpRead, <span class="self">Self</span>::Reader)&gt; {
-        <span class="kw">let </span>resp = <span class="self">self</span>.core.supabase_get_object(path).<span class="kw">await</span><span class="question-mark">?</span>;
+    <span class="kw">async fn </span>create_dir(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, <span class="kw">_</span>: OpCreate) -&gt; <span class="prelude-ty">Result</span>&lt;RpCreate&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>req =
+            <span class="self">self</span>.core
+                .supabase_upload_object_request(path, <span class="prelude-val">Some</span>(<span class="number">0</span>), <span class="prelude-val">None</span>, AsyncBody::Empty)<span class="question-mark">?</span>;
+
+        <span class="self">self</span>.core.sign(<span class="kw-2">&amp;mut </span>req)<span class="question-mark">?</span>;
+
+        <span class="kw">let </span>resp = <span class="self">self</span>.core.send(req).<span class="kw">await</span><span class="question-mark">?</span>;
+
+        <span class="kw">let </span>status = resp.status();
+
+        <span class="kw">if </span>status.is_success() {
+            resp.into_body().consume().<span class="kw">await</span><span class="question-mark">?</span>;
+            <span class="prelude-val">Ok</span>(RpCreate::default())
+        } <span class="kw">else </span>{
+            <span class="comment">// create duplicate dir is ok
+            </span><span class="kw">let </span>e = parse_error(resp).<span class="kw">await</span><span class="question-mark">?</span>;
+            <span class="kw">if </span>e.kind() == ErrorKind::AlreadyExists {
+                <span class="prelude-val">Ok</span>(RpCreate::default())
+            } <span class="kw">else </span>{
+                <span class="prelude-val">Err</span>(e)
+            }
+        }
+    }
+
+    <span class="kw">async fn </span>read(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpRead) -&gt; <span class="prelude-ty">Result</span>&lt;(RpRead, <span class="self">Self</span>::Reader)&gt; {
+        <span class="kw">let </span>resp = <span class="self">self</span>.core.supabase_get_object(path, args.range()).<span class="kw">await</span><span class="question-mark">?</span>;
 
         <span class="kw">let </span>status = resp.status();
 
@@ -533,16 +609,38 @@
             <span class="kw">return </span><span class="prelude-val">Ok</span>(RpStat::new(Metadata::new(EntryMode::DIR)));
         }
 
-        <span class="kw">let </span>resp = <span class="self">self</span>.core.supabase_get_object_info(path).<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="comment">// The get_object_info does not contain the file size. Therefore
+        // we first try the get the metadata through head, if we fail,
+        // we then use get_object_info to get the actual error info
+        </span><span class="kw">let </span><span class="kw-2">mut </span>resp = <span class="self">self</span>.core.supabase_head_object(path).<span class="kw">await</span><span class="question-mark">?</span>;
 
-        <span class="kw">let </span>status = resp.status();
-
-        <span class="kw">match </span>status {
+        <span class="kw">match </span>resp.status() {
             StatusCode::OK =&gt; parse_into_metadata(path, resp.headers()).map(RpStat::new),
-            StatusCode::NOT_FOUND <span class="kw">if </span>path.ends_with(<span class="string">&#39;/&#39;</span>) =&gt; {
-                <span class="prelude-val">Ok</span>(RpStat::new(Metadata::new(EntryMode::DIR)))
+            <span class="kw">_ </span>=&gt; {
+                resp = <span class="self">self</span>.core.supabase_get_object_info(path).<span class="kw">await</span><span class="question-mark">?</span>;
+                <span class="kw">match </span>resp.status() {
+                    StatusCode::NOT_FOUND <span class="kw">if </span>path.ends_with(<span class="string">&#39;/&#39;</span>) =&gt; {
+                        <span class="prelude-val">Ok</span>(RpStat::new(Metadata::new(EntryMode::DIR)))
+                    }
+                    <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(parse_error(resp).<span class="kw">await</span><span class="question-mark">?</span>),
+                }
             }
-            <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(parse_error(resp).<span class="kw">await</span><span class="question-mark">?</span>),
+        }
+    }
+
+    <span class="kw">async fn </span>delete(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, <span class="kw">_</span>: OpDelete) -&gt; <span class="prelude-ty">Result</span>&lt;RpDelete&gt; {
+        <span class="kw">let </span>resp = <span class="self">self</span>.core.supabase_delete_object(path).<span class="kw">await</span><span class="question-mark">?</span>;
+
+        <span class="kw">if </span>resp.status().is_success() {
+            <span class="prelude-val">Ok</span>(RpDelete::default())
+        } <span class="kw">else </span>{
+            <span class="comment">// deleting not existing objects is ok
+            </span><span class="kw">let </span>e = parse_error(resp).<span class="kw">await</span><span class="question-mark">?</span>;
+            <span class="kw">if </span>e.kind() == ErrorKind::NotFound {
+                <span class="prelude-val">Ok</span>(RpDelete::default())
+            } <span class="kw">else </span>{
+                <span class="prelude-val">Err</span>(e)
+            }
         }
     }
 }

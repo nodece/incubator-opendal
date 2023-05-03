@@ -65,6 +65,12 @@
 <a href="#65" id="65">65</a>
 <a href="#66" id="66">66</a>
 <a href="#67" id="67">67</a>
+<a href="#68" id="68">68</a>
+<a href="#69" id="69">69</a>
+<a href="#70" id="70">70</a>
+<a href="#71" id="71">71</a>
+<a href="#72" id="72">72</a>
+<a href="#73" id="73">73</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -106,22 +112,12 @@
     <span class="kw">let </span>(parts, body) = resp.into_parts();
     <span class="kw">let </span>bs = body.bytes().<span class="kw">await</span><span class="question-mark">?</span>;
 
-    <span class="comment">// todo: the supabase error has status code 4XX, handle all that
-    </span><span class="kw">let </span>(kind, retryable) = <span class="kw">match </span>parts.status {
-        StatusCode::NOT_FOUND =&gt; (ErrorKind::NotFound, <span class="bool-val">false</span>),
-        StatusCode::FORBIDDEN =&gt; (ErrorKind::PermissionDenied, <span class="bool-val">false</span>),
-        StatusCode::PRECONDITION_FAILED | StatusCode::NOT_MODIFIED =&gt; {
-            (ErrorKind::ConditionNotMatch, <span class="bool-val">false</span>)
-        }
-        StatusCode::INTERNAL_SERVER_ERROR
-        | StatusCode::BAD_GATEWAY
-        | StatusCode::SERVICE_UNAVAILABLE
-        | StatusCode::GATEWAY_TIMEOUT =&gt; (ErrorKind::Unexpected, <span class="bool-val">true</span>),
-        <span class="kw">_ </span>=&gt; (ErrorKind::Unexpected, <span class="bool-val">false</span>),
-    };
-
+    <span class="kw">let </span>(<span class="kw-2">mut </span>kind, <span class="kw-2">mut </span>retryable) = (ErrorKind::Unexpected, <span class="bool-val">false</span>);
     <span class="kw">let </span>(message, <span class="kw">_</span>) = from_slice::&lt;SupabaseError&gt;(<span class="kw-2">&amp;</span>bs)
-        .map(|sb_err| (<span class="macro">format!</span>(<span class="string">&quot;{sb_err:?}&quot;</span>), <span class="prelude-val">Some</span>(sb_err)))
+        .map(|sb_err| {
+            (kind, retryable) = parse_supabase_error(<span class="kw-2">&amp;</span>sb_err);
+            (<span class="macro">format!</span>(<span class="string">&quot;{sb_err:?}&quot;</span>), <span class="prelude-val">Some</span>(sb_err))
+        })
         .unwrap_or_else(|<span class="kw">_</span>| (String::from_utf8_lossy(<span class="kw-2">&amp;</span>bs).into_owned(), <span class="prelude-val">None</span>));
 
     <span class="kw">let </span><span class="kw-2">mut </span>err = Error::new(kind, <span class="kw-2">&amp;</span>message).with_context(<span class="string">&quot;response&quot;</span>, <span class="macro">format!</span>(<span class="string">&quot;{parts:?}&quot;</span>));
@@ -131,6 +127,22 @@
     }
 
     <span class="prelude-val">Ok</span>(err)
+}
+
+<span class="comment">// Return the error kind and whether it is retryable
+</span><span class="kw">fn </span>parse_supabase_error(err: <span class="kw-2">&amp;</span>SupabaseError) -&gt; (ErrorKind, bool) {
+    <span class="kw">let </span>code = err.status_code.parse::&lt;u16&gt;().unwrap();
+    <span class="kw">if </span>code == StatusCode::CONFLICT.as_u16() &amp;&amp; err.error == <span class="string">&quot;Duplicate&quot; </span>{
+        (ErrorKind::AlreadyExists, <span class="bool-val">false</span>)
+    } <span class="kw">else if </span>code == StatusCode::NOT_FOUND.as_u16() {
+        (ErrorKind::NotFound, <span class="bool-val">false</span>)
+    } <span class="kw">else if </span>code == StatusCode::FORBIDDEN.as_u16() {
+        (ErrorKind::PermissionDenied, <span class="bool-val">false</span>)
+    } <span class="kw">else if </span>code == StatusCode::PRECONDITION_FAILED.as_u16() {
+        (ErrorKind::ConditionNotMatch, <span class="bool-val">false</span>)
+    } <span class="kw">else </span>{
+        (ErrorKind::Unexpected, <span class="bool-val">false</span>)
+    }
 }
 </code></pre></div>
 </section></main><div id="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="opendal" data-themes="" data-resource-suffix="" data-rustdoc-version="1.69.0 (84c898d65 2023-04-16)" data-search-js="search-8a59a8356673ec1f.js" data-settings-js="settings-f0c5c39777a9a2f6.js" data-settings-css="settings-0bcba95ff279c1db.css" ></div></body></html>
